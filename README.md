@@ -1,2 +1,2 @@
 # NixRenderer
-Graphics API wrapper mainly for **vulkan metal  DX12 **
+Graphics API wrapper mainly for **VULKAN,METAL,DX12**
