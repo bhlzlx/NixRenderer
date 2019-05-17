@@ -5,14 +5,14 @@
 #pragma warning(disable:4251)
 
 #ifdef KS_DYNAMIC_LINK
-	#define KS_API_DECL _declspec(dllexport)
+	#define NIX_API_DECL _declspec(dllexport)
 #elif defined KS_STATIC_LINK
-	#define KS_API_DECL __declspec(dllimport)
+	#define NIX_API_DECL __declspec(dllimport)
 #else
-	#define KS_API_DECL
+	#define NIX_API_DECL
 #endif
 #else
-#define KS_API_DECL 
+#define NIX_API_DECL 
 #endif
 
 #ifndef KS_JSON
@@ -453,7 +453,7 @@ namespace nix {
 	class IRenderPass;
 	class IContext;
 
-    class KS_API_DECL ITexture {
+    class NIX_API_DECL ITexture {
 	public:
         virtual const TextureDescription& getDesc() const = 0;
         virtual void setSubData( const void * _data, size_t _length, const TextureRegion& _region ) = 0;
@@ -461,7 +461,7 @@ namespace nix {
         virtual void release() = 0;
     };
 
-    class KS_API_DECL IBuffer {
+    class NIX_API_DECL IBuffer {
 	protected:
 		BufferType m_type;
     public:
@@ -476,7 +476,7 @@ namespace nix {
 		}
     };
 
-    class KS_API_DECL IAttachment {
+    class NIX_API_DECL IAttachment {
     public:
         //virtual void resize( uint32_t _width, uint32_t _height ) = 0;
         virtual const ITexture* getTexture() const = 0;
@@ -484,7 +484,7 @@ namespace nix {
 		virtual NixFormat getFormat() const = 0;
     };
     //
-    class KS_API_DECL IRenderPass {
+    class NIX_API_DECL IRenderPass {
     private:
     public:
         virtual bool begin() = 0;
@@ -516,7 +516,7 @@ namespace nix {
 		};
 	} UniformSlot;
 
-	class KS_API_DECL IArgument {
+	class NIX_API_DECL IArgument {
 	private:
 	public:
 		virtual void bind() = 0;
@@ -529,7 +529,7 @@ namespace nix {
 		virtual void release() = 0;
 	};
 
-	class KS_API_DECL IRenderable {
+	class NIX_API_DECL IRenderable {
 	public:
 		virtual void bind() = 0;
 		virtual uint32_t getVertexBufferCount() = 0;
@@ -539,15 +539,7 @@ namespace nix {
         virtual void release() = 0;
 	};
 
-	class KS_API_DECL IMaterial {
-	public:
-		virtual IArgument* createArgument() = 0;
-		virtual IRenderable* createRenderable() = 0;
-        virtual IPipeline* createPipeline( IRenderPass* _renderPass );
-        virtual void release() = 0;
-	};
-
-	class KS_API_DECL IPipeline {
+	class NIX_API_DECL IPipeline {
 	public:
         virtual void bind() = 0;
         virtual void setViewport( const Viewport& _vp ) = 0;
@@ -556,6 +548,14 @@ namespace nix {
         virtual void pushConstants( size_t _offset, size_t _size, const void * _data ) = 0;
         virtual void draw( IRenderable* _renderable, uint32_t _indexCount ) = 0;
         virtual void drawInstance( IRenderable* _renderable, uint32_t _indexCount, uint32_t _instanceCount ) = 0;
+        virtual void release() = 0;
+	};
+
+	class NIX_API_DECL IMaterial {
+	public:
+		virtual IArgument* createArgument() = 0;
+		virtual IRenderable* createRenderable() = 0;
+        virtual IPipeline* createPipeline( IRenderPass* _renderPass ) = 0;
         virtual void release() = 0;
 	};
 
@@ -577,7 +577,7 @@ namespace nix {
 
 	class IContext;
 	//
-	class KS_API_DECL IDriver {
+	class NIX_API_DECL IDriver {
 	public:
 		virtual bool initialize( nix::IArchieve* _arch, DriverType _type) = 0;
 		virtual IContext* createContext(void* _hwnd) = 0;
@@ -585,7 +585,7 @@ namespace nix {
 		virtual ILogger* getLogger() = 0;
 	};
 
-    class KS_API_DECL IContext {
+    class NIX_API_DECL IContext {
 	public:
 		virtual IBuffer* createStableVBO( const void* _data, size_t _size) = 0;
 		virtual IBuffer* createTransientVBO(size_t _size) = 0;

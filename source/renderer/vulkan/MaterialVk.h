@@ -1,6 +1,6 @@
 #pragma once
 #include "vkinc.h"
-#include <KsRenderer.h>
+#include <NixRenderer.h>
 #include <SPIRV-Cross/spirv_cross.hpp>
 
 namespace Ks {

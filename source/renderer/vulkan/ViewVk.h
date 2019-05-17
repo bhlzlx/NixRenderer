@@ -1,5 +1,5 @@
 #pragma once
-#include <KsRenderer.h>
+#include <NixRenderer.h>
 
 namespace Ks {
 

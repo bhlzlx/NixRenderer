@@ -4,7 +4,7 @@
 #include <vector>
 #include <set>
 #include "DebuggerVk.h"
-#include <KsRenderer.h>
+#include <NixRenderer.h>
 #include <iostream>
 
 namespace Ks {

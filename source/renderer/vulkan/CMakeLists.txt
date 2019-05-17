@@ -72,7 +72,7 @@ add_library( NixVulkan SHARED
 
 if( ANDROID )
     target_link_libraries(
-        RendererVk
+        NixVulkan
         OGLCompiler
         SPIRV
         glslang
@@ -84,7 +84,7 @@ if( ANDROID )
     )
 else()
     target_link_libraries(
-        RendererVk
+        NixVulkan
         OGLCompiler
         SPIRV
         glslang

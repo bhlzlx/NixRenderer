@@ -1,6 +1,6 @@
 #pragma once
 
-#include <KsRenderer.h>
+#include <NixRenderer.h>
 #include "vkinc.h"
 #include <vector>
 #include <thread>

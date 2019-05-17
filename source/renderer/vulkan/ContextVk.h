@@ -1,5 +1,5 @@
 #pragma once
-#include <KsRenderer.h>
+#include <NixRenderer.h>
 #include "UniformVk.h"
 #include "vkinc.h"
 #include "SwapchainVk.h"
