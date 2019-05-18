@@ -78,7 +78,7 @@ if( ANDROID )
         glslang
         OSDependent
         spirv-cross-core
-        Ks
+        nix
 		log
 		android
     )
@@ -90,7 +90,7 @@ else()
         glslang
         OSDependent
         spirv-cross-core
-        Ks
+        nix
         ${vulkan-1}
     )
 endif()

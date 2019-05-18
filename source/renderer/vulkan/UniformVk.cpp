@@ -3,7 +3,7 @@
 #include "BufferVk.h"
 #include "DriverVk.h"
 
-namespace Ks {
+namespace nix {
 
 	UBOAllocatePool::UBOAllocatePool(size_t _unitSize, size_t _unitCount, ContextVk* _context)
 	{

@@ -2,7 +2,7 @@
 #define TINYDDSLOADER_IMPLEMENTATION
 #include "tinyddsloader.h"
 
-namespace Ks {
+namespace nix {
 	//
 	static_assert(sizeof(DDS_HEADER) == 124, "size does not match");
 	
@@ -73,7 +73,7 @@ namespace Ks {
 				return nullptr;
 			}
 		}
-		TextureVk* texture = TextureVk::createTexture(VK_NULL_HANDLE, VK_NULL_HANDLE, desc, Ks::TextureUsageTransferDestination | Ks::TextureUsageSampled);
+		TextureVk* texture = TextureVk::createTexture(VK_NULL_HANDLE, VK_NULL_HANDLE, desc, nix::TextureUsageTransferDestination | nix::TextureUsageSampled);
 		//
 		for (uint32_t mipIndex = 0; mipIndex < file.GetMipCount(); ++mipIndex)
 		{

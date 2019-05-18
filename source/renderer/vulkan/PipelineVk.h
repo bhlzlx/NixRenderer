@@ -4,7 +4,7 @@
 #include "ShaderVk.h"
 #include <map>
 
-namespace Ks {
+namespace nix {
 
 	class PipelineVk;
 	class TextureVk;
@@ -13,7 +13,7 @@ namespace Ks {
 	class ContextVk;
 	//
 
-	class KS_API_DECL PipelineVk : public IPipeline
+	class NIX_API_DECL PipelineVk : public IPipeline
 	{
 		friend class GraphicsQueueAsyncTaskManager;
 		friend class ContextVk;

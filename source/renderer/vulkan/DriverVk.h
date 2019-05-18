@@ -7,7 +7,7 @@
 #include <NixRenderer.h>
 #include <iostream>
 
-namespace Ks {
+namespace nix {
 
 	class ContextVk;
 	class IArchieve;
@@ -42,26 +42,27 @@ namespace Ks {
 
 	class DriverVk : IDriver {
 	private:
-		VkInstance m_instance;
-		VkPhysicalDevice m_device;
-		VkPhysicalDeviceProperties m_deviceProps;
-		IArchieve* m_archieve;
-		DebugReporterVk m_debugReport;
+		VkInstance							m_instance;
+		VkPhysicalDevice					m_PhDevice;
+		VkDevice							m_device;
+		VkPhysicalDeviceProperties			m_deviceProps;
+		IArchieve*							m_archieve;
+		DebugReporterVk						m_debugReport;
 		//
-		std::set<unsigned> m_queueSet;
+		std::set<unsigned>					m_queueSet;
 		// Uniform Allocator
 		// Dynamic Buffer Allocator
-		SimplerLogger m_logger;
+		SimplerLogger						m_logger;
+		//
 	public:
 		DriverVk() :
 			m_instance(VK_NULL_HANDLE)
-			, m_device( VK_NULL_HANDLE )
+			, m_PhDevice( VK_NULL_HANDLE )
 			, m_archieve( nullptr )
 		{
-
 		}
 
-		virtual bool initialize(IArchieve* _arch, DeviceType _type) override;
+		virtual bool initialize( nix::IArchieve* _arch, DeviceType _type ) override;
 		virtual IContext* createContext( void* _hwnd ) override;
 		virtual inline IArchieve* getArchieve() override {
 			return m_archieve;
@@ -79,6 +80,7 @@ namespace Ks {
 		unsigned requestGraphicsQueue( VkSurfaceKHR _surface );
 		unsigned requestTransferQueue();
 		//
+		bool validatePipelineCache(const void * _data, size_t _length);
 		inline VkInstance getInstance() { return m_instance; }
 		inline const VkPhysicalDeviceProperties& getPhysicalDeviceProperties() { return m_deviceProps; }
 	};

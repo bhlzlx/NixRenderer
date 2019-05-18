@@ -7,7 +7,7 @@
 #include "DescriptorSetVk.h"
 #include "DeferredDeletor.h"
 
-namespace Ks {
+namespace nix {
 
 	UniformSlot ArgumentVk::getUniformSlot(const char * _name)
 	{

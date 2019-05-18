@@ -6,30 +6,22 @@
 #include <map>
 #include <array>
 
-namespace Ks {
-
-	class PipelineVk;
+namespace nix {
+	class MaterialVk;
 	class TextureVk;
 	class BufferVk;
 
-	class KS_API_DECL DescriptorSetVk
+	// assume that, we only allocate one `uniform chunk` per `descriptor set`
+	class NIX_API_DECL DescriptorSetVk
 	{
 		friend class DescriptorSetPool;
 	private:
-		PipelineVk* m_pipeline;
-		union {
-			DescriptorSet m_descriptorSet[2];
-			struct {
-				DescriptorSet m_activeDescriptor;
-				DescriptorSet m_backupDescriptor;
-			};
-		};
-		struct STPair /* Sampler Texture Pair */ {
-			SamplerState sampler;
-			TextureVk* texture;
-		};
-
-		std::array< std::vector<uint32_t>, MaxFlightCount > m_dynamicOffsets;
+		uint32_t		m_descriptorSetID; // descriptor set id declared in the shader
+		size_t			m_descriptorSetPoolIndex[2]; // descriptor set chunk index ( in the descriptor set pool object )
+		VkDescriptorSet m_descriptorSets[2]; // descriptor set, one is in use and one is for backup
+		uint32_t		m_activeDescriptorSetIndex; // the index of the one in use
+		//
+		std::array< std::array<uint32_t, MaxArgumentCount>, MaxFlightCount > m_dynamicOffsets;
 		//
 		struct UniformChunkWriteData {
 			uint32_t binding;
@@ -62,7 +54,7 @@ namespace Ks {
 		void bind(VkCommandBuffer _cmdbuff, uint32_t _flightIndex);
 		//
 		const VkDescriptorSet& descriptorSet() const {
-			return m_activeDescriptor.set;
+			return m_descriptorSets[m_activeDescriptorSetIndex];
 		}
 	private:
 		DescriptorSetVk() {
@@ -77,34 +69,30 @@ namespace Ks {
 	const static int ChunkSamplerCount = 1024;
 	const static int ChunkUniformBlockCount = 256;
 
-	class KS_API_DECL MinimumDescriptorSetPool {
+	class NIX_API_DECL DescriptorSetPoolChunk {
 	private:
-		VkDescriptorPool m_pool;
-		uint8_t m_state; // 0 : unavailable 
+		VkDescriptorPool	m_pool;
+		uint8_t				m_state; // 0 : unavailable 
 	public:
-		MinimumDescriptorSetPool() : m_pool(VK_NULL_HANDLE), m_state(0) {
+		DescriptorSetPoolChunk() : m_pool(VK_NULL_HANDLE), m_state(0) {
 		}
-
 		bool available() const {
 			return m_state != 0;
 		}
 		void initialize();
-		bool allocate(VkDescriptorSetLayout* _layouts, uint32_t _layoutCount, VkDescriptorSet* descriptorSets_);
-		void free(VkDescriptorSet* _descriptorSets, uint32_t _setCount);
+		VkDescriptorSet allocate( VkDevice _device, VkDescriptorSetLayout _descSetLayout );
+		void free( VkDevice _device, VkDescriptorSet _descSet );
 	};
 
-	class KS_API_DECL DescriptorSetPool
+	class NIX_API_DECL DescriptorSetPool
 	{
 	private:
-		std::vector< MinimumDescriptorSetPool > m_vecMiniPools;
+		std::vector< DescriptorSetPoolChunk > m_vecMiniPools;
 	public:
 		DescriptorSetPool() {
 		}
-		std::vector< DescriptorSet > allocOneBatch(PipelineVk* _pipeline );
-		DescriptorSet allocOne(PipelineVk* _pipeline, uint32_t _setID);
 		//
-		//std::vector<DescriptorSetVk*> alloc(PipelineVk* _pipeline);
-		DescriptorSetVk* alloc(PipelineVk* _pipeline, int _setId);
-		void free(const std::vector<DescriptorSetVk*>& _set);
+		DescriptorSetVk* allocate(MaterialVk* _material, uint32_t _index);
+		void free( DescriptorSetVk* _descriptorSet );
 	};
 }

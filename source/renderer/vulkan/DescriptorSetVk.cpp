@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <utility>
 
-namespace Ks {
+namespace nix {
 
 	VkSampler GetSampler(const SamplerState& _state);
 
@@ -38,7 +38,7 @@ namespace Ks {
 			++poolIndex;
 		}
 		if (!rst) {
-			m_vecMiniPools.push_back(MinimumDescriptorSetPool());
+			m_vecMiniPools.push_back(DescriptorSetPoolChunk());
 			auto& pool = m_vecMiniPools.back();
 			pool.initialize();
 			rst = pool.allocate(layouts.data(), layouts.size(), sets.data());
@@ -85,7 +85,7 @@ namespace Ks {
 			++poolIndex;
 		}
 		if (!rst) {
-			m_vecMiniPools.push_back(MinimumDescriptorSetPool());
+			m_vecMiniPools.push_back(DescriptorSetPoolChunk());
 			auto& pool = m_vecMiniPools.back();
 			pool.initialize();
 			rst = pool.allocate(&layout.layout, 1, &set);
@@ -330,7 +330,7 @@ namespace Ks {
 		return m_pipeline->getSampler(_name, m_activeDescriptor.id, binding_);
 	}
 
-	void MinimumDescriptorSetPool::initialize()
+	void DescriptorSetPoolChunk::initialize()
 	{
 		// alloc new pool
 		VkDescriptorPoolSize subResPools[2];
@@ -354,32 +354,33 @@ namespace Ks {
 		}
 	}
 
-	bool MinimumDescriptorSetPool::allocate(VkDescriptorSetLayout* _layouts, uint32_t _layoutCount, VkDescriptorSet* descriptorSets_)
-	{
-		VkDescriptorSetAllocateInfo inf;
-		inf.descriptorPool = m_pool;
-		inf.descriptorSetCount = _layoutCount;
-		inf.pSetLayouts = _layouts;
-		inf.pNext = nullptr;
-		inf.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		auto context = (ContextVk*)GetContextVulkan();
-		auto rst = vkAllocateDescriptorSets( context->getDevice(), &inf, descriptorSets_);
-		if (rst == VK_SUCCESS) {
-			return true;
+	VkDescriptorSet DescriptorSetPoolChunk::allocate(VkDevice _device, VkDescriptorSetLayout _descSetLayout) {
+		VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
+		// setup create info
+		VkDescriptorSetAllocateInfo inf = {}; {
+			inf.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+			inf.pNext = nullptr;
+			inf.descriptorPool = m_pool;
+			inf.descriptorSetCount = 1;
+			inf.pSetLayouts = &_descSetLayout;
+		}
+		// allocate!!!
+		auto rst = vkAllocateDescriptorSets( _device, &inf, &descriptorSet );
+		// get the result
+		if (rst == VK_SUCCESS) 
+		{
+			return descriptorSet;
 		}
 		else
 		{
 			m_state = 0;
-			return false;
+			return VK_NULL_HANDLE;
 		}
 	}
 
-	void MinimumDescriptorSetPool::free(VkDescriptorSet* _descriptorSets, uint32_t _setCount)
-	{
-		auto context = (ContextVk*)GetContextVulkan();
-		VkResult rst = vkFreeDescriptorSets(context->getDevice(), m_pool, _setCount, _descriptorSets);
+	void DescriptorSetPoolChunk::free( VkDevice _device, VkDescriptorSet _descSet) {
+		VkResult rst = vkFreeDescriptorSets( _device, m_pool, 1, &_descSet );
 		assert(rst == VK_SUCCESS);
 		m_state = 1;
 	}
-
 }

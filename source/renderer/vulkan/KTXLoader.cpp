@@ -3,15 +3,15 @@
 #include <GLES3/gl31.h>
 #include <GLES2/gl2ext.h>
 
-namespace Ks {
+namespace nix {
 
-	Ks::TextureVk* TextureVk::createTextureKTX(const void * _data, size_t _length)
+	nix::TextureVk* TextureVk::createTextureKTX(const void * _data, size_t _length)
 	{
 		return KtxLoader::CreateTexture(_data, _length);
 		//return nullptr;
 	}
     
-	Ks::TextureVk* KtxLoader::CreateTexture(const void* _data, size_t _length)
+	nix::TextureVk* KtxLoader::CreateTexture(const void* _data, size_t _length)
 	{
 		const uint8_t * ptr = (const uint8_t *)_data;
 		const uint8_t * end = ptr + _length;

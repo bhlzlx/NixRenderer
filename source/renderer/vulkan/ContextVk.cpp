@@ -7,7 +7,7 @@
 #include "UniformVk.h"
 #include "QueueVk.h"
 #include "DeferredDeletor.h"
-#include <glslang/Public/ShaderLang.h>
+//#include <glslang/Public/ShaderLang.h>
 #ifdef _MINWINDEF_
 #ifdef min
 #undef min
@@ -19,7 +19,7 @@
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
 
-namespace Ks {
+namespace nix {
 
 	std::vector<VkDeviceQueueCreateInfo> createDeviceQueueCreateInfo(std::vector< QueueReqData > _queues) {
 
@@ -56,7 +56,7 @@ namespace Ks {
 		return createInfos;
 	}
 
-	Ks::IContext* DriverVk::createContext( void* _hwnd ){
+	nix::IContext* DriverVk::createContext( void* _hwnd ){
 		VkResult rst = VK_SUCCESS;
 		//
 		ContextVk* context = new ContextVk();
@@ -87,20 +87,35 @@ namespace Ks {
 		context->m_swapchain.setGraphicsQueue((const VkQueue&)* context->m_graphicsQueue);
 		//
 		VmaAllocatorCreateInfo allocatorInfo = {};
-		allocatorInfo.physicalDevice = m_device;
+		allocatorInfo.physicalDevice = m_PhDevice;
 		allocatorInfo.device = context->m_logicalDevice;
 		rst = vmaCreateAllocator(&allocatorInfo, &KsVMAAllocator);
 		if (rst != VK_SUCCESS)
 			return false;
 		//DVBOVk::Initialize();
-		context->m_uboAllocator.initialize();
+		context->m_uboAllocator.initialize( context );
 		// Initialize glslang library.
-		glslang::InitializeProcess();
+		//glslang::InitializeProcess();
+		//
+		// read pipeline cache from disk
+		IFile* pcFile = m_archieve->open( std::string(PIPELINE_CACHE_FILENAME) );
+		VkPipelineCacheCreateInfo cacheInfo = {};
+		cacheInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+		cacheInfo.pNext = NULL;
+		cacheInfo.initialDataSize = 0;
+		cacheInfo.pInitialData = nullptr;
+		cacheInfo.flags = 0;
+		if (pcFile && this->validatePipelineCache(pcFile->constData(), pcFile->size())) {
+			cacheInfo.pInitialData = pcFile->constData();
+			cacheInfo.initialDataSize = pcFile->size();
+			pcFile->release();
+		}
+		vkCreatePipelineCache( context->m_logicalDevice, &cacheInfo, nullptr, &context->m_pipelineCache);
 		//
 		return context;
 	}
 
-	Ks::KsFormat ContextVk::swapchainFormat() const
+	nix::NixFormat ContextVk::swapchainFormat() const
 	{
 		return m_swapchain.format();
 	}
@@ -122,17 +137,17 @@ namespace Ks {
 		return m_driver->getInstance();
 	}
 
-	Ks::UploadQueueVk* ContextVk::getUploadQueue() const
+	nix::UploadQueueVk* ContextVk::getUploadQueue() const
 	{
 		return m_uploadQueue;
 	}
 
-	Ks::GraphicsQueueVk* ContextVk::getGraphicsQueue() const
+	nix::GraphicsQueueVk* ContextVk::getGraphicsQueue() const
 	{
 		return m_graphicsQueue;
 	}
 
-	Ks::SwapchainVk* ContextVk::getSwapchain()
+	nix::SwapchainVk* ContextVk::getSwapchain()
 	{
 		return &m_swapchain;
 	}
@@ -140,6 +155,17 @@ namespace Ks {
 	const std::vector<uint32_t>& ContextVk::getQueueFamilies() const
 	{
 		return m_queueFamilies;
+	}
+
+	void ContextVk::savePipelineCache()
+	{
+		size_t dataSize;
+		vkGetPipelineCacheData(m_logicalDevice, m_pipelineCache, &dataSize, nullptr);
+		if (dataSize) {
+			void * cache = malloc(dataSize);
+			vkGetPipelineCacheData(m_logicalDevice, m_pipelineCache, &dataSize, cache);
+			m_driver->getArchieve()->save(std::string(PIPELINE_CACHE_FILENAME), cache, dataSize);
+		}
 	}
 
 	VkSemaphore ContextVk::createSemaphore() const

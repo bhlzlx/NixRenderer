@@ -1,5 +1,5 @@
-#include <NixRenderer.h>
 #include "vkinc.h"
+#include <NixRenderer.h>
 #include <vk_mem_alloc.h>
 
 
@@ -8,10 +8,10 @@
 // pass the pointer to the `deferred deleter`
 // and the deleter will destroy it when not used any longer!
 
-namespace Ks {
+namespace nix {
 	class ContextVk;
 
-	class KS_API_DECL TextureVk : public ITexture {
+	class NIX_API_DECL TextureVk : public ITexture {
 		friend class ContextVk;
 		friend class RenderPassVk;
 		friend class CommandBufferVk;
@@ -28,7 +28,7 @@ namespace Ks {
 		VkImageView m_imageView;
 		VmaAllocation m_allocation;
 		TexResOwnershipFlags m_ownership;
-		// vulkan state flags
+		// Vulkan state flags
 		VkImageAspectFlags m_aspectFlags;
 		VkAccessFlags	m_accessFlags;
 		VkPipelineStageFlags m_pipelineStages;
@@ -44,8 +44,6 @@ namespace Ks {
 		}
 		// need graphics queue support
 		// can update whole image,once with a chunk of memory
-		
-		//virtual void setSubData(const void * _data, size_t _length, const ImageRegion& _region) override;
 		virtual void setSubData(const void * _data, size_t _length, const TextureRegion& _region) override;
 		virtual void setSubData(const void * _data, size_t _length, const TextureRegion& _baseMipRegion, uint32_t _mipCount) override;
 		// deferred deleter

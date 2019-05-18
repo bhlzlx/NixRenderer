@@ -7,7 +7,8 @@
 #include "TypemappingVk.h"
 #include <cassert>
 
-namespace Ks {
+namespace nix {
+	//
 	std::map< RenderPassDescription, VkRenderPass > RenderPassVk::m_renderPassMapTable;
 	//
 	VkImageLayout AttachmentUsageToImageLayout(AttachmentOutputUsageBits _usage);
@@ -25,7 +26,7 @@ namespace Ks {
 		return attachment;
 	}
 
-	AttachmentVk* AttachmentVk::createAttachment(ContextVk* _context, KsFormat _format, uint32_t _width, uint32_t _height) {
+	AttachmentVk* AttachmentVk::createAttachment(ContextVk* _context, NixFormat _format, uint32_t _width, uint32_t _height) {
 		AttachmentVk* attachment = new AttachmentVk();
 		attachment->m_isRef = VK_FALSE;
 		attachment->m_size = { _width, _height };
@@ -39,7 +40,7 @@ namespace Ks {
 			desc.width = _width;
 			desc.depth = 1;
 		}
-		auto format = KsFormatToVk(_format);
+		auto format = NixFormatToVk(_format);
 		TextureUsageFlags usage =
 			TextureUsageFlagBits::TextureUsageTransferDestination |
 			TextureUsageFlagBits::TextureUsageTransferSource |
@@ -57,7 +58,7 @@ namespace Ks {
 		return attachment;
 	}
 
-	IAttachment* ContextVk::createAttachment( KsFormat _format, uint32_t _width, uint32_t _height) {
+	IAttachment* ContextVk::createAttachment( NixFormat _format, uint32_t _width, uint32_t _height) {
 		return AttachmentVk::createAttachment( this, _format, _width, _height);
 	}
 
@@ -71,7 +72,7 @@ namespace Ks {
 				++clearCount;
 			}
 		}
-		if (_desc.depthStencil.format != KsInvalidFormat) {
+		if (_desc.depthStencil.format != NixInvalidFormat) {
 			++clearCount;
 			assert(_depthStencil && "must not be nullptr!!!");
 			renderPass->m_depthStencil = dynamic_cast<AttachmentVk*>(_depthStencil);
@@ -127,13 +128,13 @@ namespace Ks {
 		return m_texture;
 	}
 
-	void Ks::AttachmentVk::release() {
+	void nix::AttachmentVk::release() {
 		if (!m_isRef) {
 			m_texture->release();
 		}
 	}
 
-	Ks::KsFormat Ks::AttachmentVk::getFormat() const {
+	nix::NixFormat nix::AttachmentVk::getFormat() const {
 		return m_format;
 	}
 
@@ -213,7 +214,7 @@ namespace Ks {
 		m_clearValues[clearCount].depthStencil.stencil = _clear.stencil;
 	}
 
-	const Ks::RenderPassDescription& RenderPassVk::getDescption() const
+	const nix::RenderPassDescription& RenderPassVk::getDescption() const
 	{
 		return m_desc;
 	}
@@ -223,12 +224,12 @@ namespace Ks {
 		return m_framebuffer;
 	}
 
-	const Ks::Size<uint32_t>& RenderPassVk::getSize() const
+	const nix::Size<uint32_t>& RenderPassVk::getSize() const
 	{
 		return m_size;
 	}
 
-	VkAttachmentLoadOp RTLoadOpToVk(Ks::RTLoadAction _load) {
+	VkAttachmentLoadOp RTLoadOpToVk(nix::RTLoadAction _load) {
 		switch (_load) {
 		case Clear:
 			return VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -262,7 +263,7 @@ namespace Ks {
 			for (uint32_t i = 0; i < _desc.colorAttachmentCount; ++i) {
 				VkAttachmentDescription desc; {
 					desc.flags = 0;
-					desc.format = KsFormatToVk(_desc.colorAttachment[i].format);
+					desc.format = NixFormatToVk(_desc.colorAttachment[i].format);
 					desc.samples = sampleCount;
 					desc.loadOp = RTLoadOpToVk(_desc.colorAttachment[i].loadAction);
 					desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // does not support tiled rendering
@@ -276,7 +277,7 @@ namespace Ks {
 			{
 				VkAttachmentDescription desc; {
 					desc.flags = 0;
-					desc.format = KsFormatToVk(_desc.depthStencil.format);
+					desc.format = NixFormatToVk(_desc.depthStencil.format);
 					desc.samples = sampleCount;
 					desc.loadOp = RTLoadOpToVk(_desc.depthStencil.loadAction);
 					desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -404,29 +405,27 @@ namespace Ks {
 			dsdesc.width = _width;
 			dsdesc.height = _height;
 			dsdesc.depth = 1;
-			dsdesc.format = KsDepth24FStencil8;
+			dsdesc.format = NixDepth24FStencil8;
 			dsdesc.mipmapLevel = 1;
 			dsdesc.type = Texture2D;
 		}
 		m_depthStencil = (TextureVk*)TextureVk::createTexture( m_context, VK_NULL_HANDLE, VK_NULL_HANDLE, dsdesc, TextureUsageDepthStencilAttachment);
 		//
-		//renderPass->m_vecColors
 		m_vecImages = std::move(_images);
 		for (auto& image : m_vecImages) {
-			dsdesc.format = VkFormatToKs(_format);
+			dsdesc.format = VkFormatToNix(_format);
 			auto color = TextureVk::createTexture( m_context, image, VK_NULL_HANDLE, dsdesc, TextureUsageColorAttachment );
 			m_vecColors.push_back(color);
 		}
 		RenderPassDescription rpdesc = {}; {
-			rpdesc.colorAttachment[0].format = VkFormatToKs(_format);
+			rpdesc.colorAttachment[0].format = VkFormatToNix(_format);
 			rpdesc.colorAttachment[0].loadAction = Clear;
 			rpdesc.colorAttachment[0].usage = Present;
 			rpdesc.colorAttachmentCount = 1;
-			rpdesc.depthStencil.format = KsDepth24FStencil8;
+			rpdesc.depthStencil.format = NixDepth24FStencil8;
 			rpdesc.depthStencil.loadAction = Clear;
 			rpdesc.depthStencil.usage = NextPassDepthStencil;
 		}
-
 		m_renderPass = RenderPassVk::RequestRenderPassObject( m_context, rpdesc);
 
 		for (uint32_t i = 0; i < m_vecColors.size(); ++i) {

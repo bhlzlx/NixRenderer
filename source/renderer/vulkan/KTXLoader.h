@@ -1,6 +1,6 @@
 #include "TextureVk.h"
 
-namespace Ks {
+namespace nix {
 #pragma pack( push, 1 )
 	struct KtxHeader {
 		uint8_t		idendifier[12];

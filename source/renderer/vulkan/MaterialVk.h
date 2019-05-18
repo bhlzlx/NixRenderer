@@ -3,24 +3,23 @@
 #include <NixRenderer.h>
 #include <SPIRV-Cross/spirv_cross.hpp>
 
-namespace Ks {
+namespace nix {
 	//
 	class ContextVk;
 	class RenderableVk;
 	class ArgumentVk;
 	//
-	class MaterialVk {
+	class MaterialVk : public IMaterial {
 	private:
+		MaterialDescription			m_description;
+		//
 		ContextVk*					m_context;
 		//
-		//spirv_cross::ShaderResources m_vertexResource;
-		//spirv_cross::ShaderResources m_fragmentResource;
-
 		VkShaderModule				m_vertexShader;
 		VkShaderModule				m_fragmentShader;
 		//
 		uint32_t					m_descriptorSetLayoutCount;
-		VkDescriptorSetLayout		m_descriptorSetLayout[4];
+		VkDescriptorSetLayout		m_descriptorSetLayout[MaxArgumentCount];
 		//
 		VkPipelineLayout			m_pipelineLayout;
 	public:
@@ -32,10 +31,15 @@ namespace Ks {
 		{
 		}
 
-		ArgumentVk* createArgument( uint32_t _index );		
-		RenderableVk* createRenderable();
+		virtual IArgument* createArgument( uint32_t _index ) override;
+
+		virtual IRenderable* createRenderable() override;
+
+		virtual IPipeline* createPipeline(IRenderPass* _renderPass) override;
+
+		virtual void release() override;
 		//
-		static MaterialVk* CreateMaterial( ContextVk* _context, MaterialDescription& _desc,  const std::vector<uint32_t>& _vertSPV, const std::vector<uint32_t>& _fragSPV );
+		static MaterialVk* CreateMaterial( ContextVk* _context, const MaterialDescription& _desc );
 	};
 
 }

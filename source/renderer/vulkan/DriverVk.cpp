@@ -1,4 +1,5 @@
 #include "DriverVk.h"
+#include <nix/io/io.h>
 #include "vkinc.h"
 #include "vkhelper/helper.h"
 #include <map>
@@ -26,14 +27,14 @@ PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR;
 PFN_vkCreateAndroidSurfaceKHR vkCreateWin32SurfaceKHR;
 #endif
 
-namespace Ks {
+namespace nix {
 
 	DriverVk* CreateVulkanDriver() {
 		DriverVk* driver = new DriverVk();
 		return driver;
 	}
 
-	bool DriverVk::initialize(IArchieve* _arch, DeviceType _type ) {
+	bool DriverVk::initialize( IArchieve* _arch, DeviceType _type) {
 #ifdef _WIN32
 		HMODULE library = ::LoadLibraryA("vulkan-1.dll");
 		if (library == NULL) {
@@ -73,12 +74,15 @@ namespace Ks {
 		if (!selectPhysicalDevice(_type)) {
 			return false;
 		}
-		vkGetPhysicalDeviceProperties(m_device, &m_deviceProps);
+		vkGetPhysicalDeviceProperties(m_PhDevice, &m_deviceProps);
 		//
 		return true;
 	}
 
-	VkSurfaceKHR DriverVk::createSurface( void* _hwnd )
+
+
+
+	VkSurfaceKHR DriverVk::createSurface(void* _hwnd)
 	{
 		VkSurfaceKHR surface;
 		VkResult rst = VK_ERROR_INVALID_EXTERNAL_HANDLE;
@@ -115,25 +119,25 @@ namespace Ks {
 		std::vector< const char* > exts;
 		std::vector<VkExtensionProperties> vecExtsProps;
 		uint32_t count;
-		vkEnumerateDeviceLayerProperties( m_device, &count, nullptr);
+		vkEnumerateDeviceLayerProperties( m_PhDevice, &count, nullptr);
 		if (count) {
 			vecLayerProps.resize(count);
-			vkEnumerateDeviceLayerProperties(m_device, &count, &vecLayerProps[0]);
+			vkEnumerateDeviceLayerProperties(m_PhDevice, &count, &vecLayerProps[0]);
 		}
 		for (auto& layer : vecLayerProps){
 			layers.push_back(layer.layerName);
 		}
 
 		count = 0;
-		vkEnumerateDeviceExtensionProperties(m_device, nullptr, &count, nullptr);
+		vkEnumerateDeviceExtensionProperties(m_PhDevice, nullptr, &count, nullptr);
 		vecExtsProps.resize(count);
-		vkEnumerateDeviceExtensionProperties(m_device, nullptr, &count, &vecExtsProps[0]);
+		vkEnumerateDeviceExtensionProperties(m_PhDevice, nullptr, &count, &vecExtsProps[0]);
 		for (auto& ext : vecExtsProps)
 		{
 			exts.push_back(ext.extensionName);
 		}
 		VkPhysicalDeviceFeatures features;
-		vkGetPhysicalDeviceFeatures( m_device, &features);
+		vkGetPhysicalDeviceFeatures( m_PhDevice, &features);
 
 		const char* mgdLayer = "VK_LAYER_ARM_MGD";
 		VkDeviceCreateInfo deviceCreateInfo = {
@@ -150,7 +154,7 @@ namespace Ks {
 		};
 		//
 		VkDevice device;
-		if (VK_SUCCESS == vkCreateDevice( m_device, &deviceCreateInfo, nullptr, &device))
+		if (VK_SUCCESS == vkCreateDevice( m_PhDevice, &deviceCreateInfo, nullptr, &device))
 		{
 			return device;
 		}
@@ -250,27 +254,27 @@ namespace Ks {
 			uint32_t patch_version = VK_VERSION_PATCH(props.apiVersion);
 			if (major_version >= 1 && props.deviceType == (VkPhysicalDeviceType)_type) {
 				m_deviceProps = props;
-				m_device = phyDevice;
+				m_PhDevice = phyDevice;
 				return true;
 			}
 			vecProps.push_back(props);
 		}
 		// cannot find a device match the device type
-		m_device = physicalDevices[0];
-		vkGetPhysicalDeviceProperties(m_device, &m_deviceProps);
+		m_PhDevice = physicalDevices[0];
+		vkGetPhysicalDeviceProperties(m_PhDevice, &m_deviceProps);
 		return true;
 	}
 
 	unsigned DriverVk::requestGraphicsQueue( VkSurfaceKHR _surface )
 	{
 		uint32_t queueFamilyCount = 0;
-		vkGetPhysicalDeviceQueueFamilyProperties( m_device, &queueFamilyCount, nullptr);
+		vkGetPhysicalDeviceQueueFamilyProperties( m_PhDevice, &queueFamilyCount, nullptr);
 		if (queueFamilyCount == 0) {
 			return -1;
 		}
 		std::vector< VkQueueFamilyProperties > familyProperties;
 		familyProperties.resize(queueFamilyCount);
-		vkGetPhysicalDeviceQueueFamilyProperties( m_device, &queueFamilyCount, familyProperties.data());
+		vkGetPhysicalDeviceQueueFamilyProperties( m_PhDevice, &queueFamilyCount, familyProperties.data());
 		//
 		for (uint32_t familyIndex = 0; familyIndex < familyProperties.size(); ++familyIndex)
 		{
@@ -278,7 +282,7 @@ namespace Ks {
 			if (property.queueCount && property.queueFlags & VK_QUEUE_GRAPHICS_BIT)
 			{
 				VkBool32 supportPresent = VK_FALSE;
-				vkGetPhysicalDeviceSurfaceSupportKHR( m_device, familyIndex, _surface, &supportPresent);
+				vkGetPhysicalDeviceSurfaceSupportKHR( m_PhDevice, familyIndex, _surface, &supportPresent);
 				if (supportPresent == VK_TRUE)
 				{
 					QueueReqData req;
@@ -301,13 +305,13 @@ namespace Ks {
 	unsigned DriverVk::requestTransferQueue()
 	{
 		uint32_t queueFamilyCount = 0;
-		vkGetPhysicalDeviceQueueFamilyProperties( m_device, &queueFamilyCount, nullptr);
+		vkGetPhysicalDeviceQueueFamilyProperties( m_PhDevice, &queueFamilyCount, nullptr);
 		if (queueFamilyCount == 0) {
 			return -1;
 		}
 		std::vector< VkQueueFamilyProperties > familyProperties;
 		familyProperties.resize(queueFamilyCount);
-		vkGetPhysicalDeviceQueueFamilyProperties( m_device, &queueFamilyCount, familyProperties.data());
+		vkGetPhysicalDeviceQueueFamilyProperties( m_PhDevice, &queueFamilyCount, familyProperties.data());
 		//
 		for (uint32_t familyIndex = 0; familyIndex < familyProperties.size(); ++familyIndex)
 		{
@@ -329,4 +333,36 @@ namespace Ks {
 		}
 		return -1;
 	}
+
+	bool DriverVk::validatePipelineCache(const void * _data, size_t _length)
+	{
+		struct alignas(4) PipelineCacheHeader {
+			uint32_t headerSize;
+			uint32_t headerVersion;
+			uint32_t vendorID;
+			uint32_t deviceID;
+			char     cacheID[VK_UUID_SIZE];
+		};
+		if (_length <= sizeof(PipelineCacheHeader)) {
+			return false;
+		}
+		const PipelineCacheHeader* header = ( const PipelineCacheHeader*)_data;
+		if (header->headerSize > 0xffff ) {
+			return false;
+		}
+		if (header->headerVersion != VK_PIPELINE_CACHE_HEADER_VERSION_ONE) {
+			return false;
+		}
+		if (header->vendorID != m_deviceProps.vendorID ) {
+			return false;
+		}
+		if (header->deviceID != m_deviceProps.deviceID) {
+			return false;
+		}
+		if (memcmp(header->cacheID, m_deviceProps.pipelineCacheUUID, sizeof(m_deviceProps.pipelineCacheUUID)) != 0) {
+			return false;
+		}
+		return true;
+	}
 }
+

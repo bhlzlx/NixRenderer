@@ -5,31 +5,31 @@
 #include <vector>
 #include <cassert>
 
-namespace Ks {
+namespace nix {
 
 	class TextureVk;
 
-	class KS_API_DECL AttachmentVk:public IAttachment {
+	class NIX_API_DECL AttachmentVk:public IAttachment {
 		friend class ContextVk;
 	private:
-		ContextVk* m_context;
-		TextureVk* m_texture;
-		Size<uint32_t> m_size;
-		KsFormat m_format;
-		VkBool32 m_isRef;
+		ContextVk*		m_context;
+		TextureVk*		m_texture;
+		Size<uint32_t>	m_size;
+		NixFormat		m_format;
+		VkBool32		m_isRef;
 	public:
 		//virtual void resize(uint32_t _width, uint32_t _height) override;
 		virtual const ITexture* getTexture() const override;
-		virtual KsFormat getFormat() const override;
+		virtual NixFormat getFormat() const override;
 		virtual void release() override;
 		~AttachmentVk() {
 			delete this;
 		}
 		static AttachmentVk* createAttachment( ContextVk* _context, TextureVk* _texture );
-		static AttachmentVk* createAttachment( ContextVk* _context, KsFormat _format, uint32_t _width, uint32_t _height);
+		static AttachmentVk* createAttachment( ContextVk* _context, NixFormat _format, uint32_t _width, uint32_t _height);
 	};
 
-	class KS_API_DECL RenderPassVk : public IRenderPass {
+	class NIX_API_DECL RenderPassVk : public IRenderPass {
 		friend class ContextVk;
 	private:
 		ContextVk* m_context;

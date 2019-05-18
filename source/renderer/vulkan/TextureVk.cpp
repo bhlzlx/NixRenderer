@@ -6,7 +6,7 @@
 #include "TypemappingVk.h"
 #include <cassert>
 
-namespace Ks {
+namespace nix {
 	//
 	VmaAllocator KsVMAAllocator = nullptr;
 	//
@@ -100,9 +100,9 @@ namespace Ks {
 		m_imageLayout = _newLayout;
 	}
 
-	Ks::TextureVk* TextureVk::createTexture(ContextVk* _context, VkImage _image, VkImageView _imageView, TextureDescription _desc, TextureUsageFlags _usage)
+	nix::TextureVk* TextureVk::createTexture(ContextVk* _context, VkImage _image, VkImageView _imageView, TextureDescription _desc, TextureUsageFlags _usage)
 	{
-		VkFormat format = KsFormatToVk(_desc.format);
+		VkFormat format = NixFormatToVk(_desc.format);
 		VkImageAspectFlags aspectMask = 0;
 		//
 		if (_usage == 0)
@@ -131,7 +131,7 @@ namespace Ks {
 				info.pNext = nullptr;
 				info.flags = imageFlags;
 				info.imageType = VK_IMAGE_TYPE_2D;
-				info.format = KsFormatToVk(_desc.format);
+				info.format = NixFormatToVk(_desc.format);
 				info.extent = {
 					_desc.width, _desc.height, 1
 				};

@@ -3,38 +3,32 @@
 #include "vkinc.h"
 #include <vector>
 
-namespace Ks {
+namespace nix {
 
 	class ContextVk;
 	class RenderPassVk;
 	class TextureVk;
 	class AttachmentVk;
 
-	class KS_API_DECL SwapchainVk {
+	class NIX_API_DECL SwapchainVk {
 	private:
-		VkSwapchainCreateInfoKHR m_createInfo;
-		VkSwapchainKHR m_swapchain;
+		VkSwapchainCreateInfoKHR		m_createInfo;
+		VkSwapchainKHR					m_swapchain;
 		// resource objects
-		VkSemaphore m_nextImageAvailable;
-		VkSemaphore m_readyToPresent;
+		VkSemaphore						m_nextImageAvailable;
+		VkSemaphore						m_readyToPresent;
 		//
-		//std::vector< VkImage > m_vecImages;
-		IRenderPass* m_renderPass;
-		/*
-		std::vector< TextureVk* > m_vecTextures;
-		TextureVk* m_depthStencil;
-		std::vector< AttachmentVk* > m_vecAttachmentVk;
-		AttachmentVk* m_depthStencilAttachment;
-		std::vector< RenderPassVk* > m_vecRenderPass;
-		*/
+		IRenderPass*					m_renderPass;
 		//
-		VkCommandBuffer m_commandBuffer;
-		VkQueue m_graphicsQueue;
+		VkCommandBuffer					m_commandBuffer;
+		VkQueue							m_graphicsQueue;
 		// state description
-		uint32_t m_imageIndex;
-		uint32_t m_flightIndex;
-		VkBool32 m_available;
-		Size<uint32_t> m_size;
+		uint32_t						m_imageIndex;
+		uint32_t						m_flightIndex;
+		VkBool32						m_available;
+		Size<uint32_t>					m_size;
+		//GraphicsQueueVk*				m_graphicsQueue;
+		ContextVk*						m_context;
 	public:
 		SwapchainVk() :
 			m_nextImageAvailable( VK_NULL_HANDLE)
@@ -62,7 +56,7 @@ namespace Ks {
 		}
 
 		VkFormat nativeFormat() const;
-		KsFormat format() const;
+		NixFormat format() const;
 		VkBool32 avail() const;
 		//
 		bool updateSwapchain();
@@ -78,7 +72,7 @@ namespace Ks {
 		bool present();
 
 	public:
-		static SwapchainVk CreateSwapchain();
+		static SwapchainVk CreateSwapchain( ContextVk* _context );
 
 	};
 }

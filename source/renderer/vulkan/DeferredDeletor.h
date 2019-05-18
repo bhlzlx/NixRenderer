@@ -4,7 +4,7 @@
 #include <list>
 #include <array>
 
-namespace Ks {
+namespace nix {
 
 	class BufferVk;
 	class TextureVk;
@@ -18,7 +18,7 @@ namespace Ks {
 		virtual void execute() = 0;
 	};
 
-	class KS_API_DECL GraphicsQueueAsyncTaskManager
+	class NIX_API_DECL GraphicsQueueAsyncTaskManager
 	{
 	private:
 		QueueAsyncTask * createDestroyTask(BufferVk * _buffer);

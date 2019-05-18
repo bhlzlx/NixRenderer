@@ -3,14 +3,14 @@
 
 namespace nix
 {
-    class StandardFile: public IOProtocol
+    class StdFile: public IFile
     {
-        friend class StandardArchieve;
+        friend class StdArchieve;
     private:
         FILE* _handle = nullptr;
 		size_t _size = 0;
         //
-        StandardFile()
+        StdFile()
         {
         }
     public:
@@ -35,7 +35,7 @@ namespace nix
             return true;
         }
 
-        virtual size_t read( size_t _bytes, IOProtocol* out_ )
+        virtual size_t read( size_t _bytes, IFile* out_ )
         {
             char chunk[64];
             size_t bytesLeft = _bytes;
@@ -58,7 +58,7 @@ namespace nix
             return fread( out_, 1, _bytes, _handle );
         }
 
-        virtual size_t write( size_t _bytes, IOProtocol* _in )
+        virtual size_t write( size_t _bytes, IFile* _in )
         {
             char chunk[64];
             size_t bytesLeft = _bytes;
@@ -99,17 +99,17 @@ namespace nix
         }
     };
 
-    class MemoryIO: public IOProtocol
+    class MemFile: public IFile
     {
-		friend IOProtocol* CreateMemoryBuffer( void *, size_t, MemoryFreeCB _cb );
-		friend IOProtocol* CreateMemoryBuffer(size_t _length, MemoryFreeCB _cb);
+		friend IFile* CreateMemoryBuffer( void *, size_t, MemoryFreeCB _cb );
+		friend IFile* CreateMemoryBuffer(size_t _length, MemoryFreeCB _cb);
     private:
         void* _raw;
         long _size;
         long _position;
         MemoryFreeCB _destructor = nullptr;
     public:
-        MemoryIO()
+        MemFile()
         {
             _raw = nullptr;
             _size = 0;
@@ -130,7 +130,7 @@ namespace nix
             return true;
         }
 
-        virtual size_t read( size_t _bytes, IOProtocol* out_ )
+        virtual size_t read( size_t _bytes, IFile* out_ )
         {
             char chunk[64];
             size_t bytesLeft = _bytes;
@@ -159,7 +159,7 @@ namespace nix
             return readReal;
         }
 
-        virtual size_t write( size_t _bytes, IOProtocol* _in )
+        virtual size_t write( size_t _bytes, IFile* _in )
         {
             size_t sizeWrite = (_size - _position);
             sizeWrite = sizeWrite > _bytes? _bytes:sizeWrite;
@@ -224,19 +224,20 @@ namespace nix
         }
     };
 
-    class StandardArchieve: public IArchieve
+    class StdArchieve: public IArchieve
     {
     friend IArchieve* CreateStdArchieve( const std::string& _path );
     private:
         std::string _root;
         //
-        virtual IOProtocol* open( const std::string& _path ) override;
+        virtual IFile* open( const std::string& _path ) override;
+		virtual bool save(const std::string& _path, const void * _data, size_t _length) override;
         //
         virtual void release() override;
         //
     };
 
-    IOProtocol* StandardArchieve::open( const std::string& _path )
+    IFile* StdArchieve::open( const std::string& _path )
     {
         std::string fullpath = _root;
         fullpath.append( _path );
@@ -249,28 +250,41 @@ namespace nix
 		fseek(fh, 0, SEEK_END);
 		size_t size = ftell(fh) - set;
 		fseek(fh, 0, SEEK_SET);
-        StandardFile* file = new StandardFile();
+        StdFile* file = new StdFile();
 		file->_size = size;
         file->_handle = fh;
         return file;
     }
 
-    void StandardArchieve::release()
+	bool StdArchieve::save(const std::string& _path, const void * _data, size_t _length) {
+		std::string fullpath = _root;
+		fullpath.append(_path);
+		auto path = FormatFilePath(fullpath);
+		auto fh = fopen(path.c_str(), "wb");
+		if (!fh) {
+			return false;
+		}
+		fwrite(_data, 1, _length, fh);
+		fclose(fh);
+		return true;
+	}
+
+    void StdArchieve::release()
     {
         delete this;
     }
 
     IArchieve* CreateStdArchieve( const std::string& _path )
     {
-        StandardArchieve* arch = new StandardArchieve();
+        StdArchieve* arch = new StdArchieve();
         arch->_root = FormatFilePath(_path);
         arch->_root.push_back('/');
         return arch;
     }
 
-	IOProtocol* CreateMemoryBuffer(void * _ptr, size_t _length, IOProtocol::MemoryFreeCB _freeCB )
+	IFile* CreateMemoryBuffer(void * _ptr, size_t _length, IFile::MemoryFreeCB _freeCB )
 	{
-		MemoryIO* buffer = new MemoryIO();
+		MemFile* buffer = new MemFile();
 		buffer->_raw = _ptr;
 		buffer->_destructor = _freeCB;
 		buffer->_size = _length;
@@ -278,9 +292,9 @@ namespace nix
 		return buffer;
 	}
 
-	IOProtocol* CreateMemoryBuffer( size_t _length, IOProtocol::MemoryFreeCB _freeCB)
+	IFile* CreateMemoryBuffer( size_t _length, IFile::MemoryFreeCB _freeCB)
 	{
-		MemoryIO* buffer = new MemoryIO();
+		MemFile* buffer = new MemFile();
 		void * _ptr = malloc(_length);
 		buffer->_raw = _ptr;
 		buffer->_destructor = _freeCB;

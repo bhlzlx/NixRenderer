@@ -4,9 +4,9 @@
 
 #pragma warning(disable:4251)
 
-#ifdef KS_DYNAMIC_LINK
+#ifdef NIX_DYNAMIC_LINK
 	#define NIX_API_DECL _declspec(dllexport)
-#elif defined KS_STATIC_LINK
+#elif defined NIX_STATIC_LINK
 	#define NIX_API_DECL __declspec(dllimport)
 #else
 	#define NIX_API_DECL
@@ -15,8 +15,8 @@
 #define NIX_API_DECL 
 #endif
 
-#ifndef KS_JSON
-#define KS_JSON(...)
+#ifndef NIX_JSON
+#define NIX_JSON(...)
 #endif
 
 #include <memory>
@@ -76,15 +76,6 @@ namespace nix {
     };
 
     typedef Rect<int> Scissor;
-	/*
-	struct ImageRegion {
-		uint32_t			baseMipLevel;
-		uint32_t			mipLevelCount;
-		Offset3D<uint32_t>	offset;
-		Size3D<uint32_t>	size;
-	};*/
-	// Graphics API Command interface
-	// update only a part of one slice
 
 	struct TextureRegion {
 		uint32_t mipLevel; // mip map level
@@ -109,6 +100,14 @@ namespace nix {
 		DX12,
         OpenGLCore
     };
+
+	enum DeviceType {
+		OtherGPU = 0,
+		IntegratedGPU,
+		DiscreteGPU,
+		VirtualGPU,
+		CPU,
+	};
 
     enum ShaderModuleType {
         VertexShader = 0,
@@ -309,7 +308,7 @@ namespace nix {
             offset(0),
             type(VertexTypeFloat1){
             }
-		KS_JSON( name, bufferIndex, offset, type )
+		NIX_JSON( name, bufferIndex, offset, type )
     };
 
     struct VertexBufferDescription {
@@ -321,7 +320,7 @@ namespace nix {
         instanceMode(0),
         rate(1){
         }
-		KS_JSON( stride, instanceMode, rate )
+		NIX_JSON( stride, instanceMode, rate )
     };
 
     struct VertexLayout {
@@ -331,14 +330,14 @@ namespace nix {
         VertexBufferDescription     vertexBuffers[MaxVertexBufferBinding];
         VertexLayout(): vertexAttributeCount(0), vertexBufferCount(0) {
         }
-		KS_JSON( vertexAttributeCount, vertexAttributes, vertexBufferCount, vertexBuffers )
+		NIX_JSON( vertexAttributeCount, vertexAttributes, vertexBufferCount, vertexBuffers )
     };
 
 	struct DepthState {
 		uint8_t             depthWriteEnable = 1;
 		uint8_t             depthTestEnable = 1;
 		CompareFunction     depthFunction = CompareFunction::LessEqual;
-		KS_JSON(depthWriteEnable, depthTestEnable, depthFunction)
+		NIX_JSON(depthWriteEnable, depthTestEnable, depthFunction)
 	};
 
 	struct BlendState {
@@ -346,7 +345,7 @@ namespace nix {
 		BlendFactor         blendSource = SourceAlpha;
 		BlendFactor         blendDestination = InvertSourceAlpha;
 		BlendOperation      blendOperation = BlendOpAdd;
-		KS_JSON(blendEnable, blendSource, blendDestination, blendOperation)
+		NIX_JSON(blendEnable, blendSource, blendDestination, blendOperation)
 	};
 
 	struct StencilState {
@@ -360,7 +359,7 @@ namespace nix {
 		StencilOperation    stencilPassCCW = StencilOpKeep;
 		CompareFunction     stencilFunction = Greater;
 		uint32_t            stencilMask = 0xffffffff;
-		KS_JSON(stencilEnable, stencilFail, stencilZFail, stencilPass, twoSideStencil, stencilFailCCW, stencilZFailCCW, stencilPassCCW, stencilFunction, stencilMask )
+		NIX_JSON(stencilEnable, stencilFail, stencilZFail, stencilPass, twoSideStencil, stencilFailCCW, stencilZFailCCW, stencilPassCCW, stencilFunction, stencilMask )
 	};
 
     enum ColorMask {
@@ -379,7 +378,7 @@ namespace nix {
 		BlendState			blendState;
 		StencilState		stencilState;
 		//
-		KS_JSON(writeMask, cullMode, windingMode, scissorEnable, depthState, blendState, stencilState )
+		NIX_JSON(writeMask, cullMode, windingMode, scissorEnable, depthState, blendState, stencilState )
     };
 
 	typedef uint8_t TextureUsageFlags;
@@ -401,7 +400,7 @@ namespace nix {
 		NixFormat format;
 		RTLoadAction loadAction;
 		AttachmentOutputUsageBits usage;
-		KS_JSON(format, loadAction, usage)
+		NIX_JSON(format, loadAction, usage)
 	};
 	struct RenderPassDescription {
 		// render pass behavior
@@ -413,7 +412,7 @@ namespace nix {
 		bool operator < (const RenderPassDescription& _desc) const {
 			return memcmp(this, &_desc, sizeof(RenderPassDescription)) < 0;
 		}
-		KS_JSON(colorAttachmentCount, colorAttachment, depthStencil)
+		NIX_JSON(colorAttachmentCount, colorAttachment, depthStencil)
 	};
 #pragma pack (pop)
 
@@ -430,24 +429,25 @@ namespace nix {
 		uint32_t			dataSize;
 		ShaderModuleType	shaderStage;
 		std::string			name;
-		KS_JSON( binding, dataSize, shaderStage, name)
+		NIX_JSON( binding, dataSize, shaderStage, name)
 	};
 
 	struct ArgumentSetDescription {
 		std::vector< Argument > uniformChunks;
 		std::vector< Argument > samples;
+		std::vector< Argument > SSBOs;
 		//
-		KS_JSON(uniformChunks, samples)
+		NIX_JSON(uniformChunks, samples, SSBOs )
 	};
 
 	struct MaterialDescription {
-		char vertexShader[64];
-		char fragmentShader[64];
-		VertexLayout vertexLayout;
-		std::vector<ArgumentSetDescription> argumentLayout;
-		RenderState renderState;
+		char									vertexShader[64];
+		char									fragmentShader[64];
+		VertexLayout							vertexLayout;
+		std::vector<ArgumentSetDescription>		argumentLayout;
+		RenderState								renderState;
 		//
-		KS_JSON(vertexShader, fragmentShader, renderPassDescription, renderState, material)
+		NIX_JSON(vertexShader, fragmentShader, renderPassDescription, renderState, material)
 	};
 
 	class IRenderPass;
@@ -478,7 +478,6 @@ namespace nix {
 
     class NIX_API_DECL IAttachment {
     public:
-        //virtual void resize( uint32_t _width, uint32_t _height ) = 0;
         virtual const ITexture* getTexture() const = 0;
 		virtual void release() = 0;
 		virtual NixFormat getFormat() const = 0;
@@ -525,7 +524,6 @@ namespace nix {
 		//
 		virtual void setSampler(SamplerSlot _slot, const SamplerState& _sampler, const ITexture* _texture) = 0;
 		virtual void setUniform(UniformSlot _slot, const void * _data, size_t _size) = 0;
-		//virtual void setSampler(SamplerSlot _slot, const SamplerState& _ss, IAttachment* _attachment) = 0;
 		virtual void release() = 0;
 	};
 
@@ -553,7 +551,7 @@ namespace nix {
 
 	class NIX_API_DECL IMaterial {
 	public:
-		virtual IArgument* createArgument() = 0;
+		virtual IArgument* createArgument( uint32_t _index ) = 0;
 		virtual IRenderable* createRenderable() = 0;
         virtual IPipeline* createPipeline( IRenderPass* _renderPass ) = 0;
         virtual void release() = 0;
@@ -579,7 +577,7 @@ namespace nix {
 	//
 	class NIX_API_DECL IDriver {
 	public:
-		virtual bool initialize( nix::IArchieve* _arch, DriverType _type) = 0;
+		virtual bool initialize( nix::IArchieve* _arch, DeviceType _type) = 0;
 		virtual IContext* createContext(void* _hwnd) = 0;
 		virtual IArchieve* getArchieve() = 0;
 		virtual ILogger* getLogger() = 0;
@@ -609,5 +607,6 @@ namespace nix {
     };
 
 	extern "C" {
+
 	}	
  }

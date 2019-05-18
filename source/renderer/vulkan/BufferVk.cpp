@@ -4,7 +4,7 @@
 #include "DeferredDeletor.h"
 #include <cassert>
 
-namespace Ks {
+namespace nix {
 
 	VmaMemoryUsage MappingVmaMemoryUsage(VkBufferUsageFlags _usageFlags);
 
@@ -19,7 +19,7 @@ namespace Ks {
 		return true;
 	}
 
-	Ks::BufferVk BufferVk::CreateBuffer(size_t _size, VkBufferUsageFlags _usage, ContextVk* _context )
+	nix::BufferVk BufferVk::CreateBuffer(size_t _size, VkBufferUsageFlags _usage, ContextVk* _context )
 	{
 
 		VmaAllocationCreateInfo allocInfo = {}; {

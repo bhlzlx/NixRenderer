@@ -1,4 +1,5 @@
 project( Samples )
+SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
 if( WIN32 )
     if( ${WINDOW_SYSTEM} STREQUAL SDL2 )
@@ -17,3 +18,5 @@ if( ANDROID )
 endif()
 
 add_subdirectory( HelloWorld )
+
+SET_PROPERTY(TARGET HelloWorld PROPERTY FOLDER "Samples")

@@ -6,7 +6,7 @@
 
 namespace vkhelper
 {
-	KS_API_DECL uint32_t getMemoryType(VkPhysicalDevice _device, uint32_t _memTypeBits, VkMemoryPropertyFlags properties)
+	NIX_API_DECL uint32_t getMemoryType(VkPhysicalDevice _device, uint32_t _memTypeBits, VkMemoryPropertyFlags properties)
 	{
 		VkPhysicalDeviceMemoryProperties memProperties;
 		vkGetPhysicalDeviceMemoryProperties(_device, &memProperties);
@@ -24,7 +24,7 @@ namespace vkhelper
 		return 0;
 	}
 
-	KS_API_DECL VkBool32 isDepthFormat(VkFormat _format)
+	NIX_API_DECL VkBool32 isDepthFormat(VkFormat _format)
 	{
 		switch (_format)
 		{
@@ -40,7 +40,7 @@ namespace vkhelper
 		}
 	}
 
-	KS_API_DECL VkBool32 isStencilFormat(VkFormat _format)
+	NIX_API_DECL VkBool32 isStencilFormat(VkFormat _format)
 	{
 		switch (_format)
 		{
@@ -54,7 +54,7 @@ namespace vkhelper
 		}
 	}
 
-	KS_API_DECL void getImageAcessFlagAndPipelineStage(VkImageLayout _layout, VkAccessFlags& _flags, VkPipelineStageFlags& _stages)
+	NIX_API_DECL void getImageAcessFlagAndPipelineStage(VkImageLayout _layout, VkAccessFlags& _flags, VkPipelineStageFlags& _stages)
 	{
 		switch (_layout)
 		{

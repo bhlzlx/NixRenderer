@@ -8,14 +8,14 @@
 #include <cassert>
 #include "TypemappingVk.h"
 
-namespace Ks {
+namespace nix {
 
 	class RenderPassVk;
 	class SwapchainVk;
 	class BufferVk;
 	class TextureVk;
 
-	class KS_API_DECL CommandBufferVk
+	class NIX_API_DECL CommandBufferVk
 	{
 		friend class ContextVk;
 		friend class RenderPassVk;
@@ -83,7 +83,7 @@ namespace Ks {
 		void reset();
 	};
 
-	class KS_API_DECL GraphicsQueueVk
+	class NIX_API_DECL GraphicsQueueVk
 	{
 		friend class ContextVk;
 	private:
@@ -147,7 +147,7 @@ namespace Ks {
 
 	};
 
-	class KS_API_DECL UploadQueueVk
+	class NIX_API_DECL UploadQueueVk
 	{
 		friend class ContextVk;
 	public:

@@ -4,7 +4,7 @@
 #include "RenderPassVk.h"
 #include "TypemappingVk.h"
 
-namespace Ks {
+namespace nix {
 
 	void SwapchainVk::resize(uint32_t _width, uint32_t _height)
 	{
@@ -22,8 +22,8 @@ namespace Ks {
 		return m_createInfo.imageFormat;
 	}
 
-	Ks::KsFormat SwapchainVk::format() const {
-		return VkFormatToKs(m_createInfo.imageFormat);
+	NixFormat SwapchainVk::format() const {
+		return VkFormatToNix(m_createInfo.imageFormat);
 	}
 
 	bool SwapchainVk::acquireNextImage()
@@ -31,8 +31,7 @@ namespace Ks {
 		if (!m_swapchain) {
 			return false;
 		}
-		auto context = (ContextVk*)GetContextVulkan();
-		auto device = context->getDevice();
+		auto device = m_context->getDevice();
 		VkResult rst = vkAcquireNextImageKHR(device, m_swapchain, uint64_t(-1), m_nextImageAvailable, VK_NULL_HANDLE, &m_imageIndex);
 		//
 		switch (rst) {
@@ -60,11 +59,11 @@ namespace Ks {
 
 	bool SwapchainVk::updateSwapchain()
 	{
+		VkDevice device = m_context->getDevice();
 		vkQueueWaitIdle(m_graphicsQueue);
 		//
-		auto context = (ContextVk*)GetContextVulkan();
 		VkSurfaceCapabilitiesKHR surfaceCapabilities;
-		if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(context->getPhysicalDevice(), context->getSurface(), &surfaceCapabilities) != VK_SUCCESS) {
+		if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR( m_context->getPhysicalDevice(), m_context->getSurface(), &surfaceCapabilities) != VK_SUCCESS) {
 			return false;
 		}
 		//
@@ -86,7 +85,7 @@ namespace Ks {
 			m_size.height = m_createInfo.imageExtent.height;
 		}
 		//
-		m_createInfo.surface = context->getSurface();
+		m_createInfo.surface = m_context->getSurface();
 		// 1. create swapchain object
 		m_createInfo.oldSwapchain = m_swapchain;
 		if ( m_createInfo.imageExtent.width < 4 || m_createInfo.imageExtent.height < 4 )
@@ -94,7 +93,7 @@ namespace Ks {
 			return false;
 		}
 		//VkSwapchainKHR oldSwapchain = m_swapchain;
-		if (vkCreateSwapchainKHR(context->getDevice(), &m_createInfo, nullptr, &m_swapchain) != VK_SUCCESS)
+		if (vkCreateSwapchainKHR( device, &m_createInfo, nullptr, &m_swapchain) != VK_SUCCESS)
 		{
 			return false;
 		}
@@ -102,16 +101,16 @@ namespace Ks {
 		//
 		if (m_createInfo.oldSwapchain != VK_NULL_HANDLE)
 		{
-			vkDestroySwapchainKHR(context->getDevice(), m_createInfo.oldSwapchain, nullptr);
+			vkDestroySwapchainKHR(device, m_createInfo.oldSwapchain, nullptr);
 		}
 		// 2. retrieve the image attached on the swapchain
 		uint32_t nImage = 0;
-		vkGetSwapchainImagesKHR(context->getDevice(), m_swapchain, &nImage, nullptr);
+		vkGetSwapchainImagesKHR(device, m_swapchain, &nImage, nullptr);
 		if (!nImage) {
 			return false;
 		}
 		std::vector<VkImage> images(nImage);
-		vkGetSwapchainImagesKHR(context->getDevice(), m_swapchain, &nImage, &images[0]);
+		vkGetSwapchainImagesKHR(device, m_swapchain, &nImage, &images[0]);
 		// 4. create framebuffers
 		((RenderPassSwapchainVk*)m_renderPass)->update(images, m_size.width, m_size.height, m_createInfo.imageFormat);
 		m_available = true;
@@ -150,13 +149,12 @@ namespace Ks {
 		return true;
 	}
 
-	Ks::SwapchainVk SwapchainVk::CreateSwapchain()
+	nix::SwapchainVk SwapchainVk::CreateSwapchain( ContextVk* _context )
 	{
 		SwapchainVk swapchain;
-		ContextVk* context = (ContextVk*)GetContextVulkan();
-		auto device = context->getDevice();
-		auto physicalDevice = context->getPhysicalDevice();
-		auto surface = context->getSurface();
+		auto device = _context->getDevice();
+		auto physicalDevice = _context->getPhysicalDevice();
+		auto surface = _context->getSurface();
 		//
 		vkDeviceWaitIdle(device);
 		//
@@ -280,11 +278,12 @@ namespace Ks {
 		swapchain.m_flightIndex = 0;
 		swapchain.m_imageIndex = 0;
 		swapchain.m_swapchain = VK_NULL_HANDLE;
-		swapchain.m_graphicsQueue = VK_NULL_HANDLE;// (const VkQueue&)*context->getGraphicsQueue();
+		swapchain.m_graphicsQueue = (const VkQueue&)(*_context->getGraphicsQueue());
 		//swapchain.m_renderPass = renderPass;
-		swapchain.m_nextImageAvailable = context->createSemaphore();
-		swapchain.m_readyToPresent = context->createSemaphore();
+		swapchain.m_nextImageAvailable = _context->createSemaphore();
+		swapchain.m_readyToPresent = _context->createSemaphore();
 		swapchain.m_renderPass = new RenderPassSwapchainVk();
+		swapchain.m_context = _context;
 		//
 		return swapchain;
 	}

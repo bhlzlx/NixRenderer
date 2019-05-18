@@ -2,36 +2,36 @@
 #include <NixRenderer.h>
 #include "vkinc.h"
 
-namespace Ks {
+namespace nix {
 
-	static inline uint32_t KsFormatBits(KsFormat _format)
+	static inline uint32_t NixFormatBits( NixFormat _format )
 	{
 		switch (_format)
 		{
-		case KsInvalidFormat: return 0;
-		case KsRGBA8888_UNORM:
-		case KsBGRA8888_UNORM:
-		case KsRGBA8888_SNORM:
+		case NixInvalidFormat: return 0;
+		case NixRGBA8888_UNORM:
+		case NixBGRA8888_UNORM:
+		case NixRGBA8888_SNORM:
 			return 32;
-		case KsRGB565_PACKED:
-		case KsRGBA5551_PACKED:
-		case KsRGBA_F16:
+		case NixRGB565_PACKED:
+		case NixRGBA5551_PACKED:
+		case NixRGBA_F16:
 			return 16;
-		case KsRGBA_F32:
+		case NixRGBA_F32:
 			return 128;
-		case KsDepth24FStencil8:
-		case KsDepth32F:
+		case NixDepth24FStencil8:
+		case NixDepth32F:
 			return 32;
-		case KsDepth32FStencil8:
+		case NixDepth32FStencil8:
 			return 40;
-		case KsETC2_LINEAR_RGBA:
-		case KsEAC_RG11_UNORM:
+		case NixETC2_LINEAR_RGBA:
+		case NixEAC_RG11_UNORM:
 			return 8; // 8 bit per pixel
-		case KsBC1_LINEAR_RGBA:
+		case NixBC1_LINEAR_RGBA:
 			return 4; // it's not 4!!!!!!!!!!!!!!
-		case KsBC3_LINEAR_RGBA:
+		case NixBC3_LINEAR_RGBA:
 			return 8;
-		case KsPVRTC_LINEAR_RGBA:
+		case NixPVRTC_LINEAR_RGBA:
 			return 4; // pvrt 4bpp
 		default:
 			break;
@@ -39,30 +39,30 @@ namespace Ks {
 		return 0;
 	}
 
-	static inline VkFormat KsFormatToVk(KsFormat _format) {
+	static inline VkFormat NixFormatToVk(NixFormat _format) {
 		switch (_format) {
-		case KsRGBA8888_UNORM: return VK_FORMAT_R8G8B8A8_UNORM;
-		case KsRGBA8888_SNORM: return VK_FORMAT_R8G8B8A8_SNORM;
-		case KsBGRA8888_UNORM: return VK_FORMAT_B8G8R8A8_UNORM;
-		case KsRGB565_PACKED: return VK_FORMAT_R5G6B5_UNORM_PACK16;
-		case KsRGBA5551_PACKED: return VK_FORMAT_R5G5B5A1_UNORM_PACK16;
-		case KsRGBA_F16: return VK_FORMAT_R16G16B16A16_SFLOAT;
-		case KsRGBA_F32: return VK_FORMAT_R32G32B32A32_SFLOAT;
-		case KsDepth24FStencil8: return VK_FORMAT_D24_UNORM_S8_UINT;
-		case KsDepth32F: return VK_FORMAT_D32_SFLOAT;
-		case KsDepth32FStencil8: return VK_FORMAT_D32_SFLOAT_S8_UINT;
-		case KsETC2_LINEAR_RGBA: return VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK;
-		case KsEAC_RG11_UNORM: return VK_FORMAT_EAC_R11G11_UNORM_BLOCK;
-		case KsBC1_LINEAR_RGBA: return VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
-		case KsBC3_LINEAR_RGBA: return VK_FORMAT_BC3_UNORM_BLOCK;
-		case KsPVRTC_LINEAR_RGBA: return VK_FORMAT_PVRTC1_4BPP_UNORM_BLOCK_IMG;
+		case NixRGBA8888_UNORM: return VK_FORMAT_R8G8B8A8_UNORM;
+		case NixRGBA8888_SNORM: return VK_FORMAT_R8G8B8A8_SNORM;
+		case NixBGRA8888_UNORM: return VK_FORMAT_B8G8R8A8_UNORM;
+		case NixRGB565_PACKED: return VK_FORMAT_R5G6B5_UNORM_PACK16;
+		case NixRGBA5551_PACKED: return VK_FORMAT_R5G5B5A1_UNORM_PACK16;
+		case NixRGBA_F16: return VK_FORMAT_R16G16B16A16_SFLOAT;
+		case NixRGBA_F32: return VK_FORMAT_R32G32B32A32_SFLOAT;
+		case NixDepth24FStencil8: return VK_FORMAT_D24_UNORM_S8_UINT;
+		case NixDepth32F: return VK_FORMAT_D32_SFLOAT;
+		case NixDepth32FStencil8: return VK_FORMAT_D32_SFLOAT_S8_UINT;
+		case NixETC2_LINEAR_RGBA: return VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK;
+		case NixEAC_RG11_UNORM: return VK_FORMAT_EAC_R11G11_UNORM_BLOCK;
+		case NixBC1_LINEAR_RGBA: return VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
+		case NixBC3_LINEAR_RGBA: return VK_FORMAT_BC3_UNORM_BLOCK;
+		case NixPVRTC_LINEAR_RGBA: return VK_FORMAT_PVRTC1_4BPP_UNORM_BLOCK_IMG;
 		default:
 			break;
 		}
 		return VK_FORMAT_UNDEFINED;
 	}
 
-	static inline VkSamplerAddressMode KsAddressModeToVk( AddressMode _mode)
+	static inline VkSamplerAddressMode NixAddressModeToVk( AddressMode _mode)
 	{
 		switch (_mode)
 		{
@@ -73,31 +73,31 @@ namespace Ks {
 		return VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	}
 
-	static inline KsFormat VkFormatToKs( VkFormat _format )
+	static inline NixFormat VkFormatToNix( VkFormat _format )
 	{
 		switch (_format) {
-		case VK_FORMAT_R8G8B8A8_UNORM: return KsRGBA8888_UNORM;
-		case VK_FORMAT_B8G8R8A8_UNORM: return KsBGRA8888_UNORM;
-		case VK_FORMAT_R8G8B8A8_SNORM: return KsRGBA8888_SNORM;
-		case VK_FORMAT_R5G6B5_UNORM_PACK16: return KsRGB565_PACKED;
-		case VK_FORMAT_R5G5B5A1_UNORM_PACK16: return KsRGBA5551_PACKED;
-		case VK_FORMAT_R16G16B16A16_SFLOAT: return KsRGBA_F16;
-		case VK_FORMAT_R32G32B32A32_SFLOAT: return KsRGBA_F32;
-		case VK_FORMAT_D24_UNORM_S8_UINT: return KsDepth24FStencil8;
-		case VK_FORMAT_D32_SFLOAT: return KsDepth32F;
-		case VK_FORMAT_D32_SFLOAT_S8_UINT: return KsDepth32FStencil8;
-		case VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK: return KsETC2_LINEAR_RGBA;
-		case VK_FORMAT_EAC_R11G11_UNORM_BLOCK: return KsEAC_RG11_UNORM;
-		case VK_FORMAT_BC3_UNORM_BLOCK: return KsBC3_LINEAR_RGBA;
-		case VK_FORMAT_BC1_RGBA_UNORM_BLOCK : return KsBC1_LINEAR_RGBA;
-		case VK_FORMAT_PVRTC1_4BPP_UNORM_BLOCK_IMG: return KsPVRTC_LINEAR_RGBA;
+		case VK_FORMAT_R8G8B8A8_UNORM: return NixRGBA8888_UNORM;
+		case VK_FORMAT_B8G8R8A8_UNORM: return NixBGRA8888_UNORM;
+		case VK_FORMAT_R8G8B8A8_SNORM: return NixRGBA8888_SNORM;
+		case VK_FORMAT_R5G6B5_UNORM_PACK16: return NixRGB565_PACKED;
+		case VK_FORMAT_R5G5B5A1_UNORM_PACK16: return NixRGBA5551_PACKED;
+		case VK_FORMAT_R16G16B16A16_SFLOAT: return NixRGBA_F16;
+		case VK_FORMAT_R32G32B32A32_SFLOAT: return NixRGBA_F32;
+		case VK_FORMAT_D24_UNORM_S8_UINT: return NixDepth24FStencil8;
+		case VK_FORMAT_D32_SFLOAT: return NixDepth32F;
+		case VK_FORMAT_D32_SFLOAT_S8_UINT: return NixDepth32FStencil8;
+		case VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK: return NixETC2_LINEAR_RGBA;
+		case VK_FORMAT_EAC_R11G11_UNORM_BLOCK: return NixEAC_RG11_UNORM;
+		case VK_FORMAT_BC3_UNORM_BLOCK: return NixBC3_LINEAR_RGBA;
+		case VK_FORMAT_BC1_RGBA_UNORM_BLOCK : return NixBC1_LINEAR_RGBA;
+		case VK_FORMAT_PVRTC1_4BPP_UNORM_BLOCK_IMG: return NixPVRTC_LINEAR_RGBA;
 		default:
 			break;
 		}
-		return KsInvalidFormat;
+		return NixInvalidFormat;
 	}
 
-	static inline VkFilter KsFilterToVk(TextureFilter _filter)
+	static inline VkFilter NixFilterToVk(TextureFilter _filter)
 	{
 		switch (_filter)
 		{
@@ -110,7 +110,7 @@ namespace Ks {
 		return VK_FILTER_NEAREST;
 	}
 
-	static inline VkSamplerMipmapMode KsMipmapFilerToVk( TextureFilter _filter)
+	static inline VkSamplerMipmapMode NixMipmapFilerToVk( TextureFilter _filter)
 	{
 		switch (_filter)
 		{
@@ -139,7 +139,7 @@ namespace Ks {
 		return VK_CULL_MODE_NONE;
 	}
 
-	static inline VkPrimitiveTopology KsTopologyToVk( TopologyMode _mode )
+	static inline VkPrimitiveTopology NixTopologyToVk( TopologyMode _mode )
 	{
 		switch (_mode)
 		{
@@ -154,7 +154,7 @@ namespace Ks {
 		return VK_PRIMITIVE_TOPOLOGY_MAX_ENUM;
 	}
 
-	static inline VkPolygonMode KsTopolygyPolygonMode( TopologyMode _mode )
+	static inline VkPolygonMode NixTopolygyPolygonMode( TopologyMode _mode )
 	{
 		switch (_mode)
 		{
@@ -183,7 +183,7 @@ namespace Ks {
 		return VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	}
 
-	static inline VkCompareOp KsCompareOpToVk( CompareFunction _op)
+	static inline VkCompareOp NixCompareOpToVk( CompareFunction _op)
 	{
 		switch (_op)
 		{
@@ -199,7 +199,7 @@ namespace Ks {
 		return VK_COMPARE_OP_ALWAYS;
 	}
 
-	static inline VkStencilOp KsStencilOpToVk( StencilOperation _op)
+	static inline VkStencilOp NixStencilOpToVk( StencilOperation _op)
 	{
 		switch (_op)
 		{
@@ -215,7 +215,7 @@ namespace Ks {
 		return VK_STENCIL_OP_REPLACE;
 	}
 
-	static inline VkAttachmentLoadOp KsLoadOpToVk( RTLoadAction _op )
+	static inline VkAttachmentLoadOp NixLoadOpToVk( RTLoadAction _op )
 	{
 		switch (_op)
 		{
@@ -233,7 +233,7 @@ namespace Ks {
 	// so, the default op is [store op : store]
 	// static VkAttachmentStoreOp GxStoreOpToVk(GX_STORE_ACTION _op);
 
-	static inline VkBlendFactor KsBlendFactorToVk( BlendFactor _factor)
+	static inline VkBlendFactor NixBlendFactorToVk( BlendFactor _factor)
 	{
 		switch (_factor)
 		{
@@ -252,7 +252,7 @@ namespace Ks {
 		return VK_BLEND_FACTOR_ONE;
 	}
 
-	static inline VkBlendOp KsBlendOpToVk( BlendOperation _op)
+	static inline VkBlendOp NixBlendOpToVk( BlendOperation _op)
 	{
 		switch (_op)
 		{
@@ -263,7 +263,7 @@ namespace Ks {
 		return VK_BLEND_OP_ADD;
 	}
 
-	static inline VkFormat KsVertexFormatToVK( VertexType _type)
+	static inline VkFormat NixVertexFormatToVK( VertexType _type)
 	{
 		switch (_type)
 		{

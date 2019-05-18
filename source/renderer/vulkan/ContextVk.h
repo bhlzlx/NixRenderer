@@ -5,10 +5,12 @@
 #include "SwapchainVk.h"
 #include "DescriptorSetVk.h"
 #include "DebuggerVk.h"
-#include <Ks/io/io.h>
+#include <nix/io/io.h>
 #include <vector>
 
-namespace Ks {
+#define PIPELINE_CACHE_FILENAME "pipeline_cache.bin"
+
+namespace nix {
 	class GraphicsQueueVk;
 	class UploadQueueVk;
 	class BufferVk;
@@ -17,7 +19,7 @@ namespace Ks {
 	class DriverVk;
 	// a context owns a phy/logic device graphics queue,present queue
 	// contexts shares a upload queue
-	class KS_API_DECL ContextVk : public IContext {
+	class NIX_API_DECL ContextVk : public IContext {
 		//friend class ViewVk;
 		friend class DriverVk;
 	private:
@@ -44,6 +46,9 @@ namespace Ks {
 		//
 		uint64_t				m_frameCounter;
 		//
+
+	private:
+		VkPipelineCache			m_pipelineCache;
 	public:
 		ContextVk() : 
 			m_physicalDevice(VK_NULL_HANDLE),
@@ -59,10 +64,10 @@ namespace Ks {
 		virtual ITexture* createTexture(const TextureDescription& _desc, TextureUsageFlags _usage = TextureUsageNone) override;
 		virtual ITexture* createTextureDDS(const void* _data, size_t _length) override;
 		virtual ITexture* createTextureKTX(const void* _data, size_t _length) override;
-		virtual IAttachment* createAttachment(KsFormat _format, uint32_t _width, uint32_t _height ) override;
+		virtual IAttachment* createAttachment( NixFormat _format, uint32_t _width, uint32_t _height ) override;
 		virtual IRenderPass* createRenderPass(const RenderPassDescription& _desc, IAttachment** _colorAttachments, IAttachment* _depthStencil) override;
-		virtual IPipeline* createPipeline(const PipelineDescription& _desc) override;
-		virtual KsFormat swapchainFormat() const override;
+		virtual IMaterial* createMaterial( const MaterialDescription& _desc );
+		virtual NixFormat swapchainFormat() const override;
 		virtual void captureFrame(IFrameCapture * _capture, FrameCaptureCallback _callback) override;
 		//
 		VkSurfaceKHR getSurface() const;
@@ -73,6 +78,9 @@ namespace Ks {
 		GraphicsQueueVk* getGraphicsQueue() const;
 		SwapchainVk* getSwapchain();
 		const std::vector<uint32_t>& getQueueFamilies() const;
+
+		VkPipelineCache getPipelineCache() { return m_pipelineCache; }
+		void savePipelineCache();
 
 		inline UBOAllocator& getUBOAllocator(){ return m_uboAllocator;	}
 		inline DescriptorSetPool& getDescriptorSetPool(){ return m_descriptorSetPool; }

@@ -10,7 +10,7 @@
 #include <assert.h>
 #include "DriverVk.h"
 
-namespace Ks {
+namespace nix {
 
 	GraphicsQueueVk* ContextVk::createGraphicsQueue( VkQueue _id, uint32_t _family, uint32_t _index ) const {
 		GraphicsQueueVk* queue = new GraphicsQueueVk();

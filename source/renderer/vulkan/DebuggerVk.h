@@ -5,7 +5,7 @@ extern PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT;
 extern PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT;
 extern PFN_vkDebugReportMessageEXT vkDebugReportMessageEXT;
 
-namespace Ks {
+namespace nix {
 
 	class DebugReporterVk
 	{

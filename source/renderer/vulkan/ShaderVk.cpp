@@ -6,7 +6,7 @@
 #include <map>
 #include <cassert>
 
-namespace Ks {
+namespace nix {
 
 	std::vector< DescriptorSetLayout > ShaderModuleVk::CreateDescriptorSetLayout(ShaderModuleVk* _vertexShader, ShaderModuleVk* _fragmentShader)
 	{

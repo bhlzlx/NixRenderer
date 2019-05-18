@@ -7,7 +7,7 @@
 #include <NixRenderer.h>
 #include "vkinc.h"
 
-namespace Ks {
+namespace nix {
 
 	class BufferVk;
 	class ContextVk;
@@ -21,7 +21,7 @@ namespace Ks {
 		virtual size_t unitSize() = 0;
 	};*/
 
-	class KS_API_DECL UBOAllocatePool//:public IUniformStaticAllocPool
+	class NIX_API_DECL UBOAllocatePool//:public IUniformStaticAllocPool
 	{
 	private:
 		ContextVk* m_context;

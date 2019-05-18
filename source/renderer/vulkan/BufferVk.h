@@ -16,13 +16,13 @@
 // destroy a buffer object will call `delete` right now
 // but the BufferVk resource handler will move to `deferred deleter`
 
-namespace Ks {
+namespace nix {
 	// global vulkan memory allocator
 	extern VmaAllocator KsVMAAllocator;
 	//
 	class ContextVk;
 
-	class KS_API_DECL BufferVk {
+	class NIX_API_DECL BufferVk {
 		//friend class VkDeferredDeletor;
 		//friend class ContextVk;
 		friend struct ScreenCapture;
@@ -106,7 +106,7 @@ namespace Ks {
 		static BufferVk CreateBuffer(size_t _size, VkBufferUsageFlags _usage, ContextVk* _context);
 	};
 
-	class KS_API_DECL StableVertexBuffer : public IBuffer {
+	class NIX_API_DECL StableVertexBuffer : public IBuffer {
 		friend class PipelineVk;
 		friend class DrawableVk;
 	private:
@@ -153,7 +153,7 @@ namespace Ks {
 		}
 	};
 
-	class KS_API_DECL IndexBuffer : public IBuffer
+	class NIX_API_DECL IndexBuffer : public IBuffer
 	{
 		friend class ContextVk;
 		friend class DrawableVk;

@@ -1,7 +1,7 @@
 #pragma once
 #include "vkinc.h"
 
-namespace Ks {
+namespace nix {
 
 	class BufferVk;
 

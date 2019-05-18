@@ -16,7 +16,7 @@ extern "C"{
 
 #include <vector>
 
-namespace uiv2
+namespace nix
 {
 	char16_t* ucsstr( const char16_t *s1, const char16_t *s2 )
 	{

@@ -1,6 +1,6 @@
 #include "TextureVk.h"
 
-namespace Ks {
+namespace nix {
 
 	struct DDS_PIXELFORMAT {
 		uint32_t dwSize;

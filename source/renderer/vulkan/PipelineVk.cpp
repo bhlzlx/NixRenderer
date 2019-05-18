@@ -12,7 +12,7 @@
 #include <mutex>
 #include <cassert>
 
-namespace Ks {
+namespace nix {
 
 	VkPipelineCache PipelineVk::GeneralPipelineCache = VK_NULL_HANDLE;
 
@@ -108,7 +108,7 @@ namespace Ks {
 		m_slopeScaleBias = _slopeScaleBias;
 	}
 
-	Ks::IArgument* PipelineVk::createArgument(const ArgumentDescription& _desc)
+	nix::IArgument* PipelineVk::createArgument(const ArgumentDescription& _desc)
 	{
 		std::vector<uint32_t> vecSetID;
 		for (uint32_t i = 0; i < _desc.samplerCount; ++i) {
@@ -152,7 +152,7 @@ namespace Ks {
 		return createArgument( vecSetID[0] );
 	}
 
-	Ks::IArgument* PipelineVk::createArgument(uint32_t _setId)
+	nix::IArgument* PipelineVk::createArgument(uint32_t _setId)
 	{
 		auto set = m_context->getDescriptorSetPool().alloc(this, _setId);
 		if (!set) {
@@ -178,7 +178,7 @@ namespace Ks {
 		return m_fragmentModule->GetConstantsMember(_name, size_, offset_);
 	}
 
-	const Ks::PipelineDescription& PipelineVk::getDescription()
+	const nix::PipelineDescription& PipelineVk::getDescription()
 	{
 		return m_desc;
 	}
@@ -242,8 +242,8 @@ namespace Ks {
 		TextReader vertReader, fragReader;
 		rst = vertReader.openFile( m_archieve, std::string(_desc.vertexShader));
 		rst = fragReader.openFile( m_archieve, std::string(_desc.fragmentShader));
-		//auto vertShader = createShaderModule(vertReader.getText(), Ks::ShaderModuleType::VertexShader);
-		//auto fragShader = createShaderModule(fragReader.getText(), Ks::ShaderModuleType::FragmentShader);
+		//auto vertShader = createShaderModule(vertReader.getText(), nix::ShaderModuleType::VertexShader);
+		//auto fragShader = createShaderModule(fragReader.getText(), nix::ShaderModuleType::FragmentShader);
 		auto vertShader = m_context->createShaderModule(vertReader.getText(), "main", VK_SHADER_STAGE_VERTEX_BIT);
 		if (!vertShader)
 			return nullptr;

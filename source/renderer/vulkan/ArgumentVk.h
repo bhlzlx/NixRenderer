@@ -2,16 +2,15 @@
 #include <vector>
 #include "vkinc.h"
 
-namespace Ks {
+namespace nix {
 	class DescriptorSetVk;
 	class PipelineVk;
 	class ContextVk;
 
-	class KS_API_DECL ArgumentVk : public IArgument
+	class NIX_API_DECL ArgumentVk : public IArgument
 	{
 		friend class VkDeferredDestroyer;
 		friend class PipelineVk;
-	public:
 	private:
 		DescriptorSetVk* m_descriptorSet;
 		ContextVk* m_context;

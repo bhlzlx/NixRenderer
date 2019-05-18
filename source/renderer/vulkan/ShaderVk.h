@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-namespace Ks {
+namespace nix {
 
 	struct SamplerBindingPoint
 	{
@@ -50,7 +50,7 @@ namespace Ks {
 		std::vector<UniformBindingPoint> uniforms;
 	};
 
-	class KS_API_DECL ShaderModuleVk
+	class NIX_API_DECL ShaderModuleVk
 	{
 		friend class ContextVk;
 	private:
