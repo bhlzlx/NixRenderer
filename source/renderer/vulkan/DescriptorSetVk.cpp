@@ -1,6 +1,6 @@
 #include "DescriptorSetVk.h"
 #include "ContextVk.h"
-#include "PipelineVk.h"
+#include "MaterialVk.h"
 #include "BufferVk.h"
 #include "TextureVk.h"
 #include "QueueVk.h"
@@ -12,129 +12,55 @@ namespace nix {
 
 	VkSampler GetSampler(const SamplerState& _state);
 
-	std::vector< DescriptorSet > DescriptorSetPool::allocOneBatch( PipelineVk* _pipeline ) {
-		auto& descriptorSetLayouts = _pipeline->GetDescriptorSetLayouts();
-		if (!descriptorSetLayouts.size()) {
-			return std::move(std::vector< DescriptorSet >()); // return empty descriptor set
+	VkDescriptorSet DescriptorSetPool::allocateDescriptorSet(MaterialVk* _material, uint32_t _index, uint32_t& _poolIndex) {
+		VkDescriptorSetLayout layout = _material->getDescriptorSetLayout(_index);
+		if (layout == VK_NULL_HANDLE) {
+			return;
 		}
-		std::vector<VkDescriptorSetLayout> layouts;
-		std::vector<uint32_t> layoutIDs;
-		std::vector<VkDescriptorSet> sets;
+		uint32_t setIndex = _index;
+		VkDescriptorSet set = VK_NULL_HANDLE;
 		uint32_t poolIndex = 0;
 		//
-		for (size_t i = 0; i < descriptorSetLayouts.size(); ++i) {
-			layouts.push_back(descriptorSetLayouts[i].layout);
-			layoutIDs.push_back(descriptorSetLayouts[i].id);
-			sets.push_back(VK_NULL_HANDLE);
-		}
 		bool rst = false;
-		for (auto& pool : m_vecMiniPools) {
-			if (pool.available()) {
-				rst = pool.allocate(layouts.data(), layouts.size(), sets.data());
-				if (rst) {
-					break;
-				}
-			}
-			++poolIndex;
-		}
-		if (!rst) {
-			m_vecMiniPools.push_back(DescriptorSetPoolChunk());
-			auto& pool = m_vecMiniPools.back();
-			pool.initialize();
-			rst = pool.allocate(layouts.data(), layouts.size(), sets.data());
-			assert(rst && "must be true!");
-		}
-		// arrange the descriptor set information
-		std::vector< DescriptorSet > descriptorSetInfos;
-		for (size_t i = 0; i < descriptorSetLayouts.size(); ++i) {
-			DescriptorSet ds;
-			ds.poolIndex = poolIndex;
-			ds.set = sets[i];
-			ds.id = layoutIDs[i];
-			descriptorSetInfos.push_back(ds);
-		}
-		return std::move(descriptorSetInfos);
-	}
-
-	DescriptorSet DescriptorSetPool::allocOne( PipelineVk* _effect, uint32_t _setID)
-	{
-		auto& descriptorSetLayouts = _effect->GetDescriptorSetLayouts();
-		DescriptorSetLayout layout = { VK_NULL_HANDLE, uint32_t(-1) };
-		for (auto& l : descriptorSetLayouts)
+		for (size_t poolIndex = 0; poolIndex < m_descriptorChunks.size(); ++poolIndex)
 		{
-			if (l.id == _setID) {
-				layout.id = l.id;
-				layout.layout = l.layout;
-				break;
-			}
-		}
-		if (layout.layout == VK_NULL_HANDLE) {
-			assert(false && "cannot find the set id!");
-			return DescriptorSet();
-		}
-		VkDescriptorSet set;
-		uint32_t poolIndex = 0;
-		bool rst = false;
-		for (auto& pool : m_vecMiniPools) {
+			auto& pool = m_descriptorChunks[poolIndex];
 			if (pool.available()) {
-				rst = pool.allocate(&layout.layout, 1, &set);
-				if (rst) {
+				set = pool.allocate(m_device, layout);
+				if (set != VK_NULL_HANDLE) {
+					_poolIndex = poolIndex;
 					break;
 				}
 			}
-			++poolIndex;
 		}
-		if (!rst) {
-			m_vecMiniPools.push_back(DescriptorSetPoolChunk());
-			auto& pool = m_vecMiniPools.back();
+		if (VK_NULL_HANDLE == set)
+		{
+			m_descriptorChunks.push_back(DescriptorSetPoolChunk());
+			auto& pool = m_descriptorChunks.back();
 			pool.initialize();
-			rst = pool.allocate(&layout.layout, 1, &set);
+			set = pool.allocate(m_device, layout);
+			_poolIndex = m_descriptorChunks.size() - 1;
 			assert(rst && "must be true!");
 		}
-		// arrange the descriptor set information
-		DescriptorSet setData;
-		setData.poolIndex = poolIndex;
-		setData.set = set;
-		setData.id = _setID;
-		return setData;
-	}
-
-	std::vector<DescriptorSetVk*> DescriptorSetPool::alloc(PipelineVk* _pipeline)
-	{
-		auto activeSet = allocOneBatch(_pipeline);
-		auto backupSet = allocOneBatch(_pipeline);
-		std::vector<DescriptorSetVk*> descriptorSets;
-		for (size_t i = 0; i < activeSet.size(); ++i) {
-			DescriptorSetVk* pSet = new DescriptorSetVk();
-			pSet->m_pipeline = _pipeline;
-			pSet->m_activeDescriptor = activeSet[i];
-			pSet->m_backupDescriptor = backupSet[i];
-			descriptorSets.push_back(pSet);
-			//
-			pSet->assignUniformObjects();
-		}
-		return descriptorSets;
-	}
-
-	DescriptorSetVk* DescriptorSetPool::alloc( PipelineVk* _pipeline, int _setId)
-	{
-		auto activeSet = allocOne(_pipeline, _setId);
-		auto backupSet = allocOne(_pipeline, _setId);
-		DescriptorSetVk* set = new DescriptorSetVk();
-		set->m_activeDescriptor = activeSet;
-		set->m_backupDescriptor = backupSet;
-		set->m_pipeline = _pipeline;
-		set->assignUniformObjects();
 		return set;
 	}
 
-	void DescriptorSetPool::free(const std::vector<DescriptorSetVk*>& _sets)
+	ArgumentVk* DescriptorSetPool::allocateArgument(MaterialVk* _material, uint32_t _descIndex)
 	{
-		for (auto& set : _sets)
-		{
-			m_vecMiniPools[set->m_activeDescriptor.poolIndex].free(&set->m_activeDescriptor.set, 1);
-			m_vecMiniPools[set->m_backupDescriptor.poolIndex].free(&set->m_backupDescriptor.set, 1);
+		ArgumentVk* argument = new ArgumentVk();
+		argument->m_descriptorSets[0] = allocateDescriptorSet(_material, _descIndex, argument->m_descriptorSetPools[0]);
+		argument->m_descriptorSets[1] = allocateDescriptorSet(_material, _descIndex, argument->m_descriptorSetPools[1]);
+		argument->m_descriptorSetIndex = _descIndex;
+		argument->m_activeIndex = 0;
+		return argument;
+	}
+
+	void DescriptorSetPool::free(ArgumentVk* _argument)
+	{
+		for (uint32_t i = 0; i < 2; ++i) {
+			m_descriptorChunks[_argument->m_descriptorSetPools[i]].free( m_device, _argument->m_descriptorSets[i] );
 		}
+		delete _argument;
 	}
 
 	void DescriptorSetVk::setUniform(size_t _index, const void * _data, size_t _offset, size_t _size)

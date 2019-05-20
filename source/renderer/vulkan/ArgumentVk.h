@@ -3,20 +3,28 @@
 #include "vkinc.h"
 
 namespace nix {
-	class DescriptorSetVk;
 	class PipelineVk;
 	class ContextVk;
+	
+	// `ArgumentVk` is a wrapper class for VkDescriptorSet
 
 	class NIX_API_DECL ArgumentVk : public IArgument
 	{
 		friend class VkDeferredDestroyer;
 		friend class PipelineVk;
+		friend class DescriptorSetPool;
 	private:
-		DescriptorSetVk* m_descriptorSet;
+		ArgumentDescription	m_description;
+		uint32_t		m_descriptorSetIndex;
+		VkDescriptorSet	m_descriptorSets[2];			//
+		uint32_t		m_descriptorSetPools[2];		// pools that holds the descriptor sets
+		uint32_t		m_descriptorSetIndex;
+		uint32_t		m_activeIndex;
+
 		ContextVk* m_context;
 		PipelineVk* m_pipeline;
 	public:
-		ArgumentVk( DescriptorSetVk* _set );
+		ArgumentVk();
 		~ArgumentVk();
 
 		virtual void bind() override;
@@ -25,5 +33,7 @@ namespace nix {
 		virtual void setSampler(SamplerSlot _slot, const SamplerState& _sampler, const ITexture* _texture) override;
 		virtual void setUniform(UniformSlot _slot, const void * _data, size_t _size) override;
 		virtual void release() override;
+	public:
+		void assignUniformChunks();
 	};
 }

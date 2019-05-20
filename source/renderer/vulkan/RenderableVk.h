@@ -25,7 +25,7 @@ namespace nix {
 			return m_indexBuffer;
 		}
 		inline VkDeviceSize getIndexBufferOffset() {
-			return m_indexBufferOffset
+			return m_indexBufferOffset;
 		}
 		//
 		inline void setVertexBuffer(uint32_t _binding, VkBuffer _buffer, VkDeviceSize _offset) {

@@ -5,6 +5,7 @@
 #include <list>
 #include <map>
 #include <array>
+#include "ArgumentVk.h"
 
 namespace nix {
 	class MaterialVk;
@@ -16,18 +17,20 @@ namespace nix {
 	{
 		friend class DescriptorSetPool;
 	private:
-		uint32_t		m_descriptorSetID; // descriptor set id declared in the shader
-		size_t			m_descriptorSetPoolIndex[2]; // descriptor set chunk index ( in the descriptor set pool object )
-		VkDescriptorSet m_descriptorSets[2]; // descriptor set, one is in use and one is for backup
-		uint32_t		m_activeDescriptorSetIndex; // the index of the one in use
+		uint32_t		m_descriptorSetIndex;				// descriptor set id declared in the shader
+		size_t			m_descriptorSetPoolIndex[2];	// descriptor set chunk index ( in the descriptor set pool object )
+		VkDescriptorSet m_descriptorSets[2];			// descriptor set, one is in use and one is for backup
+		uint32_t		m_activeDescriptorSetIndex;		// the index of the one in use
 		//
 		std::array< std::array<uint32_t, MaxArgumentCount>, MaxFlightCount > m_dynamicOffsets;
 		//
-		struct UniformChunkWriteData {
+		struct UniformChunkWriteData
+		{
 			uint32_t binding;
 			UBOAllocation uniform;
 		};
-		struct SamplerWriteData {
+		struct SamplerWriteData 
+		{
 			uint32_t binding;
 			SamplerState samplerState;
 			TextureVk* texture;
@@ -87,12 +90,15 @@ namespace nix {
 	class NIX_API_DECL DescriptorSetPool
 	{
 	private:
-		std::vector< DescriptorSetPoolChunk > m_vecMiniPools;
+		VkDevice m_device;
+		std::vector< DescriptorSetPoolChunk > m_descriptorChunks;
+	private:
+		VkDescriptorSet allocateDescriptorSet(MaterialVk* _material, uint32_t _index, uint32_t& _poolIndex);
 	public:
 		DescriptorSetPool() {
 		}
 		//
-		DescriptorSetVk* allocate(MaterialVk* _material, uint32_t _index);
-		void free( DescriptorSetVk* _descriptorSet );
+		ArgumentVk* allocateArgument(MaterialVk* _material, uint32_t _descIndex);
+		void free( ArgumentVk* _argument );
 	};
 }

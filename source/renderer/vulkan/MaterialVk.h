@@ -1,6 +1,7 @@
 #pragma once
 #include "vkinc.h"
 #include <NixRenderer.h>
+#include <array>
 #include <SPIRV-Cross/spirv_cross.hpp>
 
 namespace nix {
@@ -19,7 +20,7 @@ namespace nix {
 		VkShaderModule				m_fragmentShader;
 		//
 		uint32_t					m_descriptorSetLayoutCount;
-		VkDescriptorSetLayout		m_descriptorSetLayout[MaxArgumentCount];
+		std::array<VkDescriptorSetLayout, MaxArgumentCount>		m_descriptorSetLayouts;
 		//
 		VkPipelineLayout			m_pipelineLayout;
 	public:
@@ -27,6 +28,7 @@ namespace nix {
 			  m_vertexShader( VK_NULL_HANDLE )
 			, m_fragmentShader( VK_NULL_HANDLE)
 			, m_descriptorSetLayoutCount( 0 )
+			, m_descriptorSetLayouts( { VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE } )
 			, m_pipelineLayout( VK_NULL_HANDLE )
 		{
 		}
@@ -38,8 +40,13 @@ namespace nix {
 		virtual IPipeline* createPipeline(IRenderPass* _renderPass) override;
 
 		virtual void release() override;
+
+		VkDescriptorSetLayout getDescriptorSetLayout(uint32_t _setIndex) {
+			return m_descriptorSetLayouts[_setIndex];
+		}
 		//
 		static MaterialVk* CreateMaterial( ContextVk* _context, const MaterialDescription& _desc );
+		static bool ValidationShaderDescriptor(const ShaderDescriptor& _descriptor, const uint32_t _setIndex, const spirv_cross::Compiler& _compiler, const spirv_cross::ShaderResources& _resources, ContextVk* _context);
 	};
 
 }
