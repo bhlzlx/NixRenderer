@@ -5,9 +5,12 @@
 #include <list>
 #include <map>
 #include <array>
+#include <vector>
 #include "ArgumentVk.h"
+#include <NixRenderer.h>
 
 namespace nix {
+
 	class MaterialVk;
 	class TextureVk;
 	class BufferVk;
@@ -17,7 +20,7 @@ namespace nix {
 	{
 		friend class DescriptorSetPool;
 	private:
-		uint32_t		m_descriptorSetIndex;				// descriptor set id declared in the shader
+		uint32_t		m_descriptorSetIndex;			// descriptor set id declared in the shader
 		size_t			m_descriptorSetPoolIndex[2];	// descriptor set chunk index ( in the descriptor set pool object )
 		VkDescriptorSet m_descriptorSets[2];			// descriptor set, one is in use and one is for backup
 		uint32_t		m_activeDescriptorSetIndex;		// the index of the one in use
@@ -90,12 +93,14 @@ namespace nix {
 	class NIX_API_DECL DescriptorSetPool
 	{
 	private:
-		VkDevice m_device;
-		std::vector< DescriptorSetPoolChunk > m_descriptorChunks;
+		ContextVk*								m_context;
+		std::vector< DescriptorSetPoolChunk >	m_descriptorChunks;
 	private:
 		VkDescriptorSet allocateDescriptorSet(MaterialVk* _material, uint32_t _index, uint32_t& _poolIndex);
 	public:
-		DescriptorSetPool() {
+		DescriptorSetPool( ContextVk* _context ) :
+			m_context( _context )
+		{
 		}
 		//
 		ArgumentVk* allocateArgument(MaterialVk* _material, uint32_t _descIndex);

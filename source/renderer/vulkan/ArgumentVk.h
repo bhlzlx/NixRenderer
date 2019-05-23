@@ -14,15 +14,21 @@ namespace nix {
 		friend class PipelineVk;
 		friend class DescriptorSetPool;
 	private:
-		ArgumentDescription	m_description;
-		uint32_t		m_descriptorSetIndex;
-		VkDescriptorSet	m_descriptorSets[2];			//
-		uint32_t		m_descriptorSetPools[2];		// pools that holds the descriptor sets
-		uint32_t		m_descriptorSetIndex;
-		uint32_t		m_activeIndex;
 
-		ContextVk* m_context;
-		PipelineVk* m_pipeline;
+		std::vector< BufferVk* >	m_uniformBlocks;
+		std::vector< std::pair< TextureVk*, SamplerState> >		m_textures;
+
+		ArgumentDescription		m_description;
+		uint32_t				m_descriptorSetIndex;
+		VkDescriptorSet			m_descriptorSets[2];			//
+		uint32_t				m_descriptorSetPools[2];		// pools that holds the descriptor sets
+		uint32_t				m_descriptorSetIndex;
+		uint32_t				m_activeIndex;
+
+		ContextVk*				m_context;
+
+
+		MaterialVk*				m_material;
 	public:
 		ArgumentVk();
 		~ArgumentVk();

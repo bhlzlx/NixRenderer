@@ -280,7 +280,27 @@ namespace nix {
 		material->m_fragmentShader = fragSM;
 		material->m_descriptorSetLayoutCount = _desc.argumentLayouts.size();
 		material->m_pipelineLayout = pipelineLayout;
-		memcpy(&material->m_descriptorSetLayouts[0], layouts, sizeof(layouts));
+		for (uint32_t i = 0; i < _desc.argumentLayouts.size(); ++i) {
+			material->m_descriptorSetLayouts[i].m_descriptorSetIndex = i;
+			material->m_descriptorSetLayouts[i].m_descriptorSetLayout = layouts[i];
+			for (auto& descriptor : _desc.argumentLayouts[i].descriptors) {
+				switch (descriptor.type) {
+				case SDT_UniformChunk:
+					material->m_descriptorSetLayouts[i].m_uniformDescriptors.push_back(descriptor);
+					break;
+				case SDT_Sampler:
+					material->m_descriptorSetLayouts[i].m_samplerDescriptors.push_back(descriptor);
+					break;
+				case SDT_SSBO:
+					material->m_descriptorSetLayouts[i].m_storageDescriptors.push_back(descriptor);
+					break;
+				case SDT_TBO:
+					material->m_descriptorSetLayouts[i].m_texelDescriptor.push_back(descriptor);
+					break;
+				default:
+				}
+			}
+		}
 		//
 		return material;
 	}

@@ -10,17 +10,25 @@ namespace nix {
 	class RenderableVk;
 	class ArgumentVk;
 	//
+	struct DescriptorSetLayout {
+		uint32_t						m_descriptorSetIndex;
+		VkDescriptorSetLayout			m_descriptorSetLayout;
+		//
+		std::vector<ShaderDescriptor>	m_uniformDescriptors;
+		std::vector<ShaderDescriptor>	m_samplerDescriptors;
+		std::vector<ShaderDescriptor>	m_storageDescriptors;
+		std::vector<ShaderDescriptor>	m_texelDescriptor;
+	};
+
+	//
 	class MaterialVk : public IMaterial {
 	private:
-		MaterialDescription			m_description;
-		//
-		ContextVk*					m_context;
-		//
-		VkShaderModule				m_vertexShader;
-		VkShaderModule				m_fragmentShader;
-		//
-		uint32_t					m_descriptorSetLayoutCount;
-		std::array<VkDescriptorSetLayout, MaxArgumentCount>		m_descriptorSetLayouts;
+		MaterialDescription										m_description;
+		ContextVk*												m_context;
+		VkShaderModule											m_vertexShader;
+		VkShaderModule											m_fragmentShader;
+		uint32_t												m_descriptorSetLayoutCount;
+		std::array<DescriptorSetLayout, MaxArgumentCount>		m_descriptorSetLayouts;
 		//
 		VkPipelineLayout			m_pipelineLayout;
 	public:
@@ -28,7 +36,7 @@ namespace nix {
 			  m_vertexShader( VK_NULL_HANDLE )
 			, m_fragmentShader( VK_NULL_HANDLE)
 			, m_descriptorSetLayoutCount( 0 )
-			, m_descriptorSetLayouts( { VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE } )
+			, m_descriptorSetLayouts()
 			, m_pipelineLayout( VK_NULL_HANDLE )
 		{
 		}
@@ -41,7 +49,7 @@ namespace nix {
 
 		virtual void release() override;
 
-		VkDescriptorSetLayout getDescriptorSetLayout(uint32_t _setIndex) {
+		const DescriptorSetLayout& getDescriptorSetLayout(uint32_t _setIndex) const {
 			return m_descriptorSetLayouts[_setIndex];
 		}
 		//

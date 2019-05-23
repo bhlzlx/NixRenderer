@@ -52,6 +52,8 @@ namespace nix {
 		argument->m_descriptorSets[1] = allocateDescriptorSet(_material, _descIndex, argument->m_descriptorSetPools[1]);
 		argument->m_descriptorSetIndex = _descIndex;
 		argument->m_activeIndex = 0;
+		argument->m_material = _material;
+		argument->m_context = nullptr;
 		return argument;
 	}
 
