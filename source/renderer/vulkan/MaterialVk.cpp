@@ -305,4 +305,22 @@ namespace nix {
 		return material;
 	}
 
+	uint32_t DescriptorSetLayout::getUniformLocation(const std::string& _name)
+	{
+		uint32_t i = 0;
+		for (; i < m_descriptors.size(); ++i) {
+
+		}
+	}
+
+	uint32_t DescriptorSetLayout::getSamplerLocation(const std::string& _name)
+	{
+
+	}
+
+	uint32_t DescriptorSetLayout::getSSBOLocation(const std::string& _name)
+	{
+
+	}
+
 }

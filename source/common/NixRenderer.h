@@ -424,27 +424,33 @@ namespace nix {
 		int stencil;
 	};
 
-	struct Argument {
-		uint32_t			binding;
-		uint32_t			dataSize;
-		ShaderModuleType	shaderStage;
-		std::string			name;
-		NIX_JSON( binding, dataSize, shaderStage, name)
+	enum ShaderDescriptorType {
+		SDT_UniformChunk,
+		SDT_Sampler,
+		SDT_SSBO,
+		SDT_TBO,
 	};
 
-	struct ArgumentSetDescription {
-		std::vector< Argument > uniformChunks;
-		std::vector< Argument > samples;
-		std::vector< Argument > SSBOs;
-		//
-		NIX_JSON(uniformChunks, samples, SSBOs )
+	struct ShaderDescriptor {
+		ShaderDescriptorType	type;
+		uint32_t				binding;
+		std::string				name;
+		ShaderModuleType		shaderStage;
+		uint32_t				dataSize;
+		NIX_JSON( type, binding, name, shaderStage, dataSize)
+	};
+
+	struct ArgumentDescription {
+		uint32_t						index;
+		std::vector< ShaderDescriptor > descriptors;
+		NIX_JSON(index, descriptors)
 	};
 
 	struct MaterialDescription {
 		char									vertexShader[64];
 		char									fragmentShader[64];
 		VertexLayout							vertexLayout;
-		std::vector<ArgumentSetDescription>		argumentLayout;
+		std::vector<ArgumentDescription>		argumentLayouts;
 		RenderState								renderState;
 		//
 		NIX_JSON(vertexShader, fragmentShader, renderPassDescription, renderState, material)

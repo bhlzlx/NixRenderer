@@ -7,7 +7,8 @@ include_directories(
 project( nix )
 
 set( CLAN_SOURCE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/io/StandardIO.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/io/archieve.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/io/archieve.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/string/encoding.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/string/path.cpp
     )

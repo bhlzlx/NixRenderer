@@ -24,10 +24,7 @@ namespace nix {
 		uint32_t				m_descriptorSetPools[2];		// pools that holds the descriptor sets
 		uint32_t				m_descriptorSetIndex;
 		uint32_t				m_activeIndex;
-
 		ContextVk*				m_context;
-
-
 		MaterialVk*				m_material;
 	public:
 		ArgumentVk();

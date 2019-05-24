@@ -13,14 +13,13 @@ namespace nix {
 	struct DescriptorSetLayout {
 		uint32_t						m_descriptorSetIndex;
 		VkDescriptorSetLayout			m_descriptorSetLayout;
-		//
-		std::vector<ShaderDescriptor>	m_uniformDescriptors;
-		std::vector<ShaderDescriptor>	m_samplerDescriptors;
-		std::vector<ShaderDescriptor>	m_storageDescriptors;
-		std::vector<ShaderDescriptor>	m_texelDescriptor;
+		std::vector<ShaderDescriptor>	m_descriptors;
+		///////
+		uint32_t getUniformLocation(const std::string& _name);
+		uint32_t getSamplerLocation(const std::string& _name );
+		uint32_t getSSBOLocation(const std::string& _name );
 	};
 
-	//
 	class MaterialVk : public IMaterial {
 	private:
 		MaterialDescription										m_description;
