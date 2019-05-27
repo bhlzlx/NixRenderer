@@ -1,10 +1,12 @@
 #include <NixRenderer.h>
 #include <vector>
+#include "UniformVk.h"
 #include "vkinc.h"
 
 namespace nix {
 	class PipelineVk;
 	class ContextVk;
+	class TextureVk;
 	
 	// `ArgumentVk` is a wrapper class for VkDescriptorSet
 
@@ -14,27 +16,27 @@ namespace nix {
 		friend class PipelineVk;
 		friend class DescriptorSetPool;
 	private:
-
-		std::vector< BufferVk* >	m_uniformBlocks;
+		std::vector< UBOAllocation >							m_uniformBlocks;
 		std::vector< std::pair< TextureVk*, SamplerState> >		m_textures;
-
-		ArgumentDescription		m_description;
-		uint32_t				m_descriptorSetIndex;
-		VkDescriptorSet			m_descriptorSets[2];			//
-		uint32_t				m_descriptorSetPools[2];		// pools that holds the descriptor sets
-		uint32_t				m_descriptorSetIndex;
-		uint32_t				m_activeIndex;
-		ContextVk*				m_context;
-		MaterialVk*				m_material;
+		std::vector< BufferVk* >								m_ssbos;
+		//
+		uint32_t												m_descriptorSetIndex;
+		VkDescriptorSet											m_descriptorSets[2];			//
+		uint32_t												m_descriptorSetPools[2];		// pools that holds the descriptor sets
+		uint32_t												m_activeIndex;
+		ContextVk*												m_context;
+		MaterialVk*												m_material;
 	public:
 		ArgumentVk();
 		~ArgumentVk();
 
 		virtual void bind() override;
-		virtual UniformSlot getUniformSlot(const char * _name) override;
-		virtual SamplerSlot getSamplerSlot(const char * _name) override;
-		virtual void setSampler(SamplerSlot _slot, const SamplerState& _sampler, const ITexture* _texture) override;
-		virtual void setUniform(UniformSlot _slot, const void * _data, size_t _size) override;
+		virtual uint32_t getUniformBlock(const std::string& _name) override;
+		virtual uint32_t getUniformMemberOffset(const std::string& _name) override;
+		virtual uint32_t getSampler(const std::string& _name) override;
+		//
+		virtual void setSampler(uint32_t _index, const SamplerState& _sampler, const ITexture* _texture) override;
+		virtual void setUniform(uint32_t _index, uint32_t _offset, const void * _data, uint32_t _size) override;
 		virtual void release() override;
 	public:
 		void assignUniformChunks();

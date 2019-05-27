@@ -11,13 +11,20 @@ namespace nix {
 	class ArgumentVk;
 	//
 	struct DescriptorSetLayout {
+		struct UniformMember {
+			std::string	name;
+			uint32_t	binding;
+			uint32_t	offset;
+		};
 		uint32_t						m_descriptorSetIndex;
 		VkDescriptorSetLayout			m_descriptorSetLayout;
 		std::vector<ShaderDescriptor>	m_descriptors;
+		std::vector<UniformMember>		m_uniformMembers;
 		///////
-		uint32_t getUniformLocation(const std::string& _name);
-		uint32_t getSamplerLocation(const std::string& _name );
-		uint32_t getSSBOLocation(const std::string& _name );
+		const ShaderDescriptor* getUniformBlock(const std::string& _name);
+		uint32_t getUniformBlockMemberOffset( uint32_t _binding, const std::string& _name );
+		const ShaderDescriptor* getSampler(const std::string& _name );
+		const ShaderDescriptor* getSSBO(const std::string& _name );
 	};
 
 	class MaterialVk : public IMaterial {
@@ -29,7 +36,7 @@ namespace nix {
 		uint32_t												m_descriptorSetLayoutCount;
 		std::array<DescriptorSetLayout, MaxArgumentCount>		m_descriptorSetLayouts;
 		//
-		VkPipelineLayout			m_pipelineLayout;
+		VkPipelineLayout										m_pipelineLayout;
 	public:
 		MaterialVk() :
 			  m_vertexShader( VK_NULL_HANDLE )
@@ -53,7 +60,7 @@ namespace nix {
 		}
 		//
 		static MaterialVk* CreateMaterial( ContextVk* _context, const MaterialDescription& _desc );
-		static bool ValidationShaderDescriptor(const ShaderDescriptor& _descriptor, const uint32_t _setIndex, const spirv_cross::Compiler& _compiler, const spirv_cross::ShaderResources& _resources, ContextVk* _context);
+		static bool ValidationShaderDescriptor(const ShaderDescriptor& _descriptor, const uint32_t _setIndex, const spirv_cross::Compiler& _compiler, const spirv_cross::ShaderResources& _resources, ContextVk* _context, spirv_cross::Resource& res);
 	};
 
 }

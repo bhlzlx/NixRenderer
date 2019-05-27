@@ -21,7 +21,7 @@
 //
 #include <algorithm>
 #include <unordered_map>
-#include <spirv_glsl.hpp>
+#include <spirv_cross.hpp>
 #include "SPIRVReflection.h"
 
 namespace vez

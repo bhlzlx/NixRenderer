@@ -525,11 +525,12 @@ namespace nix {
 	private:
 	public:
 		virtual void bind() = 0;
-		virtual UniformSlot getUniformSlot(const char * _name) = 0;
-		virtual SamplerSlot getSamplerSlot(const char * _name) = 0;
+		virtual uint32_t getUniformBlock( const std::string& _name ) = 0;
+		virtual uint32_t getUniformMemberOffset( const std::string& _name ) = 0; 
+		virtual uint32_t getSampler(const std::string& _name) = 0;
 		//
-		virtual void setSampler(SamplerSlot _slot, const SamplerState& _sampler, const ITexture* _texture) = 0;
-		virtual void setUniform(UniformSlot _slot, const void * _data, size_t _size) = 0;
+		virtual void setSampler( uint32_t _index, const SamplerState& _sampler, const ITexture* _texture) = 0;
+		virtual void setUniform(uint32_t _index, uint32_t _offset, const void * _data, uint32_t _size) = 0;
 		virtual void release() = 0;
 	};
 

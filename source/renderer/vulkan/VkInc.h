@@ -15,17 +15,6 @@ enum DeviceType {
 	DeviceTypeCPU
 };
 
-struct DescriptorSetLayout {
-	VkDescriptorSetLayout layout;
-	uint32_t id;
-};
-
-// struct DescriptorSet {
-// 	VkDescriptorSet set = VK_NULL_HANDLE;
-// 	uint32_t id = -1;
-// 	uint32_t poolIndex = -1;
-// };
-
 namespace Ks {
 	class BufferVk;
 }

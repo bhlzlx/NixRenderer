@@ -5,13 +5,13 @@
 
 namespace nix {
 
-	bool MaterialVk::ValidationShaderDescriptor( const ShaderDescriptor& _descriptor, const uint32_t _setIndex, const spirv_cross::Compiler& _compiler, const spirv_cross::ShaderResources& _resources, ContextVk* _context ) {
+	bool MaterialVk::ValidationShaderDescriptor( const ShaderDescriptor& _descriptor, const uint32_t _setIndex, const spirv_cross::Compiler& _compiler, const spirv_cross::ShaderResources& _resources, ContextVk* _context, spirv_cross::Resource& res ) {
 		if (_descriptor.type == SDT_UniformChunk) 
 		{
 			for (auto& shaderRes : _resources.uniform_buffers) 
 			{
 				// find a shader descriptor with a same name
-				if (shaderRes.name == _descriptor.name) 
+				if (shaderRes.name == _descriptor.name)
 				{
 					auto set = _compiler.get_decoration( shaderRes.id, spv::Decoration::DecorationDescriptorSet);
 					auto binding = _compiler.get_decoration(shaderRes.id, spv::Decoration::DecorationBinding);
@@ -66,6 +66,7 @@ namespace nix {
 			}
 			return false;
 		}
+		return true;
 	}
 
 	VkShaderStageFlagBits NixShaderStageToVk(ShaderModuleType _stage) {
@@ -104,7 +105,7 @@ namespace nix {
 
 	IArgument* MaterialVk::createArgument( uint32_t _index )
 	{
-
+		return nullptr;
 	}
 
 	IPipeline* MaterialVk::createPipeline(IRenderPass* _renderPass)
@@ -167,25 +168,50 @@ namespace nix {
 		spirv_cross::Compiler* compiler = nullptr;
 		spirv_cross::ShaderResources* shaderResource = nullptr;
 
-		for ( auto& argument : _desc.argumentLayouts )
-		{
-			for ( auto& descinfo : argument.descriptors ) 
-			{
+		std::array<DescriptorSetLayout, MaxArgumentCount> argumentLayouts;
+
+		for (size_t argumentIndex = 0; argumentIndex < _desc.argumentLayouts.size(); ++argumentIndex) {
+			auto& argument = _desc.argumentLayouts[argumentIndex];
+			for (size_t descriptorIndex = 0; descriptorIndex < argument.descriptors.size(); ++descriptorIndex) {
+				auto& descinfo = argument.descriptors[descriptorIndex];
+
 				if (descinfo.shaderStage == VertexShader) {
 					compiler = &vertCompiler; shaderResource = &vertexResource;
-				} else if(descinfo.shaderStage == FragmentShader) {
+				}
+				else if (descinfo.shaderStage == FragmentShader) {
 					compiler = &fragCompiler; shaderResource = &fragmentResource;
 				}
-				if (!ValidationShaderDescriptor(descinfo, argument.index, *compiler, *shaderResource, _context))
+				spirv_cross::Resource resItem;
+				if (!ValidationShaderDescriptor(descinfo, argument.index, *compiler, *shaderResource, _context, resItem))
 				{
 					_context->getDriver()->getLogger()->error("shader descriptor set mismatch! ");
 					_context->getDriver()->getLogger()->error("name : ");
 					_context->getDriver()->getLogger()->error(descinfo.name);
 					_context->getDriver()->getLogger()->error("\n");
 					return nullptr;
+				}				
+
+				argumentLayouts[argumentIndex].m_descriptors.push_back(descinfo);
+
+				if (descinfo.type == SDT_UniformChunk) {
+					uint32_t i = 0;
+					while (true) {
+						const auto & name = compiler->get_member_qualified_name(resItem.type_id, i);
+						if (name.empty()) {
+							break;
+						}
+						else 
+						{
+							auto offset = compiler->get_member_decoration(resItem.type_id, i, spv::Decoration::DecorationOffset);
+							argumentLayouts[argumentIndex].m_uniformMembers.push_back({
+								name, descinfo.binding, offset
+							});
+						}
+					}
 				}
 			}
 		}
+
 		//\ 3 - push constants information
 		std::vector< VkPushConstantRange > constantRanges;
 
@@ -280,47 +306,58 @@ namespace nix {
 		material->m_fragmentShader = fragSM;
 		material->m_descriptorSetLayoutCount = _desc.argumentLayouts.size();
 		material->m_pipelineLayout = pipelineLayout;
-		for (uint32_t i = 0; i < _desc.argumentLayouts.size(); ++i) {
-			material->m_descriptorSetLayouts[i].m_descriptorSetIndex = i;
-			material->m_descriptorSetLayouts[i].m_descriptorSetLayout = layouts[i];
-			for (auto& descriptor : _desc.argumentLayouts[i].descriptors) {
-				switch (descriptor.type) {
-				case SDT_UniformChunk:
-					material->m_descriptorSetLayouts[i].m_uniformDescriptors.push_back(descriptor);
-					break;
-				case SDT_Sampler:
-					material->m_descriptorSetLayouts[i].m_samplerDescriptors.push_back(descriptor);
-					break;
-				case SDT_SSBO:
-					material->m_descriptorSetLayouts[i].m_storageDescriptors.push_back(descriptor);
-					break;
-				case SDT_TBO:
-					material->m_descriptorSetLayouts[i].m_texelDescriptor.push_back(descriptor);
-					break;
-				default:
-				}
-			}
-		}
+		material->m_descriptorSetLayouts = argumentLayouts;
 		//
 		return material;
 	}
 
-	uint32_t DescriptorSetLayout::getUniformLocation(const std::string& _name)
+	const ShaderDescriptor* DescriptorSetLayout::getUniformBlock(const std::string& _name)
 	{
 		uint32_t i = 0;
 		for (; i < m_descriptors.size(); ++i) {
-
+			if (m_descriptors[i].type == SDT_UniformChunk) {
+				if (m_descriptors[i].name == _name) {
+					return &m_descriptors[i];
+				}
+			}
 		}
+		return nullptr;
 	}
 
-	uint32_t DescriptorSetLayout::getSamplerLocation(const std::string& _name)
+	uint32_t DescriptorSetLayout::getUniformBlockMemberOffset(uint32_t _binding, const std::string& _name)
 	{
-
+		for (auto& member : m_uniformMembers) {
+			if (member.binding == _binding && member.name == _name ) {
+				return member.offset;
+			}
+		}
+		return -1;
 	}
 
-	uint32_t DescriptorSetLayout::getSSBOLocation(const std::string& _name)
+	const ShaderDescriptor* DescriptorSetLayout::getSampler(const std::string& _name)
 	{
+		uint32_t i = 0;
+		for (; i < m_descriptors.size(); ++i) {
+			if (m_descriptors[i].type == SDT_Sampler) {
+				if (m_descriptors[i].name == _name) {
+					return &m_descriptors[i];
+				}
+			}
+		}
+		return nullptr;
+	}
 
+	const ShaderDescriptor* DescriptorSetLayout::getSSBO(const std::string& _name)
+	{
+		uint32_t i = 0;
+		for (; i < m_descriptors.size(); ++i) {
+			if (m_descriptors[i].type == SDT_SSBO) {
+				if (m_descriptors[i].name == _name) {
+					return &m_descriptors[i];
+				}
+			}
+		}
+		return nullptr;
 	}
 
 }
