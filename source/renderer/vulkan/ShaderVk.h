@@ -139,6 +139,6 @@ namespace nix {
 			return m_module;
 		}
 		//
-		static std::vector< DescriptorSetLayout > CreateDescriptorSetLayout(ShaderModuleVk* _vertexShader, ShaderModuleVk* _fragmentShader);
+		static std::vector< ArgumentLayout > CreateDescriptorSetLayout(ShaderModuleVk* _vertexShader, ShaderModuleVk* _fragmentShader);
 	};
 }

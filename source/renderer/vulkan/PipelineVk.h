@@ -23,7 +23,7 @@ namespace nix {
 		VkGraphicsPipelineCreateInfo m_createInfo;
 		VkPipeline m_pipelines[TopologyMode::TMCount];
 		VkPipelineLayout m_pipelineLayout;
-		std::vector<DescriptorSetLayout> m_vecDescriptorSetLayout;
+		std::vector<ArgumentLayout> m_vecDescriptorSetLayout;
 		//
 		VkRenderPass m_renderPass;
 		//
@@ -72,7 +72,7 @@ namespace nix {
 			m_blendConstants[0] = m_blendConstants[1] = m_blendConstants[2] = m_blendConstants[3] = 1.0f;
 		}
 		~PipelineVk();
-		const std::vector<DescriptorSetLayout>& GetDescriptorSetLayouts() const {
+		const std::vector<ArgumentLayout>& GetDescriptorSetLayouts() const {
 			return m_vecDescriptorSetLayout;
 		}
 		VkPipeline requestPipelineObject( TopologyMode _topologyMode );
@@ -86,6 +86,6 @@ namespace nix {
 		void setBlendFactor(const float* _blendFactors);
 	public:
 		//
-		static VkPipelineLayout CreateRenderPipelineLayout(const std::vector<DescriptorSetLayout>& _descriptorSetLayouts, uint32_t _maxPushConstantSize );
+		static VkPipelineLayout CreateRenderPipelineLayout(const std::vector<ArgumentLayout>& _descriptorSetLayouts, uint32_t _maxPushConstantSize );
 	};
 }

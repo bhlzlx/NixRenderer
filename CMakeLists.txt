@@ -126,6 +126,5 @@ if( MSVC )
     endif()
 endif()
 
-
 add_subdirectory( thirdpart )
 add_subdirectory( source )

@@ -209,7 +209,7 @@ namespace nix {
 		return m_pipelineLayout;
 	}
 
-	VkPipelineLayout PipelineVk::CreateRenderPipelineLayout(const std::vector<DescriptorSetLayout>& _descriptorSetLayouts, uint32_t _maxPushConstantSize)
+	VkPipelineLayout PipelineVk::CreateRenderPipelineLayout(const std::vector<ArgumentLayout>& _descriptorSetLayouts, uint32_t _maxPushConstantSize)
 	{
 		std::vector<VkDescriptorSetLayout> layouts;
 		for (auto& d : _descriptorSetLayouts) {

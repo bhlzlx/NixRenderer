@@ -168,7 +168,7 @@ namespace nix {
 		spirv_cross::Compiler* compiler = nullptr;
 		spirv_cross::ShaderResources* shaderResource = nullptr;
 
-		std::array<DescriptorSetLayout, MaxArgumentCount> argumentLayouts;
+		std::array<ArgumentLayout, MaxArgumentCount> argumentLayouts;
 
 		for (size_t argumentIndex = 0; argumentIndex < _desc.argumentLayouts.size(); ++argumentIndex) {
 			auto& argument = _desc.argumentLayouts[argumentIndex];
@@ -219,8 +219,8 @@ namespace nix {
 			auto& vc = vertexResource.push_constant_buffers[0];
 			auto ranges = vertCompiler.get_active_buffer_ranges(vc.id);
 			VkPushConstantRange range = {};
-			range.offset = ranges[0].offset;
-			range.size = ranges[0].range;
+			range.offset = (uint32_t)ranges[0].offset;
+			range.size = (uint32_t)ranges[0].range;
 			range.stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
 			constantRanges.push_back(range);
 		}
@@ -229,8 +229,8 @@ namespace nix {
 			auto& fc = fragmentResource.push_constant_buffers[0];
 			auto ranges = vertCompiler.get_active_buffer_ranges(fc.id);
 			VkPushConstantRange range = {};
-			range.offset = ranges[0].offset;
-			range.size = ranges[0].range;
+			range.offset = (uint32_t)ranges[0].offset;
+			range.size = (uint32_t)ranges[0].range;
 			range.stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
 			constantRanges.push_back(range);
 		}
@@ -280,7 +280,7 @@ namespace nix {
 				layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 				layoutCreateInfo.pNext = nullptr;
 				layoutCreateInfo.flags = 0;
-				layoutCreateInfo.bindingCount = bindings.size();
+				layoutCreateInfo.bindingCount = (uint32_t)bindings.size();
 				layoutCreateInfo.pBindings = bindings.data();
 			}
 			vkCreateDescriptorSetLayout(device, &layoutCreateInfo, nullptr, &layouts[layoutIndex]);
@@ -292,7 +292,7 @@ namespace nix {
 			info.flags = 0;
 			info.pSetLayouts = layouts;
 			info.setLayoutCount = static_cast<uint32_t>(_desc.argumentLayouts.size());
-			info.pushConstantRangeCount = constantRanges.size();
+			info.pushConstantRangeCount = (uint32_t)constantRanges.size();
 			info.pPushConstantRanges = constantRanges.size() ? &constantRanges[0] : nullptr;
 		}
 		VkPipelineLayout pipelineLayout;
@@ -304,27 +304,27 @@ namespace nix {
 		material->m_context = _context;
 		material->m_vertexShader = vertSM;
 		material->m_fragmentShader = fragSM;
-		material->m_descriptorSetLayoutCount = _desc.argumentLayouts.size();
+		material->m_descriptorSetLayoutCount = (uint32_t)_desc.argumentLayouts.size();
 		material->m_pipelineLayout = pipelineLayout;
-		material->m_descriptorSetLayouts = argumentLayouts;
+		material->m_argumentLayouts = argumentLayouts;
 		//
 		return material;
 	}
 
-	const ShaderDescriptor* DescriptorSetLayout::getUniformBlock(const std::string& _name)
+	const ShaderDescriptor* ArgumentLayout::getUniformBlock(const std::string& _name)
 	{
 		uint32_t i = 0;
 		for (; i < m_descriptors.size(); ++i) {
-			if (m_descriptors[i].type == SDT_UniformChunk) {
-				if (m_descriptors[i].name == _name) {
-					return &m_descriptors[i];
+			if (m_descriptors.at(i).type == SDT_UniformChunk) {
+				if (m_descriptors.at(i).name == _name) {
+					return &m_descriptors.at(i);
 				}
 			}
 		}
 		return nullptr;
 	}
 
-	uint32_t DescriptorSetLayout::getUniformBlockMemberOffset(uint32_t _binding, const std::string& _name)
+	uint32_t ArgumentLayout::getUniformBlockMemberOffset(uint32_t _binding, const std::string& _name)
 	{
 		for (auto& member : m_uniformMembers) {
 			if (member.binding == _binding && member.name == _name ) {
@@ -334,7 +334,7 @@ namespace nix {
 		return -1;
 	}
 
-	const ShaderDescriptor* DescriptorSetLayout::getSampler(const std::string& _name)
+	const ShaderDescriptor* ArgumentLayout::getSampler(const std::string& _name)
 	{
 		uint32_t i = 0;
 		for (; i < m_descriptors.size(); ++i) {
@@ -347,7 +347,7 @@ namespace nix {
 		return nullptr;
 	}
 
-	const ShaderDescriptor* DescriptorSetLayout::getSSBO(const std::string& _name)
+	const ShaderDescriptor* ArgumentLayout::getSSBO(const std::string& _name)
 	{
 		uint32_t i = 0;
 		for (; i < m_descriptors.size(); ++i) {

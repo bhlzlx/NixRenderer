@@ -6,11 +6,13 @@ include_directories(
 
 project( nix )
 
-set( CLAN_SOURCE 
+set( NIX_SOURCE 
     ${CMAKE_CURRENT_SOURCE_DIR}/io/archieve.h
     ${CMAKE_CURRENT_SOURCE_DIR}/io/archieve.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/string/encoding.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/string/path.cpp
     )
 
-add_library( nix STATIC ${CLAN_SOURCE} )
+add_library( nix STATIC 
+	${NIX_SOURCE}
+)

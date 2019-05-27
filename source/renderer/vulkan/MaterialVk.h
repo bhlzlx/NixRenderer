@@ -10,7 +10,7 @@ namespace nix {
 	class RenderableVk;
 	class ArgumentVk;
 	//
-	struct DescriptorSetLayout {
+	struct ArgumentLayout {
 		struct UniformMember {
 			std::string	name;
 			uint32_t	binding;
@@ -34,7 +34,7 @@ namespace nix {
 		VkShaderModule											m_vertexShader;
 		VkShaderModule											m_fragmentShader;
 		uint32_t												m_descriptorSetLayoutCount;
-		std::array<DescriptorSetLayout, MaxArgumentCount>		m_descriptorSetLayouts;
+		std::array<ArgumentLayout, MaxArgumentCount>			m_argumentLayouts;
 		//
 		VkPipelineLayout										m_pipelineLayout;
 	public:
@@ -42,7 +42,7 @@ namespace nix {
 			  m_vertexShader( VK_NULL_HANDLE )
 			, m_fragmentShader( VK_NULL_HANDLE)
 			, m_descriptorSetLayoutCount( 0 )
-			, m_descriptorSetLayouts()
+			, m_argumentLayouts()
 			, m_pipelineLayout( VK_NULL_HANDLE )
 		{
 		}
@@ -55,8 +55,8 @@ namespace nix {
 
 		virtual void release() override;
 
-		const DescriptorSetLayout& getDescriptorSetLayout(uint32_t _setIndex) const {
-			return m_descriptorSetLayouts[_setIndex];
+		const ArgumentLayout& getDescriptorSetLayout(uint32_t _setIndex) const {
+			return m_argumentLayouts[_setIndex];
 		}
 		//
 		static MaterialVk* CreateMaterial( ContextVk* _context, const MaterialDescription& _desc );

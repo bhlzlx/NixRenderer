@@ -8,7 +8,7 @@
 
 namespace nix {
 
-	std::vector< DescriptorSetLayout > ShaderModuleVk::CreateDescriptorSetLayout(ShaderModuleVk* _vertexShader, ShaderModuleVk* _fragmentShader)
+	std::vector< ArgumentLayout > ShaderModuleVk::CreateDescriptorSetLayout(ShaderModuleVk* _vertexShader, ShaderModuleVk* _fragmentShader)
 	{
 		std::map< uint32_t, VkDescriptorSetLayoutCreateInfo> setLayoutMap;
 		std::map< uint32_t, std::vector< VkDescriptorSetLayoutBinding > > BindingMap;
@@ -79,7 +79,7 @@ namespace nix {
 		//
 		auto context = (ContextVk*)GetContextVulkan();
 		//
-		std::vector< DescriptorSetLayout > vecDescriptorLayout;
+		std::vector< ArgumentLayout > vecDescriptorLayout;
 		for (auto& p : setLayoutMap)
 		{
 			p.second.pBindings = BindingMap[p.first].data();

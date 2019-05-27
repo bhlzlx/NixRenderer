@@ -62,7 +62,7 @@ namespace nix {
 
 	void ArgumentVk::assignUniformChunks()
 	{
-		const auto& descriptorSetLayout = m_material->m_descriptorSetLayouts[ m_descriptorSetIndex ];
+		const auto& descriptorSetLayout = m_material->m_argumentLayouts[ m_descriptorSetIndex ];
 		//descriptorSetLayout.
 		// 		auto context = (ContextVk*)GetContextVulkan();
 		// 		// get all uniform block size & binding slot

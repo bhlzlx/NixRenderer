@@ -32,3 +32,9 @@
 *.app
 *.ipch
 *.ilk
+
+thirdpart/*
+.vs/*
+build/*
+out/*
+bin/*
