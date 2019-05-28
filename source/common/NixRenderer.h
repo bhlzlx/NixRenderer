@@ -525,9 +525,9 @@ namespace nix {
 	private:
 	public:
 		virtual void bind() = 0;
-		virtual uint32_t getUniformBlock( const std::string& _name ) = 0;
-		virtual uint32_t getUniformMemberOffset( const std::string& _name ) = 0; 
-		virtual uint32_t getSampler(const std::string& _name) = 0;
+		virtual bool getUniformBlock( const std::string& _name, uint32_t* id_ ) = 0;
+		virtual bool getUniformMemberOffset(uint32_t _uniform, const std::string& _name, uint32_t* offset_ ) = 0;
+		virtual bool getSampler(const std::string& _name, uint32_t* id_ ) = 0;
 		//
 		virtual void setSampler( uint32_t _index, const SamplerState& _sampler, const ITexture* _texture) = 0;
 		virtual void setUniform(uint32_t _index, uint32_t _offset, const void * _data, uint32_t _size) = 0;
