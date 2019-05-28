@@ -40,7 +40,7 @@ namespace nix {
 		// buffer object manager
 		UBOAllocator			m_uboAllocator;
 		// descriptor set manager
-		DescriptorSetPool		m_descriptorSetPool;
+		ArgumentAllocator		m_descriptorSetPool;
 		//
 		IArchieve*				m_archieve;
 		//
@@ -83,7 +83,7 @@ namespace nix {
 		void savePipelineCache();
 
 		inline UBOAllocator& getUBOAllocator(){ return m_uboAllocator;	}
-		inline DescriptorSetPool& getDescriptorSetPool(){ return m_descriptorSetPool; }
+		inline ArgumentAllocator& getDescriptorSetPool(){ return m_descriptorSetPool; }
 		inline uint64_t getFrameCounter() const { return m_frameCounter; }
 		//
 		VkSemaphore createSemaphore() const;

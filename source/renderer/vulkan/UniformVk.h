@@ -14,33 +14,27 @@ namespace nix {
 	class UniformDynamicalAllocator;
 	class UBOAllocator;
 
-	/*class IUniformStaticAllocPool {
-	public:
-		virtual UBOAllocation alloc() = 0;
-		virtual void free(const UBOAllocation& _alloc) = 0;
-		virtual size_t unitSize() = 0;
-	};*/
-
-	class NIX_API_DECL UBOAllocatePool//:public IUniformStaticAllocPool
+	struct UniformAllocation 
 	{
+		VkBuffer		buffer;
+		uint32_t		offset;
+		uint8_t*		raw;
+		//
+		uint32_t		unitSize;
+		uint32_t		pool;
+	};
+
+	class UniformPool {
 	private:
-		ContextVk* m_context;
-		std::vector<BufferVk*> m_buffers;
-		std::list<UBOAllocation> m_freeList;
+		std::vector< BufferVk* >			m_vecBuffer;
+		std::vector< uint8_t* >				m_vecRaw;
+		uint32_t							m_offset;
 		//
-		size_t m_unitSize;
-		size_t m_unitCount;
-		//
-		size_t m_counter;
+		std::vector< UniformAllocation >	m_freeList;
 	public:
-		UBOAllocatePool(size_t _uintSize, size_t _unitCount, ContextVk* _context);
-		UBOAllocation alloc();
-		void free(const UBOAllocation& _alloc) {
-			m_freeList.push_back(_alloc);
-		}
-		virtual size_t unitSize() {
-			return m_unitSize;
-		}
+		void initialize( ContextVk* _context, uint32_t _unitSize, uint32_t _unitCount );
+		UniformAllocation allocate();
+		void free( const UniformAllocation& _allocation );
 	};
 	//
 	class UBOAllocator

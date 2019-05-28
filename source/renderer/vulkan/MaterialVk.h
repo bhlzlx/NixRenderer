@@ -18,7 +18,13 @@ namespace nix {
 		};
 		uint32_t						m_descriptorSetIndex;
 		VkDescriptorSetLayout			m_descriptorSetLayout;
-		std::vector<ShaderDescriptor>	m_descriptors;
+		//std::vector<ShaderDescriptor>	m_descriptors;
+		std::vector<ShaderDescriptor>	m_uniformBlockDescriptor;
+		std::vector<ShaderDescriptor>	m_samplerImageDescriptor;
+		std::vector<ShaderDescriptor>	m_storageBufferDescriptor;
+		std::vector<ShaderDescriptor>	m_texelBufferDescriptor;
+
+
 		std::vector<UniformMember>		m_uniformMembers;
 		///////
 		const ShaderDescriptor* getUniformBlock(const std::string& _name);

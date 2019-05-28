@@ -189,9 +189,18 @@ namespace nix {
 					_context->getDriver()->getLogger()->error(descinfo.name);
 					_context->getDriver()->getLogger()->error("\n");
 					return nullptr;
-				}				
+				}
 
-				argumentLayouts[argumentIndex].m_descriptors.push_back(descinfo);
+				switch (descinfo.type) {
+				case SDT_Sampler:
+					argumentLayouts[argumentIndex].m_samplerImageDescriptor.push_back(descinfo); break;
+				case SDT_UniformChunk:
+					argumentLayouts[argumentIndex].m_uniformBlockDescriptor.push_back(descinfo); break;
+				case SDT_SSBO:
+					argumentLayouts[argumentIndex].m_storageBufferDescriptor.push_back(descinfo); break;
+				case SDT_TBO:
+					argumentLayouts[argumentIndex].m_texelBufferDescriptor.push_back(descinfo); break;
+				}
 
 				if (descinfo.type == SDT_UniformChunk) {
 					uint32_t i = 0;
@@ -314,10 +323,10 @@ namespace nix {
 	const ShaderDescriptor* ArgumentLayout::getUniformBlock(const std::string& _name)
 	{
 		uint32_t i = 0;
-		for (; i < m_descriptors.size(); ++i) {
-			if (m_descriptors.at(i).type == SDT_UniformChunk) {
-				if (m_descriptors.at(i).name == _name) {
-					return &m_descriptors.at(i);
+		for (; i < m_uniformBlockDescriptor.size(); ++i) {
+			if (m_uniformBlockDescriptor.at(i).type == SDT_UniformChunk) {
+				if (m_uniformBlockDescriptor.at(i).name == _name) {
+					return &m_uniformBlockDescriptor.at(i);
 				}
 			}
 		}
@@ -337,10 +346,10 @@ namespace nix {
 	const ShaderDescriptor* ArgumentLayout::getSampler(const std::string& _name)
 	{
 		uint32_t i = 0;
-		for (; i < m_descriptors.size(); ++i) {
-			if (m_descriptors[i].type == SDT_Sampler) {
-				if (m_descriptors[i].name == _name) {
-					return &m_descriptors[i];
+		for (; i < m_samplerImageDescriptor.size(); ++i) {
+			if (m_samplerImageDescriptor[i].type == SDT_Sampler) {
+				if (m_samplerImageDescriptor[i].name == _name) {
+					return &m_samplerImageDescriptor[i];
 				}
 			}
 		}
@@ -350,10 +359,10 @@ namespace nix {
 	const ShaderDescriptor* ArgumentLayout::getSSBO(const std::string& _name)
 	{
 		uint32_t i = 0;
-		for (; i < m_descriptors.size(); ++i) {
-			if (m_descriptors[i].type == SDT_SSBO) {
-				if (m_descriptors[i].name == _name) {
-					return &m_descriptors[i];
+		for (; i < m_storageBufferDescriptor.size(); ++i) {
+			if (m_storageBufferDescriptor[i].type == SDT_SSBO) {
+				if (m_storageBufferDescriptor[i].name == _name) {
+					return &m_storageBufferDescriptor[i];
 				}
 			}
 		}
