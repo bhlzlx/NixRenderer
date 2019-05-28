@@ -11,44 +11,40 @@ namespace nix {
 
 	class BufferVk;
 	class ContextVk;
-	class UniformDynamicalAllocator;
-	class UBOAllocator;
 
 	struct UniformAllocation 
 	{
 		VkBuffer		buffer;
 		uint32_t		offset;
-		uint8_t*		raw;
-		//
 		uint32_t		unitSize;
 		uint32_t		pool;
 	};
 
 	class UniformPool {
 	private:
-		std::vector< BufferVk* >			m_vecBuffer;
+		std::vector< BufferVk >				m_vecBuffer;
 		std::vector< uint8_t* >				m_vecRaw;
-		uint32_t							m_offset;
+		uint32_t							m_unitSize;
+		uint32_t							m_unitCount;
+		uint32_t							m_index;
 		//
 		std::vector< UniformAllocation >	m_freeList;
+		ContextVk*							m_context;
 	public:
-		void initialize( ContextVk* _context, uint32_t _unitSize, uint32_t _unitCount );
+		void initialize( ContextVk* _context, uint32_t _unitSize, uint32_t _unitCount, uint32_t _poolIndex);
 		UniformAllocation allocate();
 		void free( const UniformAllocation& _allocation );
-	};
-	//
-	class UBOAllocator
-	{
-	private:
-		// 64; 128; 256; 512, 1024; 
-		std::vector<UBOAllocatePool*> m_vecAllocPools;
-		std::vector< size_t > m_vecAlignSize;
-		ContextVk* m_context;
-	public:
-		UBOAllocator() {
+		uint32_t unitSize() {
+			return m_unitSize;
 		}
+	};
+
+	class UniformAllocator {
+	private:
+		std::vector< UniformPool > m_vecPool;
+	public:
 		void initialize( ContextVk* _context );
-		UBOAllocation alloc(size_t _size);
-		void free(const UBOAllocation& _alloc);
+		bool allocate( uint32_t _size, UniformAllocation& _allocation );
+		void free( const UniformAllocation& _allocation );
 	};
 }

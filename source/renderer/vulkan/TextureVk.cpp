@@ -8,7 +8,7 @@
 
 namespace nix {
 	//
-	VmaAllocator KsVMAAllocator = nullptr;
+	VmaAllocator NixVMAAllocator = nullptr;
 	//
 	ITexture* ContextVk::createTexture(const TextureDescription& _desc, TextureUsageFlags _usage ) {
 		return TextureVk::createTexture( this, VK_NULL_HANDLE, VK_NULL_HANDLE, _desc, _usage);
@@ -41,7 +41,7 @@ namespace nix {
 	TextureVk::~TextureVk()
 	{
 		if (m_ownership& OwnImage) {
-			vmaDestroyImage(KsVMAAllocator, m_image, m_allocation);
+			vmaDestroyImage(NixVMAAllocator, m_image, m_allocation);
 		}
 		if (m_ownership& OwnImageView) {
 			vkDestroyImageView(m_context->getDevice(), m_imageView, nullptr);
@@ -151,7 +151,7 @@ namespace nix {
 				allocInfo.flags = VMA_ALLOCATION_CREATE_STRATEGY_MIN_MEMORY_BIT;
 				allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 			};
-			vmaCreateImage(KsVMAAllocator, &info, &allocInfo, &_image, &allocation, nullptr);
+			vmaCreateImage(NixVMAAllocator, &info, &allocInfo, &_image, &allocation, nullptr);
 		}
 		
 		if (vkhelper::isDepthFormat(format))

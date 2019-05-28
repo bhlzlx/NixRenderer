@@ -13,7 +13,7 @@ namespace nix {
 		VmaAllocatorCreateInfo allocatorInfo = {};
 		allocatorInfo.physicalDevice = _physicalDevice;
 		allocatorInfo.device = _device;
-		VkResult rst = vmaCreateAllocator(&allocatorInfo, &KsVMAAllocator);
+		VkResult rst = vmaCreateAllocator(&allocatorInfo, &NixVMAAllocator);
 		if (rst != VK_SUCCESS)
 			return false;
 		return true;
@@ -44,7 +44,7 @@ namespace nix {
 		BufferVk obj;
 		VkBuffer buffer;
 		VmaAllocation allocation;
-		VkResult rst = vmaCreateBuffer(KsVMAAllocator, &bufferInfo, &allocInfo, &buffer, &allocation, nullptr);
+		VkResult rst = vmaCreateBuffer(NixVMAAllocator, &bufferInfo, &allocInfo, &buffer, &allocation, nullptr);
 		if (rst != VK_SUCCESS) {
 			return std::move(obj);
 		}
@@ -54,7 +54,7 @@ namespace nix {
 		obj.m_usage = _usage;
 		obj.m_allocation = allocation;
 		obj.m_raw = nullptr;
-		vmaMapMemory(KsVMAAllocator, allocation, (void**)&obj.m_raw);
+		vmaMapMemory(NixVMAAllocator, allocation, (void**)&obj.m_raw);
 		//
 		return std::move(obj);
 	}
@@ -150,7 +150,7 @@ namespace nix {
 	BufferVk::~BufferVk()
 	{
 		if (m_buffer && m_allocation) {
-			vmaDestroyBuffer(KsVMAAllocator, m_buffer, m_allocation);
+			vmaDestroyBuffer(NixVMAAllocator, m_buffer, m_allocation);
 		}
 	}
 

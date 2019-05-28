@@ -80,7 +80,7 @@ namespace nix {
 				context->m_queueFamilies.push_back(queueFamily);
 			}
 		}
-		context->m_swapchain = SwapchainVk::CreateSwapchain();
+		context->m_swapchain = SwapchainVk::CreateSwapchain(context);
 		context->m_renderPass = context->m_swapchain.renderPass();
 		context->m_graphicsQueue = context->createGraphicsQueue(graphicsQueue, graphicQueueReq.family, graphicQueueReq.index );
 		context->m_uploadQueue = context->createUploadQueue(uploadQueue, uploadQueueReq.family, uploadQueueReq.index );
@@ -89,11 +89,11 @@ namespace nix {
 		VmaAllocatorCreateInfo allocatorInfo = {};
 		allocatorInfo.physicalDevice = m_PhDevice;
 		allocatorInfo.device = context->m_logicalDevice;
-		rst = vmaCreateAllocator(&allocatorInfo, &KsVMAAllocator);
+		rst = vmaCreateAllocator(&allocatorInfo, &NixVMAAllocator);
 		if (rst != VK_SUCCESS)
 			return false;
 		//DVBOVk::Initialize();
-		context->m_uboAllocator.initialize( context );
+		context->m_uniformAllocator.initialize( context );
 		// Initialize glslang library.
 		//glslang::InitializeProcess();
 		//
@@ -198,14 +198,14 @@ namespace nix {
 			info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 			info.flags = 0;
 			info.pNext = nullptr;
-			info.addressModeU = KsAddressModeToVk(_ss.u);
-			info.addressModeV = KsAddressModeToVk(_ss.v);
-			info.addressModeW = KsAddressModeToVk(_ss.w);
-			info.compareOp = KsCompareOpToVk(_ss.compareFunction);
+			info.addressModeU = NixAddressModeToVk(_ss.u);
+			info.addressModeV = NixAddressModeToVk(_ss.v);
+			info.addressModeW = NixAddressModeToVk(_ss.w);
+			info.compareOp = NixCompareOpToVk(_ss.compareFunction);
 			info.compareEnable = _ss.compareMode != RefNone;
-			info.magFilter = KsFilterToVk(_ss.mag);
-			info.minFilter = KsFilterToVk(_ss.min);
-			info.mipmapMode = KsMipmapFilerToVk(_ss.mip);
+			info.magFilter = NixFilterToVk(_ss.mag);
+			info.minFilter = NixFilterToVk(_ss.min);
+			info.mipmapMode = NixMipmapFilerToVk(_ss.mip);
 			info.borderColor = VK_BORDER_COLOR_INT_TRANSPARENT_BLACK;
 			info.anisotropyEnable = VK_FALSE;
 			info.mipLodBias = 0;

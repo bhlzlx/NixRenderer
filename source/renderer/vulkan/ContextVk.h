@@ -25,8 +25,8 @@ namespace nix {
 	private:
 		DriverVk* m_driver;
 		//
-		VkPhysicalDevice	m_physicalDevice;
-		VkDevice			m_logicalDevice;
+		VkPhysicalDevice		m_physicalDevice;
+		VkDevice				m_logicalDevice;
 		// Queues
 		uint32_t				m_graphicQueueID;
 			uint32_t			m_transferQueueID;
@@ -38,7 +38,7 @@ namespace nix {
 		SwapchainVk				m_swapchain;
 		IRenderPass*			m_renderPass;
 		// buffer object manager
-		UBOAllocator			m_uboAllocator;
+		UniformAllocator		m_uniformAllocator;
 		// descriptor set manager
 		ArgumentAllocator		m_descriptorSetPool;
 		//
@@ -82,7 +82,7 @@ namespace nix {
 		VkPipelineCache getPipelineCache() { return m_pipelineCache; }
 		void savePipelineCache();
 
-		inline UBOAllocator& getUBOAllocator(){ return m_uboAllocator;	}
+		inline UniformAllocator& getUBOAllocator(){ return m_uniformAllocator; }
 		inline ArgumentAllocator& getDescriptorSetPool(){ return m_descriptorSetPool; }
 		inline uint64_t getFrameCounter() const { return m_frameCounter; }
 		//

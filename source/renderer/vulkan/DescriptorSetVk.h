@@ -35,8 +35,7 @@ namespace nix {
 		VkDevice					m_device;
 		VkDescriptorPoolSize		m_freeTable[VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT];
 	public:
-		ArgumentPoolChunk() : m_pool(VK_NULL_HANDLE){
-		}
+		ArgumentPoolChunk();
 		void initialize( VkDevice _device, const VkDescriptorPoolSize* _pools, uint32_t _poolCount );
 		VkDescriptorSet allocate( VkDevice _device, MaterialVk* _material, uint32_t _argumentIndex );
 		void free( VkDevice _device, VkDescriptorSet _descSet );

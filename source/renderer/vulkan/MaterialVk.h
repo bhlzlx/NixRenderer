@@ -64,6 +64,9 @@ namespace nix {
 		const ArgumentLayout& getDescriptorSetLayout(uint32_t _setIndex) const {
 			return m_argumentLayouts[_setIndex];
 		}
+		ContextVk* getContext() {
+			return m_context;
+		}
 		//
 		static MaterialVk* CreateMaterial( ContextVk* _context, const MaterialDescription& _desc );
 		static bool ValidationShaderDescriptor(const ShaderDescriptor& _descriptor, const uint32_t _setIndex, const spirv_cross::Compiler& _compiler, const spirv_cross::ShaderResources& _resources, ContextVk* _context, spirv_cross::Resource& res);

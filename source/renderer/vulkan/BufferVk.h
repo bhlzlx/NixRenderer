@@ -18,7 +18,7 @@
 
 namespace nix {
 	// global vulkan memory allocator
-	extern VmaAllocator KsVMAAllocator;
+	extern VmaAllocator NixVMAAllocator;
 	//
 	class ContextVk;
 
@@ -86,11 +86,11 @@ namespace nix {
 		~BufferVk();
 		void* map() {
 			void* ptr;
-			vmaMapMemory(KsVMAAllocator, m_allocation, &ptr);
+			vmaMapMemory(NixVMAAllocator, m_allocation, &ptr);
 			return ptr;
 		}
 		void unmap() {
-			vmaUnmapMemory(KsVMAAllocator, m_allocation);
+			vmaUnmapMemory(NixVMAAllocator, m_allocation);
 		}
 		// for persistent mapping or can be mapped buffer type
 		void writeDataImmediatly(const void * _data, size_t _size, size_t _offset);

@@ -52,7 +52,7 @@ namespace nix {
 		argument->m_descriptorSetIndex = _descIndex;
 		argument->m_activeIndex = 0;
 		argument->m_material = _material;
-		argument->m_context = nullptr;
+		argument->m_device = _material->getContext()->getDevice();
 		return argument;
 	}
 
@@ -62,6 +62,9 @@ namespace nix {
 			m_descriptorChunks[_argument->m_descriptorSetPools[i]].free(m_context->getDevice(), _argument->m_descriptorSets[i] );
 		}
 		delete _argument;
+	}
+
+	inline ArgumentPoolChunk::ArgumentPoolChunk() : m_pool(VK_NULL_HANDLE) {
 	}
 
 	void ArgumentPoolChunk::initialize( VkDevice _device, const VkDescriptorPoolSize* _pools, uint32_t _poolCount)
