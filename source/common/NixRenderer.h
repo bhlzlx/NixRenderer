@@ -258,11 +258,11 @@ namespace nix {
 		TextureUsageInputAttachment = 0x80
 	};
 
-	enum AttachmentOutputUsageBits : uint8_t {
-		NextPassColor,
-		NextPassDepthStencil,
-		Sampling,
-		Present,
+	enum AttachmentUsageBits : uint8_t {
+		AOU_ColorAttachment,
+		AOU_DepthStencilAttachment,
+		AOU_ShaderRead,
+		AOU_Present,
 	};
 
 	enum BufferType :uint8_t {
@@ -274,7 +274,15 @@ namespace nix {
 		TBO, // Texel buffer object
 	};
 
-	enum RTLoadAction :uint8_t {
+	enum MultiSampleType {
+		MsaaNone,
+		Msaax2,
+		Msaax4,
+		Msaax8,
+		Msaax16
+	};
+
+	enum AttachmentLoadAction :uint8_t {
 		Keep,
 		Clear,
 		DontCare,
@@ -397,10 +405,12 @@ namespace nix {
 	// load action
 #pragma pack( push, 1 )
 	struct AttachmentDescription {
-		NixFormat format;
-		RTLoadAction loadAction;
-		AttachmentOutputUsageBits usage;
-		NIX_JSON(format, loadAction, usage)
+		NixFormat						format;
+		MultiSampleType					multisample;
+		AttachmentLoadAction			loadAction;
+		AttachmentUsageBits				usage;
+		//
+		NIX_JSON(format, multisample, loadAction, usage)
 	};
 	struct RenderPassDescription {
 		// render pass behavior
@@ -408,10 +418,11 @@ namespace nix {
 		// framebuffer description
 		AttachmentDescription colorAttachment[MaxRenderTarget];
 		AttachmentDescription depthStencil;
+		uint32_t inputAttachmentCount;
+		AttachmentDescription inputAttachment[MaxRenderTarget];
 		//
-		bool operator < (const RenderPassDescription& _desc) const {
-			return memcmp(this, &_desc, sizeof(RenderPassDescription)) < 0;
-		}
+		AttachmentDescription resolveAttachment;
+
 		NIX_JSON(colorAttachmentCount, colorAttachment, depthStencil)
 	};
 #pragma pack (pop)

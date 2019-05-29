@@ -7,13 +7,39 @@
 #include "vkhelper/helper.h"
 #include "TypemappingVk.h"
 #include <cassert>
+#include "nix/string/encoding.h"
 
 namespace nix {
 	//
-	std::map< RenderPassDescription, VkRenderPass > RenderPassVk::m_renderPassMapTable;
+	std::map< uint64_t, VkRenderPass > RenderPassVk::m_renderPassMapTable;
 	//
-	VkImageLayout AttachmentUsageToImageLayout(AttachmentOutputUsageBits _usage);
+	VkImageLayout AttachmentUsageToImageLayout(AttachmentUsageBits _usage);
 	//
+
+	uint64_t HashRenderPassDescription(const RenderPassDescription& _desc) {
+		APHasher hasher;
+		if (_desc.colorAttachmentCount) {
+			for (uint32_t i = 0; i < _desc.colorAttachmentCount; ++i ) {
+				hasher.hash(&_desc.colorAttachment[i].format, sizeof(_desc.colorAttachment[i].format));
+				hasher.hash(&_desc.colorAttachment[i].multisample, sizeof(_desc.colorAttachment[i].multisample));
+			}
+		}
+		if (_desc.depthStencil.format != NixInvalidFormat) {
+			hasher.hash(&_desc.depthStencil.format, sizeof(_desc.depthStencil.format));
+			hasher.hash(&_desc.depthStencil.multisample, sizeof(_desc.depthStencil.multisample));
+		}
+		if (_desc.inputAttachmentCount) {
+			for (uint32_t i = 0; i < _desc.inputAttachmentCount; ++i) {
+				hasher.hash(&_desc.inputAttachment[i].format, sizeof(_desc.inputAttachment[i].format));
+				hasher.hash(&_desc.inputAttachment[i].multisample, sizeof(_desc.inputAttachment[i].multisample));
+			}
+		}
+		if (_desc.resolveAttachment.format != NixInvalidFormat) {
+			hasher.hash(&_desc.resolveAttachment.format, sizeof(_desc.resolveAttachment.format));
+			hasher.hash(&_desc.resolveAttachment.multisample, sizeof(_desc.resolveAttachment.multisample));
+		}
+		return hasher;
+	}
 
 	AttachmentVk* AttachmentVk::createAttachment(ContextVk* _context, TextureVk* _texture) {
 		AttachmentVk* attachment = new AttachmentVk();
@@ -230,7 +256,7 @@ namespace nix {
 		return m_size;
 	}
 
-	VkAttachmentLoadOp RTLoadOpToVk(nix::RTLoadAction _load) {
+	VkAttachmentLoadOp RTLoadOpToVk(nix::AttachmentLoadAction _load) {
 		switch (_load) {
 		case Clear:
 			return VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -242,25 +268,26 @@ namespace nix {
 		return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 	}
 
-	VkImageLayout AttachmentUsageToImageLayout(AttachmentOutputUsageBits _usage) {
+	VkImageLayout AttachmentUsageToImageLayout(AttachmentUsageBits _usage) {
 		switch (_usage) {
-		case Sampling: return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		case NextPassDepthStencil: return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		case NextPassColor: return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		case Present: return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		case AOU_ShaderRead: return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		case AOU_DepthStencilAttachment: return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		case AOU_ColorAttachment: return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		case AOU_Present: return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 		}
 		return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	}
 
 	VkRenderPass RenderPassVk::RequestRenderPassObject(ContextVk* _context, const RenderPassDescription& _desc)
 	{
-		auto it = m_renderPassMapTable.find(_desc);
+		uint64_t hashCode = HashRenderPassDescription(_desc);
+		auto it = m_renderPassMapTable.find(hashCode);
 		if (it != m_renderPassMapTable.end()) {
 			return it->second;
 		}
 		//
 		auto sampleCount = VK_SAMPLE_COUNT_1_BIT;
-		std::vector<  VkAttachmentDescription > attacmentDescriptions; {
+		std::vector<VkAttachmentDescription> attacmentDescriptions; {
 			for (uint32_t i = 0; i < _desc.colorAttachmentCount; ++i) {
 				VkAttachmentDescription desc; {
 					desc.flags = 0;
@@ -367,7 +394,7 @@ namespace nix {
 		if (rst != VK_SUCCESS) {
 			return VK_NULL_HANDLE;
 		}
-		m_renderPassMapTable[_desc] = renderpass;
+		m_renderPassMapTable[hashCode] = renderpass;
 		return renderpass;
 	}
 
@@ -421,11 +448,11 @@ namespace nix {
 		RenderPassDescription rpdesc = {}; {
 			rpdesc.colorAttachment[0].format = VkFormatToNix(_format);
 			rpdesc.colorAttachment[0].loadAction = Clear;
-			rpdesc.colorAttachment[0].usage = Present;
+			rpdesc.colorAttachment[0].usage = AOU_Present;
 			rpdesc.colorAttachmentCount = 1;
 			rpdesc.depthStencil.format = NixDepth24FStencil8;
 			rpdesc.depthStencil.loadAction = Clear;
-			rpdesc.depthStencil.usage = NextPassDepthStencil;
+			rpdesc.depthStencil.usage = AOU_DepthStencilAttachment;
 		}
 		m_renderPass = RenderPassVk::RequestRenderPassObject( m_context, rpdesc);
 

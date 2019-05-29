@@ -47,7 +47,7 @@ namespace nix {
 		//
 		Size<uint32_t> m_size;
 		//
-		static std::map< RenderPassDescription, VkRenderPass > m_renderPassMapTable;
+		static std::map< uint64_t, VkRenderPass > m_renderPassMapTable;
 	public:
 		RenderPassVk() {
 			memset(m_colorAttachments, 0, sizeof(m_colorAttachments));

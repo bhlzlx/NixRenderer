@@ -215,7 +215,7 @@ namespace nix {
 		return VK_STENCIL_OP_REPLACE;
 	}
 
-	static inline VkAttachmentLoadOp NixLoadOpToVk( RTLoadAction _op )
+	static inline VkAttachmentLoadOp NixLoadOpToVk( AttachmentLoadAction _op )
 	{
 		switch (_op)
 		{

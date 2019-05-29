@@ -17,409 +17,6 @@ namespace nix {
 
 	IPipeline* MaterialVk::createPipeline(const RenderPassDescription& _renderPass)
 	{
-
-	}
-
-	void PipelineVk::begin()
-	{
-		auto cmd = m_context->getGraphicsQueue()->commandBuffer();
-		m_commandBuffer = *cmd;
-
-		vkCmdSetStencilReference(m_commandBuffer, VK_STENCIL_FRONT_AND_BACK, m_stencilReference);
-		vkCmdSetBlendConstants(m_commandBuffer, m_blendConstants);
-		vkCmdSetDepthBias(m_commandBuffer, m_constantBias, 0, m_slopeScaleBias);
-		vkCmdSetViewport(m_commandBuffer, 0, 1, &m_viewport);
-		vkCmdSetScissor(m_commandBuffer, 0, 1, &m_scissor);
-		//
-	}
-
-	void PipelineVk::end()
-	{
-		m_commandBuffer = VK_NULL_HANDLE;
-	}
-
-	void PipelineVk::setViewport(const Viewport& _viewport)
-	{
-		m_viewport.width = _viewport.width;
-		m_viewport.height = _viewport.height;
-		m_viewport.x = _viewport.x;
-		m_viewport.y = _viewport.y;
-		m_viewport.maxDepth = _viewport.zFar;
-		m_viewport.minDepth = _viewport.zNear;
-	}
-
-	void PipelineVk::setScissor(const Scissor& _scissor)
-	{
-		m_scissor.extent.width = _scissor.size.width;
-		m_scissor.extent.height = _scissor.size.height;
-		m_scissor.offset.x = _scissor.origin.x;
-		m_scissor.offset.y = _scissor.origin.y;
-	}
-
-	void PipelineVk::bindVertexBuffer(uint32_t _index, IBuffer* _vertexBuffer, uint32_t _offset) {
-		VkBuffer buffer = VK_NULL_HANDLE;
-		if (_vertexBuffer->getType() == SVBO) {
-			buffer = ((StableVertexBuffer*)_vertexBuffer)->m_buffer;
-		}
-		else if(_vertexBuffer->getType() == TVBO) {
-			buffer = ((TransientVBO*)_vertexBuffer)->getBuffer();
-		}
-		else {
-			assert(false && "buffer must be a vertex buffer!");
-			return;
-		}
-		VkDeviceSize offset = _offset;
-		vkCmdBindVertexBuffers(m_commandBuffer, _index, 1, &buffer, &offset);
-	}
-
-	void PipelineVk::draw(TopologyMode _pmode, uint32_t _offset, uint32_t _vertexCount) {
-		auto pipeline = requestPipelineObject(_pmode);
-		// bind pipeline
-		vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-		// draw call
-		vkCmdDraw(m_commandBuffer, _vertexCount, 1, _offset, 0);
-	}
-
-	void PipelineVk::drawIndexed(TopologyMode _pmode, IBuffer* _indexBuffer, uint32_t _indexOffset, uint32_t _indexCount)
-	{
-		auto pipeline = requestPipelineObject(_pmode);
-		vkCmdBindIndexBuffer(m_commandBuffer, ((IndexBuffer*)_indexBuffer)->m_buffer, _indexOffset, VK_INDEX_TYPE_UINT16);
-		// bind pipeline
-		vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-		// draw call
-		vkCmdDrawIndexed(m_commandBuffer, _indexCount, 1, _indexOffset, 0, 0);
-	}
-
-	void PipelineVk::drawInstanced(TopologyMode _pmode, uint32_t _offset, uint32_t _vertexCount, uint32_t _instanceCount) {
-		auto pipeline = requestPipelineObject(_pmode);
-		// bind pipeline
-		vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-		// draw call
-		vkCmdDraw(m_commandBuffer, _vertexCount, _instanceCount, 0, 0);
-	}
-	void PipelineVk::drawInstanced(TopologyMode _pmode, IBuffer* _indexBuffer, uint32_t _indexOffset, uint32_t _indexCount, uint32_t _instanceCount) {
-		auto pipeline = requestPipelineObject(_pmode);
-		vkCmdBindIndexBuffer(m_commandBuffer, ((IndexBuffer*)_indexBuffer)->m_buffer, _indexOffset, VK_INDEX_TYPE_UINT16);
-		// bind pipeline
-		vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-		// draw call
-		vkCmdDrawIndexed(m_commandBuffer, _indexCount, 1, _indexOffset, 0, 0 );
-	}
-
-	void PipelineVk::setPolygonOffset(float _constantBias, float _slopeScaleBias)
-	{
-		m_constantBias = _constantBias;
-		m_slopeScaleBias = _slopeScaleBias;
-	}
-
-	nix::IArgument* PipelineVk::createArgument(const ArgumentDescription& _desc)
-	{
-		std::vector<uint32_t> vecSetID;
-		for (uint32_t i = 0; i < _desc.samplerCount; ++i) {
-			uint32_t set;
-			uint32_t binding;
-			bool rst = m_vertexModule->GetSampler(_desc.samplerNames[i], set, binding);
-			if (!rst) {
-				rst = m_fragmentModule->GetSampler(_desc.samplerNames[i], set, binding);
-			}
-			if (!rst)// do not exists!
-				return nullptr;
-			vecSetID.push_back(set);
-		}
-		for (uint32_t i = 0; i < _desc.uboCount; ++i) {
-			uint32_t set;
-			uint32_t binding;
-			uint32_t offset;
-			bool rst = m_vertexModule->GetUniformMember( _desc.uboNames[i], set, binding, offset );
-			if (!rst) {
-				rst = m_fragmentModule->GetUniformMember(_desc.uboNames[i], set, binding, offset);
-			}
-			if (!rst) {
-				// do not exists!
-				assert(false);
-				return nullptr;
-			}
-			vecSetID.push_back(set);
-		}
-		if (vecSetID.size() > 1) {
-			auto it = vecSetID.begin();
-			++it;
-			while (it != vecSetID.end()) {
-				if (*it != vecSetID[0]) {
-					// descriptor set not the same!
-					assert(false);
-					return nullptr;
-				}
-				++it;
-			}
-		}
-		return createArgument( vecSetID[0] );
-	}
-
-	nix::IArgument* PipelineVk::createArgument(uint32_t _setId)
-	{
-		auto set = m_context->getDescriptorSetPool().alloc(this, _setId);
-		if (!set) {
-			assert(false);
-		}
-		auto drawable = new ArgumentVk(set);
-		drawable->m_pipeline = this;
-		return drawable;
-	}
-
-	void PipelineVk::setShaderCache(const void* _data, size_t _size, size_t _offset) {
-#ifndef NDEBUG
-		assert( _size + _offset <= m_context->getDriver()->getPhysicalDeviceProperties().limits.maxPushConstantsSize );
-#endif
-		auto cmd = m_context->getGraphicsQueue()->commandBuffer();
-		vkCmdPushConstants(cmd->operator const VkCommandBuffer &(), m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, _offset, _size, _data);
-	}
-
-	bool PipelineVk::getVertexShaderCacheMember(const std::string _name, size_t& size_, size_t& offset_) {
-		return m_vertexModule->GetConstantsMember(_name, size_, offset_);
-	}
-	bool PipelineVk::getFragmentShaderCacheMember(const std::string _name, size_t& size_, size_t& offset_) {
-		return m_fragmentModule->GetConstantsMember(_name, size_, offset_);
-	}
-
-	const nix::PipelineDescription& PipelineVk::getDescription()
-	{
-		return m_desc;
-	}
-
-	void PipelineVk::release()
-	{
-		auto deletor = GetDeferredDeletor();
-		deletor.destroyResource(this);
-	}
-
-	PipelineVk::~PipelineVk()
-	{
-		auto device = m_context->getDevice();
-		for (auto & pipeline : m_pipelines)
-		{
-			if (pipeline) {
-				vkDestroyPipeline(device, pipeline, nullptr);
-			}
-		}
-		vkDestroyPipelineLayout(device, m_pipelineLayout, nullptr);
-		for ( auto& setLayout : m_vecDescriptorSetLayout) {
-			vkDestroyDescriptorSetLayout(device, setLayout.layout, nullptr);
-		}
-	}
-
-	VkPipelineLayout PipelineVk::getPipelineLayout() const
-	{
-		return m_pipelineLayout;
-	}
-
-	VkPipelineLayout PipelineVk::CreateRenderPipelineLayout(const std::vector<ArgumentLayout>& _descriptorSetLayouts, uint32_t _maxPushConstantSize)
-	{
-		std::vector<VkDescriptorSetLayout> layouts;
-		for (auto& d : _descriptorSetLayouts) {
-			layouts.push_back(d.layout);
-		}
-		VkPushConstantRange constantsRange = {};
-		{
-			constantsRange.offset = 0;
-			constantsRange.size = _maxPushConstantSize;
-			constantsRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-		}
-		VkPipelineLayoutCreateInfo info; {
-			info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-			info.pNext = nullptr;
-			info.flags = 0;
-			info.pSetLayouts = layouts.data();
-			info.setLayoutCount = static_cast<uint32_t>(layouts.size());
-			info.pushConstantRangeCount = 1;
-			info.pPushConstantRanges = &constantsRange;
-		}
-		VkPipelineLayout pipelineLayout;
-		vkCreatePipelineLayout(m_context->getDevice(), &info, nullptr, &pipelineLayout);
-		return pipelineLayout;
-	}
-
-	IPipeline* ContextVk::createPipeline(const PipelineDescription& _desc) {
-		auto device = m_context->getDevice();
-
-		bool rst = false;
-		TextReader vertReader, fragReader;
-		rst = vertReader.openFile( m_archieve, std::string(_desc.vertexShader));
-		rst = fragReader.openFile( m_archieve, std::string(_desc.fragmentShader));
-		//auto vertShader = createShaderModule(vertReader.getText(), nix::ShaderModuleType::VertexShader);
-		//auto fragShader = createShaderModule(fragReader.getText(), nix::ShaderModuleType::FragmentShader);
-		auto vertShader = m_context->createShaderModule(vertReader.getText(), "main", VK_SHADER_STAGE_VERTEX_BIT);
-		if (!vertShader)
-			return nullptr;
-		ShaderModuleVk* fragShader = nullptr;
-		if ( _desc.fragmentShader)
-			fragShader = m_context->createShaderModule(fragReader.getText(), "main", VK_SHADER_STAGE_FRAGMENT_BIT);
-		//
-		auto vecSetLayouts = ShaderModuleVk::CreateDescriptorSetLayout(vertShader, fragShader);
-		auto pipelineLayout = PipelineVk::CreateRenderPipelineLayout(vecSetLayouts);
-
-		auto renderPass = RenderPassVk::RequestRenderPassObject(_desc.renderPassDescription);
-		//
-		PipelineVk* pipeline = new PipelineVk();
-		pipeline->m_desc = _desc;
-		pipeline->m_vertexModule = vertShader;
-		pipeline->m_fragmentModule = fragShader;
-		pipeline->m_vecDescriptorSetLayout = vecSetLayouts;
-		pipeline->m_pipelineLayout = pipelineLayout;
-		pipeline->m_renderPass = renderPass;
-		memset(pipeline->m_pipelines, 0, sizeof(pipeline->m_pipelines));
-		//
-		return pipeline;
-	}
-
-	bool PipelineVk::getUniformMember(const char * _name, uint32_t _setId, uint32_t & index_, uint32_t & offset_)
-	{
-		ShaderModuleVk* shaderModules[2] = { m_vertexModule, m_fragmentModule };
-		index_ = 0;
-		for (auto& shaderModule : shaderModules)
-		{
-			if (!shaderModule)
-				break;
-			auto& sets = shaderModule->GetDescriptorSetStructure();
-			for (auto& set : sets)
-			{
-				if (set.id == _setId)
-				{
-					for (auto& unif : set.uniforms)
-					{
-						for (auto& member : unif.members)
-						{
-							if (member.name == _name)
-							{
-								offset_ = static_cast<uint32_t>(member.offset);
-								return true;
-							}
-						}
-						++index_;
-					}
-				}
-			}
-		}
-		return false;
-	}
-
-	bool PipelineVk::getSampler(const char * _name, uint32_t _setId, uint32_t& binding_)
-	{
-		ShaderModuleVk* shaderModules[2] = { m_vertexModule, m_fragmentModule };
-		binding_ = 0;
-		for (auto& shaderModule : shaderModules)
-		{
-			if (!shaderModule)
-				break;
-			auto& sets = shaderModule->GetDescriptorSetStructure();
-			for (auto& set : sets)
-			{
-				if (set.id == _setId)
-				{
-					for (auto& sampler : set.samplers)
-					{
-						if (sampler.name == _name)
-						{
-							binding_ = static_cast<uint32_t>(sampler.binding);
-							return true;
-						}
-					}
-				}
-			}
-		}
-		return false;
-	}
-
-	void PipelineVk::getUniformBindingPoints(size_t _setId, std::vector<UniformBindingPoint>& _bindingPoints)
-	{
-		_bindingPoints.clear();
-		auto& vert_sets = m_vertexModule->GetDescriptorSetStructure();
-		for (auto& set : vert_sets)
-		{
-			if (set.id == _setId)
-			{
-				for (auto& uniform : set.uniforms)
-				{
-					_bindingPoints.push_back(uniform);
-				}
-			}
-		}
-		if (m_fragmentModule)
-		{
-			auto& frag_sets = m_fragmentModule->GetDescriptorSetStructure();
-			for (auto& set : frag_sets)
-			{
-				if (set.id == _setId)
-				{
-					for (auto& uniform : set.uniforms)
-					{
-						_bindingPoints.push_back(uniform);
-					}
-				}
-			}
-		}
-	}
-
-	void PipelineVk::getSamplerBindingPoints(uint32_t _setId, std::vector<SamplerBindingPoint>& _bindingPoints)
-	{
-		_bindingPoints.clear();
-		auto& vert_sets = m_vertexModule->GetDescriptorSetStructure();
-		for (auto& set : vert_sets)
-		{
-			if (set.id == _setId)
-			{
-				for (auto& sampler : set.samplers)
-				{
-					_bindingPoints.push_back(sampler);
-				}
-			}
-		}
-		if (m_fragmentModule)
-		{
-			auto& frag_sets = m_fragmentModule->GetDescriptorSetStructure();
-			for (auto& set : frag_sets)
-			{
-				if (set.id == _setId)
-				{
-					for (auto& sampler : set.samplers)
-					{
-						_bindingPoints.push_back(sampler);
-					}
-				}
-			}
-		}
-	}
-
-	/*
-	uint32_t PipelineVk::GetSamplerCount()
-	{
-		uint32_t count = 0;
-		if (m_vertexModule)
-			count += m_vertexModule->GetSamplerCount();
-		if (m_fragmentModule)
-			count += m_fragmentModule->GetSamplerCount();
-		return count;
-	}
-
-	uint32_t PipelineVk::GetUniformBlockCount()
-	{
-		uint32_t count = 0;
-		if (m_vertexModule)
-			count += m_vertexModule->GetUniformBlockCount();
-		if (m_fragmentModule)
-			count += m_fragmentModule->GetUniformBlockCount();
-		return count;
-	}*/
-
-	VkPipeline PipelineVk::requestPipelineObject( TopologyMode _topologyMode )
-	{
-		if (m_pipelines[_topologyMode]) {
-			return m_pipelines[_topologyMode];
-		}
-
-		VkPrimitiveTopology tm = KsTopologyToVk(_topologyMode);
-		VkPolygonMode pm = KsTopolygyPolygonMode(_topologyMode);
-
 		VkGraphicsPipelineCreateInfo pipelineCreateInfo = {};
 		pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		// The layout used for this pipeline (can be shared among multiple pipelines using the same layout)
@@ -524,7 +121,7 @@ namespace nix {
 
 		std::array< VkVertexInputBindingDescription, 16 > vertexInputBindings;
 		std::array<VkVertexInputAttributeDescription, 16 > vertexInputAttributs;
-		for (uint32_t i = 0; i < m_desc.vertexLayout.vertexBufferCount; ++i )
+		for (uint32_t i = 0; i < m_desc.vertexLayout.vertexBufferCount; ++i)
 		{
 			vertexInputBindings[i].binding = i;
 			vertexInputBindings[i].stride = m_desc.vertexLayout.vertexBuffers[i].stride;
@@ -615,6 +212,104 @@ namespace nix {
 		//
 		return m_pipelines[_topologyMode];
 	}
+
+	void PipelineVk::setViewport(const Viewport& _viewport)
+	{
+		m_viewport.width = _viewport.width;
+		m_viewport.height = _viewport.height;
+		m_viewport.x = _viewport.x;
+		m_viewport.y = _viewport.y;
+		m_viewport.maxDepth = _viewport.zFar;
+		m_viewport.minDepth = _viewport.zNear;
+	}
+
+	void PipelineVk::setScissor(const Scissor& _scissor)
+	{
+		m_scissor.extent.width = _scissor.size.width;
+		m_scissor.extent.height = _scissor.size.height;
+		m_scissor.offset.x = _scissor.origin.x;
+		m_scissor.offset.y = _scissor.origin.y;
+	}
+
+	void PipelineVk::setPolygonOffset(float _constantBias, float _slopeScaleBias)
+	{
+		m_constantBias = _constantBias;
+		m_slopeScaleBias = _slopeScaleBias;
+	}
+
+// 	void PipelineVk::setShaderCache(const void* _data, size_t _size, size_t _offset) {
+// #ifndef NDEBUG
+// 		assert( _size + _offset <= m_context->getDriver()->getPhysicalDeviceProperties().limits.maxPushConstantsSize );
+// #endif
+// 		auto cmd = m_context->getGraphicsQueue()->commandBuffer();
+// 		vkCmdPushConstants(cmd->operator const VkCommandBuffer &(), m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, _offset, _size, _data);
+// 	}
+// 
+// 	bool PipelineVk::getVertexShaderCacheMember(const std::string _name, size_t& size_, size_t& offset_) {
+// 		return m_vertexModule->GetConstantsMember(_name, size_, offset_);
+// 	}
+// 	bool PipelineVk::getFragmentShaderCacheMember(const std::string _name, size_t& size_, size_t& offset_) {
+// 		return m_fragmentModule->GetConstantsMember(_name, size_, offset_);
+// 	}
+// 
+// 	const nix::PipelineDescription& PipelineVk::getDescription()
+// 	{
+// 		return m_desc;
+// 	}
+
+	void PipelineVk::release()
+	{
+		auto deletor = GetDeferredDeletor();
+		deletor.destroyResource(this);
+	}
+
+	PipelineVk::~PipelineVk()
+	{
+// 		auto device = m_context->getDevice();
+// 		for (auto & pipeline : m_pipelines)
+// 		{
+// 			if (pipeline) {
+// 				vkDestroyPipeline(device, pipeline, nullptr);
+// 			}
+// 		}
+// 		vkDestroyPipelineLayout(device, m_pipelineLayout, nullptr);
+// 		for ( auto& setLayout : m_vecDescriptorSetLayout) {
+// 			vkDestroyDescriptorSetLayout(device, setLayout.layout, nullptr);
+// 		}
+	}
+
+// 	IPipeline* ContextVk::createPipeline(const PipelineDescription& _desc) {
+// 		auto device = m_context->getDevice();
+// 
+// 		bool rst = false;
+// 		TextReader vertReader, fragReader;
+// 		rst = vertReader.openFile( m_archieve, std::string(_desc.vertexShader));
+// 		rst = fragReader.openFile( m_archieve, std::string(_desc.fragmentShader));
+// 		//auto vertShader = createShaderModule(vertReader.getText(), nix::ShaderModuleType::VertexShader);
+// 		//auto fragShader = createShaderModule(fragReader.getText(), nix::ShaderModuleType::FragmentShader);
+// 		auto vertShader = m_context->createShaderModule(vertReader.getText(), "main", VK_SHADER_STAGE_VERTEX_BIT);
+// 		if (!vertShader)
+// 			return nullptr;
+// 		ShaderModuleVk* fragShader = nullptr;
+// 		if ( _desc.fragmentShader)
+// 			fragShader = m_context->createShaderModule(fragReader.getText(), "main", VK_SHADER_STAGE_FRAGMENT_BIT);
+// 		//
+// 		auto vecSetLayouts = ShaderModuleVk::CreateDescriptorSetLayout(vertShader, fragShader);
+// 		auto pipelineLayout = PipelineVk::CreateRenderPipelineLayout(vecSetLayouts);
+// 
+// 		auto renderPass = RenderPassVk::RequestRenderPassObject(_desc.renderPassDescription);
+// 		//
+// 		PipelineVk* pipeline = new PipelineVk();
+// 		pipeline->m_desc = _desc;
+// 		pipeline->m_vertexModule = vertShader;
+// 		pipeline->m_fragmentModule = fragShader;
+// 		pipeline->m_vecDescriptorSetLayout = vecSetLayouts;
+// 		pipeline->m_pipelineLayout = pipelineLayout;
+// 		pipeline->m_renderPass = renderPass;
+// 		memset(pipeline->m_pipelines, 0, sizeof(pipeline->m_pipelines));
+// 		//
+// 		return pipeline;
+// 	}
 
 	void PipelineVk::setStencilReference(uint32_t _stencilReference) {
 		m_stencilReference = _stencilReference;

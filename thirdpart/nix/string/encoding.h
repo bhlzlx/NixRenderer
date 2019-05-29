@@ -46,6 +46,31 @@ namespace nix
 	// 复制字串
 	void ucsncpy( char16_t * _pDest, const char16_t *_pSrc, size_t _nCount);
 
+	class APHasher {
+	private:
+		uint64_t m_value;
+	public:
+		APHasher()
+			: m_value(0xAAAAAAAA)
+		{
+		}
+		operator uint64_t () const {
+			return m_value;
+		}
+		//
+		void hash(const void* _data, size_t _length) {
+			for ( size_t i = 0; i< _length; ++i )
+			{
+				uint8_t v = *((const uint8_t*)_data + i);
+				if (i & 1) {
+					m_value ^= ((m_value << 7) ^ v * (m_value >> 3));
+				}
+				else {
+					m_value ^= ((m_value << 11) ^ v * (m_value >> 5));
+				}
+			}
+		}
+	};
 }
 
 #endif
