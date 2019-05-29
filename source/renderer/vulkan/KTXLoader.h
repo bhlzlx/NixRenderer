@@ -31,7 +31,7 @@ namespace nix {
 		//
 		TextureVk* m_texture;
 	public:
-		static TextureVk* CreateTexture(const void* _data, size_t _length);
+		static TextureVk* CreateTexture(ContextVk* _context,const void* _data, size_t _length);
 	};
 
 }

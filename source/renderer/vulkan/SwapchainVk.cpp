@@ -1,5 +1,6 @@
 #include "SwapchainVk.h"
 #include "ContextVk.h"
+#include "BufferVk.h"
 #include "TextureVk.h"
 #include "RenderPassVk.h"
 #include "TypemappingVk.h"

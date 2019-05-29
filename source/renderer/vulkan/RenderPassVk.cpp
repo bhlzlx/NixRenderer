@@ -2,6 +2,7 @@
 #include "RenderPassVk.h"
 #include "TextureVk.h"
 #include "ContextVk.h"
+#include "BufferVk.h"
 #include "QueueVk.h"
 #include "vkhelper/helper.h"
 #include "TypemappingVk.h"

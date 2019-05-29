@@ -23,6 +23,7 @@ namespace nix {
 		std::vector<ShaderDescriptor>	m_samplerImageDescriptor;
 		std::vector<ShaderDescriptor>	m_storageBufferDescriptor;
 		std::vector<ShaderDescriptor>	m_texelBufferDescriptor;
+		std::vector< uint32_t >			m_dynamicalBindings;
 
 
 		std::vector<UniformMember>		m_uniformMembers;
@@ -31,9 +32,11 @@ namespace nix {
 		uint32_t getUniformBlockMemberOffset( uint32_t _binding, const std::string& _name );
 		const ShaderDescriptor* getSampler(const std::string& _name );
 		const ShaderDescriptor* getSSBO(const std::string& _name );
+		void updateDynamicalBindings();
 	};
 
 	class MaterialVk : public IMaterial {
+		friend class ArgumentAllocator;
 	private:
 		MaterialDescription										m_description;
 		ContextVk*												m_context;
@@ -54,10 +57,12 @@ namespace nix {
 		}
 
 		virtual IArgument* createArgument( uint32_t _index ) override;
+		virtual void destroyArgument( IArgument* _argument ) override;
 
 		virtual IRenderable* createRenderable() override;
+		virtual void destroyRenderable(IRenderable* _renderable) override;
 
-		virtual IPipeline* createPipeline(IRenderPass* _renderPass) override;
+		virtual IPipeline* createPipeline(const RenderPassDescription& _renderPass) override;
 
 		virtual void release() override;
 
@@ -66,6 +71,9 @@ namespace nix {
 		}
 		ContextVk* getContext() {
 			return m_context;
+		}
+		const VkPipelineLayout& getPipelineLayout() const {
+			return m_pipelineLayout;
 		}
 		//
 		static MaterialVk* CreateMaterial( ContextVk* _context, const MaterialDescription& _desc );

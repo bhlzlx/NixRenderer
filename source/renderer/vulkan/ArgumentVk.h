@@ -18,17 +18,23 @@ namespace nix {
 		friend class PipelineVk;
 		friend class ArgumentAllocator;
 	private:
-		std::vector< UBOAllocation >							m_uniformBlocks;
+		std::vector< UniformAllocation >						m_uniformBlocks;
 		std::vector< std::pair< TextureVk*, SamplerState> >		m_textures;
 		std::vector< BufferVk* >								m_ssbos;
+		std::vector< uint32_t >									m_dynamicalOffsets[MaxFlightCount];
 		//
 		uint32_t												m_descriptorSetIndex;
 		VkDescriptorSet											m_descriptorSets[MaxFlightCount];			//
 		uint32_t												m_descriptorSetPools[MaxFlightCount];		// pools that holds the descriptor sets
 		uint32_t												m_activeIndex;
-		//ContextVk*												m_context;
-		VkDevice												m_device;
+		//VkDevice												m_device;
+		ContextVk*												m_context;
 		MaterialVk*												m_material;
+		//
+		std::vector<VkDescriptorBufferInfo>						m_vecDescriptorBufferInfo; // UBO, SSBO, TBO
+		std::vector<VkDescriptorImageInfo>						m_vecDescriptorImageInfo; // sampler/image
+		std::vector<VkWriteDescriptorSet>						m_vecDescriptorWrites;
+		bool													m_needUpdate;
 	public:
 		ArgumentVk();
 		~ArgumentVk();

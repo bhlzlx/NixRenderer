@@ -24,7 +24,8 @@ namespace nix {
 					(const VkBuffer&)m_vecBuffer.back(),
 					i * m_unitSize* MaxFlightCount,
 					m_unitSize,
-					m_index
+					m_index,
+					m_vecBuffer.back().raw()
 					});
 			}
 		}

@@ -55,7 +55,7 @@ namespace nix {
 		void transformImageLayout(VkCommandBuffer _cmdBuffer, VkImageLayout _layout);
 		//
 		static TextureVk* createTexture( ContextVk* _context, VkImage _image, VkImageView _imageView, TextureDescription _desc, TextureUsageFlags _usage );
-		static TextureVk* createTextureDDS(const void * _data, size_t _length);
-		static TextureVk* createTextureKTX(const void * _data, size_t _length);
+		static TextureVk* createTextureDDS(ContextVk* _context, const void * _data, size_t _length);
+		static TextureVk* createTextureKTX(ContextVk* _context, const void * _data, size_t _length);
 	};
 }

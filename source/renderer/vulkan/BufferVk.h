@@ -92,6 +92,9 @@ namespace nix {
 		void unmap() {
 			vmaUnmapMemory(NixVMAAllocator, m_allocation);
 		}
+		uint8_t* raw() {
+			return m_raw;
+		}
 		// for persistent mapping or can be mapped buffer type
 		void writeDataImmediatly(const void * _data, size_t _size, size_t _offset);
 		// for GPU access only buffer

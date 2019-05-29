@@ -741,7 +741,7 @@ namespace nix {
 			assert(rst == VK_SUCCESS);
 		}
 		// check the _length is match
-		auto bytesTotal = KsFormatBits(texture->getDesc().format) * texture->getDesc().width * texture->getDesc().height / 8;
+		auto bytesTotal = NixFormatBits(texture->getDesc().format) * texture->getDesc().width * texture->getDesc().height / 8;
 		assert(bytesTotal <= _length);
 		stagingBuffer = new BufferVk();
 		*stagingBuffer = std::move(BufferVk::CreateBuffer( bytesTotal, VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT, context));

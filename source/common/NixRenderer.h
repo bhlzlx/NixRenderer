@@ -559,8 +559,11 @@ namespace nix {
 	class NIX_API_DECL IMaterial {
 	public:
 		virtual IArgument* createArgument( uint32_t _index ) = 0;
+		virtual void destroyArgument(IArgument* _argument) = 0;
 		virtual IRenderable* createRenderable() = 0;
-        virtual IPipeline* createPipeline( IRenderPass* _renderPass ) = 0;
+		virtual void destroyRenderable(IRenderable* _renderable) = 0;
+		//
+        virtual IPipeline* createPipeline(const RenderPassDescription& _renderPass) = 0;
         virtual void release() = 0;
 	};
 

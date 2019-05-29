@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include <NixRenderer.h>
 #include "vkinc.h"
-#include "ShaderVk.h"
 #include <map>
 
 namespace nix {
@@ -19,20 +18,10 @@ namespace nix {
 		friend class ContextVk;
 	private:
 		ContextVk* m_context;
-		PipelineDescription	m_desc;
-		VkGraphicsPipelineCreateInfo m_createInfo;
-		VkPipeline m_pipelines[TopologyMode::TMCount];
-		VkPipelineLayout m_pipelineLayout;
-		std::vector<ArgumentLayout> m_vecDescriptorSetLayout;
-		//
 		VkRenderPass m_renderPass;
-		//
-		ShaderModuleVk* m_vertexModule;
-		ShaderModuleVk* m_fragmentModule;
-		//
 		VkViewport m_viewport;
 		VkRect2D m_scissor;
-		VkCommandBuffer m_commandBuffer;
+		//
 		float m_blendConstants[4];
 		uint32_t m_stencilReference;
 		float m_constantBias;

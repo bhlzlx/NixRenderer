@@ -29,7 +29,7 @@ namespace nix {
 		VkDevice				m_logicalDevice;
 		// Queues
 		uint32_t				m_graphicQueueID;
-			uint32_t			m_transferQueueID;
+		uint32_t				m_transferQueueID;
 		std::vector<uint32_t>	m_queueFamilies;
 		GraphicsQueueVk*		m_graphicsQueue;
 		UploadQueueVk*			m_uploadQueue;
@@ -46,7 +46,6 @@ namespace nix {
 		//
 		uint64_t				m_frameCounter;
 		//
-
 	private:
 		VkPipelineCache			m_pipelineCache;
 	public:
@@ -82,7 +81,7 @@ namespace nix {
 		VkPipelineCache getPipelineCache() { return m_pipelineCache; }
 		void savePipelineCache();
 
-		inline UniformAllocator& getUBOAllocator(){ return m_uniformAllocator; }
+		inline UniformAllocator& getUniformAllocator(){ return m_uniformAllocator; }
 		inline ArgumentAllocator& getDescriptorSetPool(){ return m_descriptorSetPool; }
 		inline uint64_t getFrameCounter() const { return m_frameCounter; }
 		//

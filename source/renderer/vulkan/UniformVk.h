@@ -18,6 +18,7 @@ namespace nix {
 		uint32_t		offset;
 		uint32_t		unitSize;
 		uint32_t		pool;
+		uint8_t*		raw;
 	};
 
 	class UniformPool {

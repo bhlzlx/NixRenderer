@@ -1,5 +1,6 @@
 #include "TextureVk.h"
 #include "ContextVk.h"
+#include "BufferVk.h"
 #include "QueueVk.h"
 #include "DeferredDeletor.h"
 #include "vkhelper/helper.h"
@@ -15,11 +16,11 @@ namespace nix {
 	}
 
 	ITexture* ContextVk::createTextureDDS(const void* _data, size_t _length) {
-		return TextureVk::createTextureDDS(_data, _length);
+		return TextureVk::createTextureDDS( this, _data, _length);
 	}
 
 	ITexture* ContextVk::createTextureKTX(const void* _data, size_t _length) {
-		return TextureVk::createTextureKTX(_data, _length);
+		return TextureVk::createTextureKTX(this, _data, _length);
 	}
 
 	void TextureVk::setSubData(const void * _data, size_t _length, const TextureRegion& _region)

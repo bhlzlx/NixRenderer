@@ -8,13 +8,17 @@
 #include "DeferredDeletor.h"
 #include "BufferVk.h"
 #include "DriverVk.h"
-#include <ks/io/io.h>
+#include <nix/io/archieve.h>
 #include <mutex>
 #include <cassert>
+#include "MaterialVk.h"
 
 namespace nix {
 
-	VkPipelineCache PipelineVk::GeneralPipelineCache = VK_NULL_HANDLE;
+	IPipeline* MaterialVk::createPipeline(const RenderPassDescription& _renderPass)
+	{
+
+	}
 
 	void PipelineVk::begin()
 	{

@@ -6,7 +6,7 @@ namespace nix {
 	//
 	static_assert(sizeof(DDS_HEADER) == 124, "size does not match");
 	
-	TextureVk* TextureVk::createTextureDDS(const void * _data, size_t _length) {
+	TextureVk* TextureVk::createTextureDDS(ContextVk* _context, const void * _data, size_t _length) {
 		tinyddsloader::DDSFile file;
 		auto result = file.Load((const uint8_t*)_data, _length);
 		if (result != tinyddsloader::Success) {
@@ -64,22 +64,22 @@ namespace nix {
 			desc.mipmapLevel = file.GetMipCount();
 			auto format = file.GetFormat();
 			if (format == tinyddsloader::DDSFile::DXGIFormat::BC3_UNorm) {
-				desc.format = KsBC3_LINEAR_RGBA;
+				desc.format = NixBC3_LINEAR_RGBA;
 			}
 			else if (format == tinyddsloader::DDSFile::DXGIFormat::BC1_UNorm) {
-				desc.format = KsBC1_LINEAR_RGBA;
+				desc.format = NixBC1_LINEAR_RGBA;
 			}
 			else {
 				return nullptr;
 			}
 		}
-		TextureVk* texture = TextureVk::createTexture(VK_NULL_HANDLE, VK_NULL_HANDLE, desc, nix::TextureUsageTransferDestination | nix::TextureUsageSampled);
+		TextureVk* texture = TextureVk::createTexture( _context, VK_NULL_HANDLE, VK_NULL_HANDLE, desc, nix::TextureUsageTransferDestination | nix::TextureUsageSampled);
 		//
 		for (uint32_t mipIndex = 0; mipIndex < file.GetMipCount(); ++mipIndex)
 		{
 			uint32_t width = desc.width >> mipIndex;
 			uint32_t height = desc.height >> mipIndex;
-			if (desc.format == KsBC1_LINEAR_RGBA || desc.format == KsBC3_LINEAR_RGBA) {
+			if (desc.format == NixBC1_LINEAR_RGBA || desc.format == NixBC3_LINEAR_RGBA) {
 				if (width <= 4) {
 					width = 4;
 				}

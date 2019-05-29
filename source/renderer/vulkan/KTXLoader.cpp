@@ -5,13 +5,12 @@
 
 namespace nix {
 
-	nix::TextureVk* TextureVk::createTextureKTX(const void * _data, size_t _length)
+	nix::TextureVk* TextureVk::createTextureKTX( ContextVk* _context ,const void * _data, size_t _length )
 	{
-		return KtxLoader::CreateTexture(_data, _length);
-		//return nullptr;
+		return KtxLoader::CreateTexture(_context, _data, _length);
 	}
     
-	nix::TextureVk* KtxLoader::CreateTexture(const void* _data, size_t _length)
+	nix::TextureVk* KtxLoader::CreateTexture(ContextVk* _context,const void* _data, size_t _length)
 	{
 		const uint8_t * ptr = (const uint8_t *)_data;
 		const uint8_t * end = ptr + _length;
@@ -44,22 +43,22 @@ namespace nix {
 		// GL_COMPRESSED_RGBA8_ETC2_EAC GL_COMPRESSED_RG11_EAC
 		if (header->internalFormat == GL_COMPRESSED_RGBA8_ETC2_EAC && header->baseInternalFormat == GL_RGBA) {
 			// GL_COMPRESSED_RGBA8_ETC2_EAC
-			desc.format = VkFormatToKs(VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK);
+			desc.format = VkFormatToNix(VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK);
 			// 
 		} else if (header->internalFormat == GL_COMPRESSED_RG11_EAC && header->baseInternalFormat == GL_RG) {
 			// GL_COMPRESSED_RG11_EAC
 			// VK_FORMAT_EAC_R11G11_UNORM_BLOCK
-			desc.format = VkFormatToKs(VK_FORMAT_EAC_R11G11_UNORM_BLOCK);
+			desc.format = VkFormatToNix(VK_FORMAT_EAC_R11G11_UNORM_BLOCK);
 		}
 		else if (header->internalFormat == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT && header->baseInternalFormat == GL_RGBA) {
 			// GL_COMPRESSED_RGBA_S3TC_DXT1_EXT
 			// VK_FORMAT_BC1_RGBA_UNORM_BLOCK
-			desc.format = VkFormatToKs(VK_FORMAT_BC1_RGBA_UNORM_BLOCK);
+			desc.format = VkFormatToNix(VK_FORMAT_BC1_RGBA_UNORM_BLOCK);
 		}
 		else if (header->internalFormat == GL_COMPRESSED_RGBA_S3TC_DXT5_EXT && header->baseInternalFormat == GL_RGBA) {
 			// GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
 			// VK_FORMAT_BC3_UNORM_BLOCK
-			desc.format = VkFormatToKs(VK_FORMAT_BC3_UNORM_BLOCK);
+			desc.format = VkFormatToNix(VK_FORMAT_BC3_UNORM_BLOCK);
 		}
 		else {
 			// unsupported texture format
@@ -89,7 +88,7 @@ namespace nix {
 		}
 		desc.width = header->pixelWidth;
 		desc.height = header->pixelHeight;
-		TextureVk* texture = TextureVk::createTexture(VK_NULL_HANDLE, VK_NULL_HANDLE, desc, TextureUsageSampled | TextureUsageTransferDestination);
+		TextureVk* texture = TextureVk::createTexture(_context, VK_NULL_HANDLE, VK_NULL_HANDLE, desc, TextureUsageSampled | TextureUsageTransferDestination);
 		//
 		ptr += header->bytesOfKeyValueData;
 		//

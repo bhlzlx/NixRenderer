@@ -1,6 +1,7 @@
 #include "MaterialVk.h"
 #include "RenderableVk.h"
 #include "ContextVk.h"
+#include "BufferVk.h"
 #include "DescriptorSetVk.h"
 
 namespace nix {
@@ -105,12 +106,12 @@ namespace nix {
 
 	IArgument* MaterialVk::createArgument( uint32_t _index )
 	{
-		return nullptr;
+		return m_context->getDescriptorSetPool().allocateArgument(this, _index);
 	}
 
-	IPipeline* MaterialVk::createPipeline(IRenderPass* _renderPass)
+	void MaterialVk::destroyArgument(IArgument* _argument)
 	{
-		throw std::logic_error("The method or operation is not implemented.");
+		return m_context->getDescriptorSetPool().free((ArgumentVk*)_argument);
 	}
 
 	void MaterialVk::release()
@@ -121,6 +122,11 @@ namespace nix {
 	IRenderable* MaterialVk::createRenderable()
 	{
 		throw std::logic_error("The method or operation is not implemented.");
+	}
+
+	void MaterialVk::destroyRenderable(IRenderable* _renderable)
+	{
+
 	}
 
 #define VULKAN_SHADER_PATH( SHADER_NAME ) "/shader/vulkan/" + std::string(SHADER_NAME)
@@ -367,6 +373,16 @@ namespace nix {
 			}
 		}
 		return nullptr;
+	}
+
+	void ArgumentLayout::updateDynamicalBindings()
+	{
+		// only uniform buffer object need dynamical bindings
+		for (auto& descriptor : m_uniformBlockDescriptor) {
+			m_dynamicalBindings.push_back(descriptor.binding);
+		}
+		//
+		std::sort(m_dynamicalBindings.begin(), m_dynamicalBindings.end());
 	}
 
 }
