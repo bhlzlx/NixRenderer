@@ -267,7 +267,7 @@ namespace nix {
 
 	enum BufferType :uint8_t {
 		SVBO, // stable vertex buffer object
-		TVBO, // transient vertex buffer object
+		CVBO, // cached vertex buffer object
 		IBO, // index buffer object
 		UBO, // uniform buffer object
 		SSBO, // shader storage buffer objects
@@ -462,7 +462,11 @@ namespace nix {
 		char									fragmentShader[64];
 		VertexLayout							vertexLayout;
 		std::vector<ArgumentDescription>		argumentLayouts;
+		//
 		RenderState								renderState;
+		//
+		TopologyMode							topologyMode;
+		PolygonMode								pologonMode;
 		//
 		NIX_JSON(vertexShader, fragmentShader, renderPassDescription, renderState, material)
 	};
@@ -500,6 +504,15 @@ namespace nix {
 		virtual NixFormat getFormat() const = 0;
     };
     //
+
+	enum RenderPassType {
+		MainRenderPass,
+		OffscreenRenderPass
+	};
+
+	class IArgument;
+	class IRenderable;
+	class IPipeline;
     class NIX_API_DECL IRenderPass {
     private:
     public:
@@ -507,7 +520,23 @@ namespace nix {
         virtual void end() = 0;
 		virtual void release() = 0;
 		virtual void setClear( const RpClear& _clear ) = 0;
-		virtual void resize( uint32_t _width, uint32_t _height ) = 0;
+		virtual void resize(uint32_t _width, uint32_t _height) = 0;
+		// -------------------------------------------------------------
+		// binding
+		// -------------------------------------------------------------
+		virtual void bindPipeline(IPipeline* _pipeline) = 0;
+		virtual void bindArgument(IArgument* _argument) = 0;
+		// -------------------------------------------------------------
+		// drawing ( renderable )
+		// -------------------------------------------------------------
+		virtual void draw(IRenderable* _renderable, uint32_t _vertexOffset, uint32_t _vertexCount) = 0;
+		virtual void drawElements(IRenderable* _renderable, uint32_t _indexOffset, uint32_t _indexCount) = 0;
+		virtual void drawInstanced(IRenderable* _renderable, uint32_t _vertexOffset, uint32_t _vertexCount, uint32_t _baseInstance, uint32_t _instanceCount) = 0;
+		virtual void drawElementInstanced(IRenderable* _renderable, uint32_t _indexOffset, uint32_t _indexCount, uint32_t _baseInstance, uint32_t _instanceCount) = 0;
+		// -------------------------------------------------------------
+		// destroy
+		// -------------------------------------------------------------
+		virtual RenderPassType type() = 0;
     };
 
 	typedef union {
@@ -535,35 +564,30 @@ namespace nix {
 	class NIX_API_DECL IArgument {
 	private:
 	public:
-		virtual void bind() = 0;
 		virtual bool getUniformBlock( const std::string& _name, uint32_t* id_ ) = 0;
 		virtual bool getUniformMemberOffset(uint32_t _uniform, const std::string& _name, uint32_t* offset_ ) = 0;
 		virtual bool getSampler(const std::string& _name, uint32_t* id_ ) = 0;
 		//
 		virtual void setSampler( uint32_t _index, const SamplerState& _sampler, const ITexture* _texture) = 0;
 		virtual void setUniform(uint32_t _index, uint32_t _offset, const void * _data, uint32_t _size) = 0;
+		virtual void setShaderCache( uint32_t _offset, const void* _data, uint32_t _size ) = 0;
 		virtual void release() = 0;
 	};
 
 	class NIX_API_DECL IRenderable {
 	public:
-		virtual void bind() = 0;
 		virtual uint32_t getVertexBufferCount() = 0;
 		virtual TopologyMode getTopologyMode() = 0;
-		virtual void setVertexBuffer( IBuffer* _buffer, uint32_t _index );
-		virtual void setIndexBuffer( IBuffer* _buffer );
+		virtual void setVertexBuffer( IBuffer* _buffer, size_t _offset, uint32_t _index ) = 0;
+		virtual void setIndexBuffer( IBuffer* _buffer, size_t _offset ) = 0;
         virtual void release() = 0;
 	};
 
 	class NIX_API_DECL IPipeline {
 	public:
-        virtual void bind() = 0;
         virtual void setViewport( const Viewport& _vp ) = 0;
         virtual void setScissor( const Scissor& _scissor ) = 0;
         virtual void setPolygonOffset(float _constantBias, float _slopeScaleBias) = 0;
-        virtual void pushConstants( size_t _offset, size_t _size, const void * _data ) = 0;
-        virtual void draw( IRenderable* _renderable, uint32_t _indexCount ) = 0;
-        virtual void drawInstance( IRenderable* _renderable, uint32_t _indexCount, uint32_t _instanceCount ) = 0;
         virtual void release() = 0;
 	};
 
