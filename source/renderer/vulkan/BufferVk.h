@@ -26,7 +26,7 @@ namespace nix {
 		//friend class VkDeferredDeletor;
 		//friend class ContextVk;
 		friend struct ScreenCapture;
-		friend class TransientVBO;
+		friend class CachedVertexBuffer;
 		friend class IndexBuffer;
 	private:
 		ContextVk*			m_context;
@@ -109,13 +109,13 @@ namespace nix {
 		static BufferVk CreateBuffer(size_t _size, VkBufferUsageFlags _usage, ContextVk* _context);
 	};
 
-	class NIX_API_DECL StableVertexBuffer : public IBuffer {
+	class NIX_API_DECL VertexBuffer : public IBuffer {
 		friend class PipelineVk;
 		friend class DrawableVk;
 	private:
 		BufferVk m_buffer;
 	public:
-		StableVertexBuffer(BufferVk&& _buffer) : 
+		VertexBuffer(BufferVk&& _buffer) : 
 			IBuffer(SVBO),
 			m_buffer(std::move(_buffer)) {
 		}
@@ -125,17 +125,24 @@ namespace nix {
 			return m_buffer.size();
 		}
 		virtual void release() override;
+		//
+		operator VkBuffer () const {
+			return m_buffer;
+		}
+		size_t getOffset() {
+			return 0;
+		}
 	};
 
-	class TransientVBO : public IBuffer {
+	class CachedVertexBuffer : public IBuffer {
 	private:
-		BufferVk m_buffer;
-		uint8_t* m_mem;
-		size_t m_size;
-		uint64_t m_frame;
-		size_t m_offsets[MaxFlightCount];
+		BufferVk		m_buffer;
+		uint8_t*		m_mem;
+		size_t			m_size;
+		uint64_t		m_frame;
+		size_t			m_offsets[MaxFlightCount];
 	public:
-		TransientVBO( BufferVk&& _buffer, size_t _size ) : IBuffer(TVBO) {
+		CachedVertexBuffer( BufferVk&& _buffer, size_t _size ) : IBuffer(CVBO) {
 			m_buffer = std::move(_buffer);
 			m_size = _size;
 			m_offsets[0] = 0;
@@ -148,9 +155,10 @@ namespace nix {
 		virtual void setData(const void* _data, size_t _size, size_t _offset) override;
 		virtual void release() override;
 		//
-		VkBuffer getBuffer() {
-			return (const VkBuffer&)m_buffer;
+		operator VkBuffer () const {
+			return m_buffer;
 		}
+
 		size_t getOffset() {
 			return m_offsets[0];
 		}
@@ -173,5 +181,12 @@ namespace nix {
 			return m_buffer.size();
 		}
 		virtual void release() override;
+		//
+		operator VkBuffer() const {
+			return m_buffer;
+		}
+		size_t getOffset() {
+			return 0;
+		}
 	};
 }

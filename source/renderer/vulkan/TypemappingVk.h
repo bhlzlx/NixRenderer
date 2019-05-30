@@ -123,7 +123,7 @@ namespace nix {
 		return VK_SAMPLER_MIPMAP_MODE_NEAREST;
 	}
 
-	static inline VkCullModeFlags GxCullModeToVk( CullMode _mode)
+	static inline VkCullModeFlags NixCullModeToVk( CullMode _mode)
 	{
 		switch (_mode)
 		{
@@ -173,7 +173,7 @@ namespace nix {
 		return VK_POLYGON_MODE_LINE;
 	}
 
-	static inline VkFrontFace GxFrontFaceToVk( WindingMode _mode)
+	static inline VkFrontFace NixFrontFaceToVk( WindingMode _mode)
 	{
 		switch (_mode)
 		{

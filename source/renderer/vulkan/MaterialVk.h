@@ -46,6 +46,8 @@ namespace nix {
 		std::array<ArgumentLayout, MaxArgumentCount>			m_argumentLayouts;
 		//
 		VkPipelineLayout										m_pipelineLayout;
+		VkPrimitiveTopology										m_topology;
+		VkPolygonMode											m_pologonMode;
 	public:
 		MaterialVk() :
 			  m_vertexShader( VK_NULL_HANDLE )

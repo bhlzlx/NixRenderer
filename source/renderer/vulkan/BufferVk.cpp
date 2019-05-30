@@ -96,7 +96,7 @@ namespace nix {
 		if (_data) {
 			buffer.uploadDataImmediatly(_data, _size, 0);
 		}
-		auto svb = new StableVertexBuffer(std::move(buffer));
+		auto svb = new VertexBuffer(std::move(buffer));
 		return svb;
 	}
 
@@ -107,14 +107,14 @@ namespace nix {
 		return dvb;
 	}
 
-	void StableVertexBuffer::setData(const void * _data, size_t _size, size_t _offset) {
+	void VertexBuffer::setData(const void * _data, size_t _size, size_t _offset) {
 		m_buffer.updateDataQueued(_data, _size, _offset);
 	}
 
 	IBuffer* ContextVk::createTransientVBO(size_t _size) {
 		// transient buffer should use `persistent mapping` feature
 		auto buffer = BufferVk::CreateBuffer(_size * MaxFlightCount, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, this);
-		auto dvb = new TransientVBO(std::move(buffer), _size);
+		auto dvb = new CachedVertexBuffer(std::move(buffer), _size);
 		return dvb;
 	}
 
@@ -154,18 +154,18 @@ namespace nix {
 		}
 	}
 
-	void StableVertexBuffer::release()
+	void VertexBuffer::release()
 	{
 		BufferVk* movedTarget = new BufferVk(std::move(m_buffer));
 		GetDeferredDeletor().destroyResource(movedTarget);
 		delete this;
 	}
 	
-	size_t TransientVBO::getSize() {
+	size_t CachedVertexBuffer::getSize() {
 		return m_buffer.size();
 	}
 
-	void TransientVBO::setData(const void* _data, size_t _size, size_t _offset) {
+	void CachedVertexBuffer::setData(const void* _data, size_t _size, size_t _offset) {
 		auto frame = m_buffer.m_context->getFrameCounter();
 		if (m_frame != frame) {
 			m_frame = frame;
@@ -180,7 +180,7 @@ namespace nix {
 		memcpy( m_mem + m_offsets[0] + _offset, _data, _size );
 	}
 
-	void TransientVBO::release()
+	void CachedVertexBuffer::release()
 	{
 		m_buffer.unmap();
 		BufferVk* movedTarget = new BufferVk(std::move(m_buffer));

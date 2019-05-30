@@ -34,18 +34,21 @@ namespace nix {
 		std::vector<VkDescriptorBufferInfo>						m_vecDescriptorBufferInfo; // UBO, SSBO, TBO
 		std::vector<VkDescriptorImageInfo>						m_vecDescriptorImageInfo; // sampler/image
 		std::vector<VkWriteDescriptorSet>						m_vecDescriptorWrites;
+		//
 		bool													m_needUpdate;
 	public:
 		ArgumentVk();
 		~ArgumentVk();
 
-		virtual void bind() override;
+		void bind(VkCommandBuffer _commandBuffer);
+
 		virtual bool getUniformBlock(const std::string& _name, uint32_t* id_ ) override;
 		virtual bool getUniformMemberOffset( uint32_t _uniform, const std::string& _name, uint32_t* offset_) override;
 		virtual bool getSampler(const std::string& _name, uint32_t* id_) override;
 		//
 		virtual void setSampler(uint32_t _index, const SamplerState& _sampler, const ITexture* _texture) override;
 		virtual void setUniform(uint32_t _index, uint32_t _offset, const void * _data, uint32_t _size) override;
+		virtual void setShaderCache(uint32_t _offset, const void* _data, uint32_t _size) override;
 		virtual void release() override;
 	public:
 		void assignUniformChunks();

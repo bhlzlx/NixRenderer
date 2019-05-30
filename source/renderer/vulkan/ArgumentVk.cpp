@@ -7,6 +7,7 @@
 #include "MaterialVk.h"
 #include "DescriptorSetVk.h"
 #include "DeferredDeletor.h"
+#include "DriverVk.h"
 
 namespace nix {
 
@@ -31,7 +32,7 @@ namespace nix {
 		// do nothing
 	}
 
-	void ArgumentVk::bind()
+	void ArgumentVk::bind( VkCommandBuffer _commandBuffer )
 	{
 		if (m_needUpdate) {
 			++m_activeIndex;
@@ -40,22 +41,19 @@ namespace nix {
 			}
 			vkUpdateDescriptorSets(m_context->getDevice(), static_cast<uint32_t>(m_vecDescriptorWrites.size()), m_vecDescriptorWrites.data(), 0, nullptr);
 		}
-		//
-		auto cmdbuff = m_context->getGraphicsQueue()->commandBuffer();
-		auto flightIndex = m_context->getSwapchain()->getFlightIndex();
 		vkCmdBindDescriptorSets(
-			(const VkCommandBuffer&)cmdbuff,
+			_commandBuffer,
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
 			m_material->getPipelineLayout(),
 			0,
 			1,
 			&m_descriptorSets[m_activeIndex],
-			m_dynamicalOffsets[0].size(),
-			m_dynamicalOffsets[flightIndex].data()
+			m_dynamicalOffsets[m_activeIndex].size(),
+			m_dynamicalOffsets[m_activeIndex].data()
 		);
 	}
 
-	bool ArgumentVk::getUniformBlock(const std::string& _name, uint32_t* id_ )
+	bool ArgumentVk::getUniformBlock(const std::string& _name, uint32_t* id_)
 	{
 		uint32_t i = 0;
 		const ArgumentLayout& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
@@ -115,6 +113,16 @@ namespace nix {
 		auto flightIndex = m_context->getSwapchain()->getFlightIndex();
 		auto& uniformBlock = m_uniformBlocks[_index];
 		memcpy(uniformBlock.raw + flightIndex*uniformBlock.unitSize + _offset, _data, _size);
+	}
+
+	void ArgumentVk::setShaderCache(uint32_t _offset, const void* _data, uint32_t _size)
+	{
+#ifndef NDEBUG
+		DriverVk* driver = (DriverVk*)m_context->getDriver();
+		assert(_size + _offset <= driver->getPhysicalDeviceProperties().limits.maxPushConstantsSize);
+#endif
+		auto cmd = m_context->getGraphicsQueue()->commandBuffer();
+		vkCmdPushConstants(cmd->operator const VkCommandBuffer &(), m_material->getPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, _offset, _size, _data);
 	}
 
 	void ArgumentVk::release()

@@ -10,6 +10,49 @@
 
 #define PIPELINE_CACHE_FILENAME "pipeline_cache.bin"
 
+// create sampler must be a thread safe function
+// engine may be create resources in a background thread
+// std::map< SamplerState, VkSampler > SamplerMapVk;
+// std::mutex SamplerMapMutex;
+// VkSampler GetSampler(const SamplerState& _state)
+// {
+// 	// construct a `key`
+// 	union {
+// 		struct alignas(1) {
+// 			uint8_t AddressU;
+// 			uint8_t AddressV;
+// 			uint8_t AddressW;
+// 			uint8_t MinFilter;
+// 			uint8_t MagFilter;
+// 			uint8_t MipFilter;
+// 			uint8_t TexCompareMode;
+// 			uint8_t TexCompareFunc;
+// 		} u;
+// 		SamplerState k;
+// 	} key = {
+// 		static_cast<uint8_t>(_state.u),
+// 		static_cast<uint8_t>(_state.v),
+// 		static_cast<uint8_t>(_state.w),
+// 		static_cast<uint8_t>(_state.min),
+// 		static_cast<uint8_t>(_state.mag),
+// 		static_cast<uint8_t>(_state.mip),
+// 		static_cast<uint8_t>(_state.compareMode),
+// 		static_cast<uint8_t>(_state.compareFunction)
+// 	};
+// 	SamplerMapMutex.lock();
+// 	// find a sampler by `key`
+// 	auto rst = SamplerMapVk.find(key.k);
+// 	if (rst != SamplerMapVk.end()) {
+// 		SamplerMapMutex.unlock();
+// 		return rst->second;
+// 	}
+// 	// cannot find a `sampler`, create a new one
+// 	auto sampler = m_context->createSampler(_state);
+// 	SamplerMapVk[key.k] = sampler; // insert the sampler to the map
+// 	SamplerMapMutex.unlock();
+// 	return sampler;
+// }
+
 namespace nix {
 	class GraphicsQueueVk;
 	class UploadQueueVk;
@@ -46,8 +89,11 @@ namespace nix {
 		//
 		uint64_t				m_frameCounter;
 		//
+		VkCommandBuffer			m_renderCommandBuffer;
 	private:
 		VkPipelineCache			m_pipelineCache;
+		std::map< SamplerState, VkSampler > m_samplerMapping;
+		VkSampler createSampler(const SamplerState& _ss);
 	public:
 		ContextVk() : 
 			m_physicalDevice(VK_NULL_HANDLE),
@@ -76,6 +122,9 @@ namespace nix {
 		UploadQueueVk* getUploadQueue() const;
 		GraphicsQueueVk* getGraphicsQueue() const;
 		SwapchainVk* getSwapchain();
+		//
+		VkSampler getSampler( const SamplerState& _samplerState );
+		//
 		const std::vector<uint32_t>& getQueueFamilies() const;
 
 		VkPipelineCache getPipelineCache() { return m_pipelineCache; }
@@ -87,7 +136,6 @@ namespace nix {
 		//
 		VkSemaphore createSemaphore() const;
 		VkFence createFence() const;
-		VkSampler createSampler( const SamplerState& _ss );
 		GraphicsQueueVk* createGraphicsQueue(VkQueue _id, uint32_t _family, uint32_t _index ) const;
 		UploadQueueVk* createUploadQueue(VkQueue _id, uint32_t _family, uint32_t _index ) const;
 		ShaderModuleVk* createShaderModule(const char * _text, const char * _entryPoint, VkShaderStageFlagBits _stage) const;		

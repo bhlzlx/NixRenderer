@@ -32,20 +32,22 @@ namespace nix {
 	class NIX_API_DECL RenderPassVk : public IRenderPass {
 		friend class ContextVk;
 	private:
-		ContextVk* m_context;
-		RenderPassDescription m_desc;
-		VkFramebuffer m_framebuffer;
-		VkRenderPass m_renderPass;
+		ContextVk*					m_context;
+		RenderPassDescription		m_desc;
+		VkFramebuffer				m_framebuffer;
+		VkRenderPass				m_renderPass;
 		//
-		AttachmentVk* m_colorAttachments[MaxRenderTarget];
-		AttachmentVk* m_depthStencil;
-		VkImageLayout m_colorImageLayout[MaxRenderTarget];
-		VkImageLayout m_dsImageLayout;
+		AttachmentVk*				m_colorAttachments[MaxRenderTarget];
+		AttachmentVk*				m_depthStencil;
+		VkImageLayout				m_colorImageLayout[MaxRenderTarget];
+		VkImageLayout				m_dsImageLayout;
 		//
-		uint8_t m_clearCount; // clear count
-		VkClearValue m_clearValues[MaxRenderTarget+1]; // color & depth-stencil clear values
+		uint8_t						m_clearCount; // clear count
+		VkClearValue				m_clearValues[MaxRenderTarget+1]; // color & depth-stencil clear values
 		//
-		Size<uint32_t> m_size;
+		Size<uint32_t>				m_size;
+		//
+		VkCommandBuffer				m_commandBuffer;
 		//
 		static std::map< uint64_t, VkRenderPass > m_renderPassMapTable;
 	public:
@@ -57,10 +59,21 @@ namespace nix {
 		}
 		~RenderPassVk();
 		//
-		bool begin();
-		void resize(uint32_t _width, uint32_t _height);
-		void end(); 
-		void setClear( const RpClear& _clear );
+		virtual bool begin() override;
+		virtual void resize(uint32_t _width, uint32_t _height) override;
+		virtual void end() override; 
+		virtual void setClear( const RpClear& _clear ) override;
+		
+		virtual RenderPassType type() override {
+			return OffscreenRenderPass;
+		}
+		virtual void bindPipeline(IPipeline* _pipeline) override;
+		virtual void bindArgument(IArgument* _argument) override;
+		//
+		virtual void draw(IRenderable* _renderable, uint32_t _vertexOffset, uint32_t _vertexCount) override;
+		virtual void drawElements(IRenderable* _renderable, uint32_t _indexOffset, uint32_t _indexCount) override;
+		virtual void drawInstanced(IRenderable* _renderable, uint32_t _vertexOffset, uint32_t _vertexCount, uint32_t _baseInstance, uint32_t _instanceCount) override;
+		virtual void drawElementInstanced(IRenderable* _renderable, uint32_t _indexOffset, uint32_t _indexCount, uint32_t _baseInstance, uint32_t _instanceCount) override;
 		//
 		void release() {
 		}
@@ -76,15 +89,15 @@ namespace nix {
 
 	class RenderPassSwapchainVk : public IRenderPass {
 	private:
-		ContextVk* m_context;
-		VkRenderPass m_renderPass;
-		std::vector< VkImage > m_vecImages;
-		std::vector< TextureVk* > m_vecColors;
-		//std::vector< VkImageView > m_vecImageViews;
-		TextureVk* m_depthStencil;
-		std::vector< VkFramebuffer> m_vecFramebuffers;
-		Size<uint32_t> m_size;
-		uint32_t m_imageIndex;
+		ContextVk*						m_context;
+		VkRenderPass					m_renderPass;
+		std::vector< VkImage >			m_vecImages;
+		std::vector< TextureVk* >		m_vecColors;
+		TextureVk*						m_depthStencil;
+		std::vector< VkFramebuffer>		m_vecFramebuffers;
+		Size<uint32_t>					m_size;
+		uint32_t						m_imageIndex;
+		VkCommandBuffer					m_commandBuffer;
 		//
 		//uint8_t m_clearCount; // clear count
 		VkClearValue m_clearValues[2]; // color & depth-stencil clear values
@@ -116,9 +129,20 @@ namespace nix {
 
 		virtual void setClear(const RpClear& _clear) override;
 
+		virtual RenderPassType type() override {
+			return MainRenderPass;
+		}
+
 		TextureVk* colorAttachment(uint32_t _index) {
 			return m_vecColors[_index];
 		}
 
+		virtual void bindPipeline(IPipeline* _pipeline) override;
+		virtual void bindArgument(IArgument* _argument) override;
+		//
+		virtual void draw(IRenderable* _renderable, uint32_t _vertexOffset, uint32_t _vertexCount) override;
+		virtual void drawElements(IRenderable* _renderable, uint32_t _indexOffset, uint32_t _indexCount) override;
+		virtual void drawInstanced(IRenderable* _renderable, uint32_t _vertexOffset, uint32_t _vertexCount, uint32_t _baseInstance, uint32_t _instanceCount) override;
+		virtual void drawElementInstanced(IRenderable* _renderable, uint32_t _indexOffset, uint32_t _indexCount, uint32_t _baseInstance, uint32_t _instanceCount) override;
 	};
 }

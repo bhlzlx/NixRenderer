@@ -152,6 +152,44 @@ namespace nix {
 		return &m_swapchain;
 	}
 
+	VkSampler ContextVk::getSampler(const SamplerState& _samplerState)
+	{
+		union {
+			struct alignas(1) {
+				uint8_t AddressU;
+				uint8_t AddressV;
+				uint8_t AddressW;
+				uint8_t MinFilter;
+				uint8_t MagFilter;
+				uint8_t MipFilter;
+				uint8_t TexCompareMode;
+				uint8_t TexCompareFunc;
+			} u;
+			SamplerState k;
+		} key = {
+			static_cast<uint8_t>(_samplerState.u),
+			static_cast<uint8_t>(_samplerState.v),
+			static_cast<uint8_t>(_samplerState.w),
+			static_cast<uint8_t>(_samplerState.min),
+			static_cast<uint8_t>(_samplerState.mag),
+			static_cast<uint8_t>(_samplerState.mip),
+			static_cast<uint8_t>(_samplerState.compareMode),
+			static_cast<uint8_t>(_samplerState.compareFunction)
+		};
+		//SamplerMapMutex.lock();
+		// find a sampler by `key`
+		auto rst = m_samplerMapping.find(key.k);
+		if (rst != m_samplerMapping.end()) {
+			//SamplerMapMutex.unlock();
+			return rst->second;
+		}
+		// cannot find a `sampler`, create a new one
+		auto sampler = createSampler(_samplerState);
+		m_samplerMapping[key.k] = sampler; // insert the sampler to the map
+		//SamplerMapMutex.unlock();
+		return sampler;
+	}
+
 	const std::vector<uint32_t>& ContextVk::getQueueFamilies() const
 	{
 		return m_queueFamilies;

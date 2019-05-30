@@ -12,31 +12,34 @@
 #include <mutex>
 #include <cassert>
 #include "MaterialVk.h"
+#include <cassert>
 
 namespace nix {
 
 	IPipeline* MaterialVk::createPipeline(const RenderPassDescription& _renderPass)
 	{
+		VkRenderPass renderPass = RenderPassVk::RequestRenderPassObject(m_context, _renderPass);
+		//
 		VkGraphicsPipelineCreateInfo pipelineCreateInfo = {};
 		pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		// The layout used for this pipeline (can be shared among multiple pipelines using the same layout)
 		pipelineCreateInfo.layout = m_pipelineLayout;
 		// render pass this pipeline is attached to
-		pipelineCreateInfo.renderPass = m_renderPass;
+		pipelineCreateInfo.renderPass = renderPass;
 		// Construct the different states making up the pipeline
 		// Input assembly state describes how primitives are assembled
 		// This pipeline will assemble vertex data as a triangle lists (though we only use one triangle)
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = {};
 		inputAssemblyState.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-		inputAssemblyState.topology = tm;
+		inputAssemblyState.topology = m_topology;
 		//
 		VkPipelineRasterizationStateCreateInfo rasterizationState; {
 			rasterizationState.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 			rasterizationState.pNext = nullptr;
 			rasterizationState.flags = 0;
-			rasterizationState.polygonMode = pm;
-			rasterizationState.cullMode = GxCullModeToVk(m_desc.renderState.cullMode);
-			rasterizationState.frontFace = GxFrontFaceToVk(m_desc.renderState.windingMode);
+			rasterizationState.polygonMode = m_pologonMode;
+			rasterizationState.cullMode = NixCullModeToVk(m_description.renderState.cullMode);
+			rasterizationState.frontFace = NixFrontFaceToVk(m_description.renderState.windingMode);
 			rasterizationState.depthClampEnable = VK_FALSE;
 			rasterizationState.rasterizerDiscardEnable = VK_FALSE;
 			rasterizationState.depthBiasEnable = VK_TRUE;
@@ -49,14 +52,14 @@ namespace nix {
 			VkPipelineColorBlendAttachmentState& colorAttachmentBlendState = blendAttachmentState[0];
 			{
 				colorAttachmentBlendState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-				colorAttachmentBlendState.blendEnable = m_desc.renderState.blendState.blendEnable;
-				colorAttachmentBlendState.alphaBlendOp = KsBlendOpToVk(m_desc.renderState.blendState.blendOperation);
-				colorAttachmentBlendState.colorBlendOp = KsBlendOpToVk(m_desc.renderState.blendState.blendOperation);
-				colorAttachmentBlendState.dstAlphaBlendFactor = KsBlendFactorToVk(m_desc.renderState.blendState.blendDestination);
-				colorAttachmentBlendState.dstColorBlendFactor = KsBlendFactorToVk(m_desc.renderState.blendState.blendDestination);
-				colorAttachmentBlendState.srcAlphaBlendFactor = KsBlendFactorToVk(m_desc.renderState.blendState.blendSource);
-				colorAttachmentBlendState.srcColorBlendFactor = KsBlendFactorToVk(m_desc.renderState.blendState.blendSource);
-				colorAttachmentBlendState.colorWriteMask = m_desc.renderState.writeMask;
+				colorAttachmentBlendState.blendEnable = m_description.renderState.blendState.blendEnable;
+				colorAttachmentBlendState.alphaBlendOp = NixBlendOpToVk(m_description.renderState.blendState.blendOperation);
+				colorAttachmentBlendState.colorBlendOp = NixBlendOpToVk(m_description.renderState.blendState.blendOperation);
+				colorAttachmentBlendState.dstAlphaBlendFactor = NixBlendFactorToVk(m_description.renderState.blendState.blendDestination);
+				colorAttachmentBlendState.dstColorBlendFactor = NixBlendFactorToVk(m_description.renderState.blendState.blendDestination);
+				colorAttachmentBlendState.srcAlphaBlendFactor = NixBlendFactorToVk(m_description.renderState.blendState.blendSource);
+				colorAttachmentBlendState.srcColorBlendFactor = NixBlendFactorToVk(m_description.renderState.blendState.blendSource);
+				colorAttachmentBlendState.colorWriteMask = m_description.renderState.writeMask;
 				//
 				blendAttachmentState[1] = blendAttachmentState[0];
 				blendAttachmentState[2] = blendAttachmentState[1];
@@ -66,7 +69,7 @@ namespace nix {
 		VkPipelineColorBlendStateCreateInfo colorBlendState = {};
 		colorBlendState.pNext = nullptr;
 		colorBlendState.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		colorBlendState.attachmentCount = m_desc.renderPassDescription.colorAttachmentCount;
+		colorBlendState.attachmentCount = _renderPass.colorAttachmentCount;
 		colorBlendState.pAttachments = blendAttachmentState;
 		// Viewport state sets the number of viewports and scissor used in this pipeline
 		// Note: This is actually overriden by the dynamic states (see below) ���ﶯ̬������
@@ -95,23 +98,23 @@ namespace nix {
 			depthStencilState.pNext = nullptr;
 			depthStencilState.flags = 0;
 			depthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-			depthStencilState.depthTestEnable = m_desc.renderState.depthState.depthTestEnable;
-			depthStencilState.depthWriteEnable = m_desc.renderState.depthState.depthWriteEnable;
-			depthStencilState.depthCompareOp = KsCompareOpToVk(m_desc.renderState.depthState.depthFunction);
+			depthStencilState.depthTestEnable = m_description.renderState.depthState.depthTestEnable;
+			depthStencilState.depthWriteEnable = m_description.renderState.depthState.depthWriteEnable;
+			depthStencilState.depthCompareOp = NixCompareOpToVk(m_description.renderState.depthState.depthFunction);
 			depthStencilState.depthBoundsTestEnable = VK_FALSE;
-			depthStencilState.back.failOp = KsStencilOpToVk(m_desc.renderState.stencilState.stencilFail);
-			depthStencilState.back.depthFailOp = KsStencilOpToVk(m_desc.renderState.stencilState.stencilZFail);
-			depthStencilState.back.passOp = KsStencilOpToVk(m_desc.renderState.stencilState.stencilPass);
-			depthStencilState.back.writeMask = m_desc.renderState.stencilState.stencilMask;
+			depthStencilState.back.failOp = NixStencilOpToVk(m_description.renderState.stencilState.stencilFail);
+			depthStencilState.back.depthFailOp = NixStencilOpToVk(m_description.renderState.stencilState.stencilZFail);
+			depthStencilState.back.passOp = NixStencilOpToVk(m_description.renderState.stencilState.stencilPass);
+			depthStencilState.back.writeMask = m_description.renderState.stencilState.stencilMask;
 			depthStencilState.back.compareMask = 0xff;
-			depthStencilState.back.compareOp = KsCompareOpToVk(m_desc.renderState.stencilState.stencilFunction);
+			depthStencilState.back.compareOp = NixCompareOpToVk(m_description.renderState.stencilState.stencilFunction);
 			depthStencilState.minDepthBounds = 0;
 			depthStencilState.maxDepthBounds = 1.0;
-			depthStencilState.stencilTestEnable = m_desc.renderState.stencilState.stencilEnable;
+			depthStencilState.stencilTestEnable = m_description.renderState.stencilState.stencilEnable;
 			depthStencilState.front = depthStencilState.back;
-			depthStencilState.back.failOp = KsStencilOpToVk(m_desc.renderState.stencilState.stencilFailCCW);
-			depthStencilState.back.depthFailOp = KsStencilOpToVk(m_desc.renderState.stencilState.stencilZFailCCW);
-			depthStencilState.back.passOp = KsStencilOpToVk(m_desc.renderState.stencilState.stencilPassCCW);
+			depthStencilState.back.failOp = NixStencilOpToVk(m_description.renderState.stencilState.stencilFailCCW);
+			depthStencilState.back.depthFailOp = NixStencilOpToVk(m_description.renderState.stencilState.stencilZFailCCW);
+			depthStencilState.back.passOp = NixStencilOpToVk(m_description.renderState.stencilState.stencilPassCCW);
 		}
 		VkPipelineMultisampleStateCreateInfo multisampleState = {};
 		multisampleState.pNext = nullptr;
@@ -121,26 +124,26 @@ namespace nix {
 
 		std::array< VkVertexInputBindingDescription, 16 > vertexInputBindings;
 		std::array<VkVertexInputAttributeDescription, 16 > vertexInputAttributs;
-		for (uint32_t i = 0; i < m_desc.vertexLayout.vertexBufferCount; ++i)
+		for (uint32_t i = 0; i < m_description.vertexLayout.vertexBufferCount; ++i)
 		{
 			vertexInputBindings[i].binding = i;
-			vertexInputBindings[i].stride = m_desc.vertexLayout.vertexBuffers[i].stride;
-			vertexInputBindings[i].inputRate = m_desc.vertexLayout.vertexBuffers[i].instanceMode ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX;
+			vertexInputBindings[i].stride = m_description.vertexLayout.vertexBuffers[i].stride;
+			vertexInputBindings[i].inputRate = m_description.vertexLayout.vertexBuffers[i].instanceMode ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX;
 		}
 
-		for (uint32_t i = 0; i < m_desc.vertexLayout.vertexAttributeCount; ++i)
+		for (uint32_t i = 0; i < m_description.vertexLayout.vertexAttributeCount; ++i)
 		{
-			vertexInputAttributs[i].binding = m_desc.vertexLayout.vertexAttributes[i].bufferIndex;
+			vertexInputAttributs[i].binding = m_description.vertexLayout.vertexAttributes[i].bufferIndex;
 			vertexInputAttributs[i].location = i;
-			vertexInputAttributs[i].format = KsVertexFormatToVK(m_desc.vertexLayout.vertexAttributes[i].type);
-			vertexInputAttributs[i].offset = m_desc.vertexLayout.vertexAttributes[i].offset;
+			vertexInputAttributs[i].format = NixVertexFormatToVK(m_description.vertexLayout.vertexAttributes[i].type);
+			vertexInputAttributs[i].offset = m_description.vertexLayout.vertexAttributes[i].offset;
 		}
 		// Vertex input state used for pipeline creation
 		VkPipelineVertexInputStateCreateInfo vertexInputState = {};
 		vertexInputState.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputState.vertexBindingDescriptionCount = m_desc.vertexLayout.vertexBufferCount;
+		vertexInputState.vertexBindingDescriptionCount = m_description.vertexLayout.vertexBufferCount;
 		vertexInputState.pVertexBindingDescriptions = &vertexInputBindings[0];
-		vertexInputState.vertexAttributeDescriptionCount = m_desc.vertexLayout.vertexAttributeCount;
+		vertexInputState.vertexAttributeDescriptionCount = m_description.vertexLayout.vertexAttributeCount;
 		vertexInputState.pVertexAttributeDescriptions = vertexInputAttributs.data();
 		// Shaders
 		std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages{};
@@ -149,7 +152,7 @@ namespace nix {
 		// Set pipeline stage for this shader
 		shaderStages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
 		// Load binary SPIR-V shader
-		shaderStages[0].module = (const VkShaderModule&)*m_vertexModule;
+		shaderStages[0].module = m_vertexShader;
 		// Main entry point for the shader
 		shaderStages[0].pName = "main";
 
@@ -160,15 +163,15 @@ namespace nix {
 		// Set pipeline stage for this shader
 		shaderStages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
 		// Load binary SPIR-V shader
-		if (m_fragmentModule) {
-			shaderStages[1].module = (const VkShaderModule&)*m_fragmentModule;
+		if (m_fragmentShader) {
+			shaderStages[1].module = m_fragmentShader;
 			// Main entry point for the shader
 			shaderStages[1].pName = "main";
 			//
 			assert(shaderStages[1].module != VK_NULL_HANDLE);
 		}
 		// Set pipeline shader stage info
-		if (!m_fragmentModule)
+		if (!m_fragmentShader)
 			pipelineCreateInfo.stageCount = 1;
 		else
 			pipelineCreateInfo.stageCount = 2;
@@ -182,35 +185,32 @@ namespace nix {
 		pipelineCreateInfo.pMultisampleState = &multisampleState;
 		pipelineCreateInfo.pViewportState = &viewportState;
 		pipelineCreateInfo.pDepthStencilState = &depthStencilState;
-		pipelineCreateInfo.renderPass = m_renderPass;
+		pipelineCreateInfo.renderPass = renderPass;
 		pipelineCreateInfo.pDynamicState = &dynamicState;
 		//
-		if (GeneralPipelineCache == VK_NULL_HANDLE) {
-			struct alignas(4) CacheMem {
-				uint32_t headerSize = 16 + VK_UUID_SIZE;
-				uint32_t headerVersion = VK_PIPELINE_CACHE_HEADER_VERSION_ONE;
-				uint32_t vendorID = 0;
-				uint32_t deviceID = 0;
-				char     cacheID[VK_UUID_SIZE];
-			} cacheMem;
-			cacheMem.vendorID = m_context->getDeviceProperties().vendorID;
-			cacheMem.deviceID = m_context->getDeviceProperties().deviceID;
-			memcpy(cacheMem.cacheID, m_context->getDeviceProperties().pipelineCacheUUID, sizeof(VK_UUID_SIZE));
+		VkPipeline ppl;
+		vkCreateGraphicsPipelines(m_context->getDevice(), m_context->getPipelineCache(), 1, &pipelineCreateInfo, nullptr, &ppl);
 
-			VkPipelineCacheCreateInfo cacheCreateInfo = {}; {
-				cacheCreateInfo.flags = 0;
-				cacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-				cacheCreateInfo.initialDataSize = 16 + VK_UUID_SIZE;
-				cacheCreateInfo.pInitialData = &cacheMem;
-				cacheCreateInfo.pNext = nullptr;
-			}
-			if (VK_SUCCESS != vkCreatePipelineCache(m_context->getDevice(), &cacheCreateInfo, nullptr, &GeneralPipelineCache)) {
-				assert(false);
-			}
-		}
-		vkCreateGraphicsPipelines(m_context->getDevice(), GeneralPipelineCache, 1, &pipelineCreateInfo, nullptr, &m_pipelines[_topologyMode]);
-		//
-		return m_pipelines[_topologyMode];
+		PipelineVk* pipeline = new PipelineVk();
+		pipeline->m_pipeline = ppl;
+		pipeline->m_renderPass = renderPass;
+		pipeline->m_context = m_context;
+
+		return pipeline;
+	}
+
+	void PipelineVk::setDynamicalStates(VkCommandBuffer _commandBuffer)
+	{
+		vkCmdSetBlendConstants(_commandBuffer, m_blendConstants);
+		// depthBiasClamp indicates whether depth bias clamping is supported.
+		// If this feature is not enabled 
+		// the depthBiasClamp member of the VkPipelineRasterizationStateCreateInfo structure must be set to 0.0 
+		// unless the VK_DYNAMIC_STATE_DEPTH_BIAS dynamic state is enabled
+		// and the depthBiasClamp parameter to vkCmdSetDepthBias must be set to 0.0
+		vkCmdSetDepthBias(_commandBuffer, m_constantBias, 0.0f, m_slopeScaleBias);
+		vkCmdSetStencilReference(_commandBuffer, VK_STENCIL_FRONT_AND_BACK, m_stencilReference);
+		vkCmdSetViewport(_commandBuffer, 0, 1, &m_viewport);
+		vkCmdSetScissor(_commandBuffer, 0, 1, &m_scissor);
 	}
 
 	void PipelineVk::setViewport(const Viewport& _viewport)
@@ -237,79 +237,28 @@ namespace nix {
 		m_slopeScaleBias = _slopeScaleBias;
 	}
 
-// 	void PipelineVk::setShaderCache(const void* _data, size_t _size, size_t _offset) {
-// #ifndef NDEBUG
-// 		assert( _size + _offset <= m_context->getDriver()->getPhysicalDeviceProperties().limits.maxPushConstantsSize );
-// #endif
-// 		auto cmd = m_context->getGraphicsQueue()->commandBuffer();
-// 		vkCmdPushConstants(cmd->operator const VkCommandBuffer &(), m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, _offset, _size, _data);
-// 	}
-// 
-// 	bool PipelineVk::getVertexShaderCacheMember(const std::string _name, size_t& size_, size_t& offset_) {
-// 		return m_vertexModule->GetConstantsMember(_name, size_, offset_);
-// 	}
-// 	bool PipelineVk::getFragmentShaderCacheMember(const std::string _name, size_t& size_, size_t& offset_) {
-// 		return m_fragmentModule->GetConstantsMember(_name, size_, offset_);
-// 	}
-// 
-// 	const nix::PipelineDescription& PipelineVk::getDescription()
-// 	{
-// 		return m_desc;
-// 	}
-
 	void PipelineVk::release()
 	{
 		auto deletor = GetDeferredDeletor();
 		deletor.destroyResource(this);
 	}
 
-	PipelineVk::~PipelineVk()
+	PipelineVk::PipelineVk() :
+		m_renderPass(VK_NULL_HANDLE),
+		m_stencilReference(0),
+		m_constantBias(0),
+		m_slopeScaleBias(0)
 	{
-// 		auto device = m_context->getDevice();
-// 		for (auto & pipeline : m_pipelines)
-// 		{
-// 			if (pipeline) {
-// 				vkDestroyPipeline(device, pipeline, nullptr);
-// 			}
-// 		}
-// 		vkDestroyPipelineLayout(device, m_pipelineLayout, nullptr);
-// 		for ( auto& setLayout : m_vecDescriptorSetLayout) {
-// 			vkDestroyDescriptorSetLayout(device, setLayout.layout, nullptr);
-// 		}
+		m_blendConstants[0] = m_blendConstants[1] = m_blendConstants[2] = m_blendConstants[3] = 1.0f;
 	}
 
-// 	IPipeline* ContextVk::createPipeline(const PipelineDescription& _desc) {
-// 		auto device = m_context->getDevice();
-// 
-// 		bool rst = false;
-// 		TextReader vertReader, fragReader;
-// 		rst = vertReader.openFile( m_archieve, std::string(_desc.vertexShader));
-// 		rst = fragReader.openFile( m_archieve, std::string(_desc.fragmentShader));
-// 		//auto vertShader = createShaderModule(vertReader.getText(), nix::ShaderModuleType::VertexShader);
-// 		//auto fragShader = createShaderModule(fragReader.getText(), nix::ShaderModuleType::FragmentShader);
-// 		auto vertShader = m_context->createShaderModule(vertReader.getText(), "main", VK_SHADER_STAGE_VERTEX_BIT);
-// 		if (!vertShader)
-// 			return nullptr;
-// 		ShaderModuleVk* fragShader = nullptr;
-// 		if ( _desc.fragmentShader)
-// 			fragShader = m_context->createShaderModule(fragReader.getText(), "main", VK_SHADER_STAGE_FRAGMENT_BIT);
-// 		//
-// 		auto vecSetLayouts = ShaderModuleVk::CreateDescriptorSetLayout(vertShader, fragShader);
-// 		auto pipelineLayout = PipelineVk::CreateRenderPipelineLayout(vecSetLayouts);
-// 
-// 		auto renderPass = RenderPassVk::RequestRenderPassObject(_desc.renderPassDescription);
-// 		//
-// 		PipelineVk* pipeline = new PipelineVk();
-// 		pipeline->m_desc = _desc;
-// 		pipeline->m_vertexModule = vertShader;
-// 		pipeline->m_fragmentModule = fragShader;
-// 		pipeline->m_vecDescriptorSetLayout = vecSetLayouts;
-// 		pipeline->m_pipelineLayout = pipelineLayout;
-// 		pipeline->m_renderPass = renderPass;
-// 		memset(pipeline->m_pipelines, 0, sizeof(pipeline->m_pipelines));
-// 		//
-// 		return pipeline;
-// 	}
+	PipelineVk::~PipelineVk()
+	{
+		auto device = m_context->getDevice();
+		if ( m_pipeline ) {
+			vkDestroyPipeline(device, m_pipeline, nullptr);
+		}
+	}
 
 	void PipelineVk::setStencilReference(uint32_t _stencilReference) {
 		m_stencilReference = _stencilReference;
@@ -317,47 +266,5 @@ namespace nix {
 
 	void PipelineVk::setBlendFactor(const float* _blendFactors) {
 		memcpy(m_blendConstants, _blendFactors, sizeof(m_blendConstants));
-	}
-	// create sampler must be a thread safe function
-	// engine may be create resources in a background thread
-	std::map< SamplerState, VkSampler > SamplerMapVk;
-	std::mutex SamplerMapMutex;
-	VkSampler GetSampler(const SamplerState& _state)
-	{
-		// construct a `key`
-		union {
-			struct alignas(1) {
-				uint8_t AddressU;
-				uint8_t AddressV;
-				uint8_t AddressW;
-				uint8_t MinFilter;
-				uint8_t MagFilter;
-				uint8_t MipFilter;
-				uint8_t TexCompareMode;
-				uint8_t TexCompareFunc;
-			} u;
-			SamplerState k;
-		} key = {
-			static_cast<uint8_t>(_state.u),
-			static_cast<uint8_t>(_state.v),
-			static_cast<uint8_t>(_state.w),
-			static_cast<uint8_t>(_state.min),
-			static_cast<uint8_t>(_state.mag),
-			static_cast<uint8_t>(_state.mip),
-			static_cast<uint8_t>(_state.compareMode),
-			static_cast<uint8_t>(_state.compareFunction)
-		};
-		SamplerMapMutex.lock();
-		// find a sampler by `key`
-		auto rst = SamplerMapVk.find(key.k);
-		if (rst != SamplerMapVk.end()) {
-			SamplerMapMutex.unlock();
-			return rst->second;
-		}
-		// cannot find a `sampler`, create a new one
-		auto sampler = m_context->createSampler(_state);
-		SamplerMapVk[key.k] = sampler; // insert the sampler to the map
-		SamplerMapMutex.unlock();
-		return sampler;
 	}
 }

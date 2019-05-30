@@ -4,10 +4,12 @@
 #include "ContextVk.h"
 #include "BufferVk.h"
 #include "QueueVk.h"
+#include "PipelineVk.h"
 #include "vkhelper/helper.h"
 #include "TypemappingVk.h"
-#include <cassert>
+#include "RenderableVk.h"
 #include "nix/string/encoding.h"
+#include <cassert>
 
 namespace nix {
 	//
@@ -178,15 +180,16 @@ namespace nix {
 	bool RenderPassVk::begin()
 	{
 		auto cmdbuff = m_context->getGraphicsQueue()->commandBuffer();
+		m_commandBuffer = (const VkCommandBuffer&)cmdbuff;
 		// transform attachment image layout
 		for (auto& attachment : m_colorAttachments) {
 			if (!attachment)
 				break;
 			TextureVk* texture = (TextureVk*)attachment->getTexture();
-			texture->transformImageLayout( (const VkCommandBuffer&)*cmdbuff, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+			texture->transformImageLayout( m_commandBuffer, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		}
 		TextureVk* texture = (TextureVk*)m_depthStencil->getTexture();
-		texture->transformImageLayout((const VkCommandBuffer&)*cmdbuff, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+		texture->transformImageLayout(m_commandBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 		// create begin info
 		VkRenderPassBeginInfo beginInfo = {
 			VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,// VkStructureType sType;
@@ -200,7 +203,7 @@ namespace nix {
 			m_clearValues// const VkClearValue* pClearValues;
 		};
 		//
-		vkCmdBeginRenderPass(*cmdbuff, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBeginRenderPass( m_commandBuffer, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		return true;
 	}
 
@@ -211,8 +214,8 @@ namespace nix {
 
 	void RenderPassVk::end()
 	{
-		auto cmdbuff = m_context->getGraphicsQueue()->commandBuffer();
-		vkCmdEndRenderPass(*cmdbuff);
+		vkCmdEndRenderPass(m_commandBuffer);
+		m_commandBuffer = VK_NULL_HANDLE;
 		//
 		for ( uint32_t i = 0; i<m_desc.colorAttachmentCount; ++i )
 		{
@@ -239,6 +242,43 @@ namespace nix {
 		}
 		m_clearValues[clearCount].depthStencil.depth = _clear.depth;
 		m_clearValues[clearCount].depthStencil.stencil = _clear.stencil;
+	}
+
+	void RenderPassVk::bindPipeline(IPipeline* _pipeline)
+	{
+		PipelineVk* pipeline = (PipelineVk*)_pipeline;
+		vkCmdBindPipeline( m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline );
+		pipeline->setDynamicalStates(m_commandBuffer);
+	}
+
+	void RenderPassVk::bindArgument(IArgument* _argument)
+	{
+		ArgumentVk* argument = (ArgumentVk*)_argument;
+		argument->bind(m_commandBuffer);
+	}
+
+	void RenderPassVk::draw(IRenderable* _renderable, uint32_t _vertexOffset, uint32_t _vertexCount)
+	{
+		RenderableVk* renderable = (RenderableVk*)_renderable;
+		renderable->draw(m_commandBuffer, _vertexOffset, _vertexCount);
+	}
+
+	void RenderPassVk::drawElements(IRenderable* _renderable, uint32_t _indexOffset, uint32_t _indexCount)
+	{
+		RenderableVk* renderable = (RenderableVk*)_renderable;
+		renderable->drawElements(m_commandBuffer, _indexOffset, _indexCount);
+	}
+
+	void RenderPassVk::drawInstanced(IRenderable* _renderable, uint32_t _vertexOffset, uint32_t _vertexCount, uint32_t _baseInstance, uint32_t _instanceCount)
+	{
+		RenderableVk* renderable = (RenderableVk*)_renderable;
+		renderable->drawInstanced(m_commandBuffer, _vertexOffset, _vertexCount, _baseInstance, _instanceCount);
+	}
+
+	void RenderPassVk::drawElementInstanced(IRenderable* _renderable, uint32_t _indexOffset, uint32_t _indexCount, uint32_t _baseInstance, uint32_t _instanceCount)
+	{
+		RenderableVk* renderable = (RenderableVk*)_renderable;
+		renderable->drawElementInstanced(m_commandBuffer, _indexOffset, _indexCount, _baseInstance, _instanceCount);
 	}
 
 	const nix::RenderPassDescription& RenderPassVk::getDescption() const
@@ -281,6 +321,7 @@ namespace nix {
 	VkRenderPass RenderPassVk::RequestRenderPassObject(ContextVk* _context, const RenderPassDescription& _desc)
 	{
 		uint64_t hashCode = HashRenderPassDescription(_desc);
+		//
 		auto it = m_renderPassMapTable.find(hashCode);
 		if (it != m_renderPassMapTable.end()) {
 			return it->second;
@@ -501,9 +542,10 @@ namespace nix {
 	bool RenderPassSwapchainVk::begin()
 	{
 		auto cmdbuff = m_context->getGraphicsQueue()->commandBuffer();
+		m_commandBuffer = *cmdbuff;
 		// transform attachment image layout
-		m_vecColors[m_imageIndex]->transformImageLayout((const VkCommandBuffer&)*cmdbuff, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		m_depthStencil->transformImageLayout((const VkCommandBuffer&)*cmdbuff, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+		m_vecColors[m_imageIndex]->transformImageLayout(m_commandBuffer, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		m_depthStencil->transformImageLayout(m_commandBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 		// create begin info
 		VkRenderPassBeginInfo beginInfo = {
 			VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,// VkStructureType sType;
@@ -517,7 +559,7 @@ namespace nix {
 			m_clearValues// const VkClearValue* pClearValues;
 		};
 		//
-		vkCmdBeginRenderPass(*cmdbuff, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBeginRenderPass(m_commandBuffer, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		//
 		return true;
 	}
@@ -529,8 +571,8 @@ namespace nix {
 
 	void RenderPassSwapchainVk::end()
 	{
-		auto cmdbuff = m_context->getGraphicsQueue()->commandBuffer();
-		vkCmdEndRenderPass(*cmdbuff);
+		vkCmdEndRenderPass(m_commandBuffer);
+		m_commandBuffer = VK_NULL_HANDLE;
 		//
 		m_vecColors[m_imageIndex]->setImageLayout(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 		m_depthStencil->setImageLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
@@ -544,6 +586,43 @@ namespace nix {
 		m_clearValues[0].color.float32[3] = _clear.colors[0].a;
 		m_clearValues[1].depthStencil.depth = _clear.depth;
 		m_clearValues[1].depthStencil.stencil = _clear.stencil;
+	}
+
+	void RenderPassSwapchainVk::bindPipeline(IPipeline* _pipeline)
+	{
+		PipelineVk* pipeline = (PipelineVk*)_pipeline;
+		vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline);
+		pipeline->setDynamicalStates(m_commandBuffer);
+	}
+
+	void RenderPassSwapchainVk::bindArgument(IArgument* _argument)
+	{
+		ArgumentVk* argument = (ArgumentVk*)_argument;
+		argument->bind(m_commandBuffer);
+	}
+
+	void RenderPassSwapchainVk::draw(IRenderable* _renderable, uint32_t _vertexOffset, uint32_t _vertexCount)
+	{
+		RenderableVk* renderable = (RenderableVk*)_renderable;
+		renderable->draw(m_commandBuffer, _vertexOffset, _vertexCount);
+	}
+
+	void RenderPassSwapchainVk::drawElements(IRenderable* _renderable, uint32_t _indexOffset, uint32_t _indexCount)
+	{
+		RenderableVk* renderable = (RenderableVk*)_renderable;
+		renderable->drawElements(m_commandBuffer, _indexOffset, _indexCount);
+	}
+
+	void RenderPassSwapchainVk::drawInstanced(IRenderable* _renderable, uint32_t _vertexOffset, uint32_t _vertexCount, uint32_t _baseInstance, uint32_t _instanceCount)
+	{
+		RenderableVk* renderable = (RenderableVk*)_renderable;
+		renderable->drawInstanced(m_commandBuffer, _vertexOffset, _vertexCount, _baseInstance, _instanceCount);
+	}
+
+	void RenderPassSwapchainVk::drawElementInstanced(IRenderable* _renderable, uint32_t _indexOffset, uint32_t _indexCount, uint32_t _baseInstance, uint32_t _instanceCount)
+	{
+		RenderableVk* renderable = (RenderableVk*)_renderable;
+		renderable->drawElementInstanced(m_commandBuffer, _indexOffset, _indexCount, _baseInstance, _instanceCount);
 	}
 
 }

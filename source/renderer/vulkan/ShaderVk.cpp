@@ -8,92 +8,92 @@
 
 namespace nix {
 
-	std::vector< ArgumentLayout > ShaderModuleVk::CreateDescriptorSetLayout(ShaderModuleVk* _vertexShader, ShaderModuleVk* _fragmentShader)
-	{
-		std::map< uint32_t, VkDescriptorSetLayoutCreateInfo> setLayoutMap;
-		std::map< uint32_t, std::vector< VkDescriptorSetLayoutBinding > > BindingMap;
-		//z
-		ShaderModuleVk* shaders[2] = { _vertexShader, _fragmentShader };
-		for (uint32_t i = 0; i < 2; ++i)
-		{
-			if (!shaders[i])
-				break;
-			const auto& ss = shaders[i]->GetDescriptorSetStructure();
-			for (auto& set : ss)
-			{
-				VkDescriptorSetLayoutCreateInfo* pCreateInfo = nullptr;
-				auto iter = setLayoutMap.find(set.id);
-				if (iter == setLayoutMap.end())
-				{
-					VkDescriptorSetLayoutCreateInfo setLayoutInfo; {
-						setLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-						setLayoutInfo.pNext = nullptr;
-						setLayoutInfo.flags = 0;//
-						setLayoutInfo.bindingCount = 0;
-						setLayoutInfo.pBindings = nullptr;
-					}
-					setLayoutMap[set.id] = setLayoutInfo;
-					pCreateInfo = &setLayoutMap[set.id];
-				}
-				else
-				{
-					pCreateInfo = &iter->second;
-				}
-				pCreateInfo->bindingCount += static_cast<uint32_t>(set.samplers.size());
-				pCreateInfo->bindingCount += static_cast<uint32_t>(set.uniforms.size());
-			}
-		}
-		// construct bindings
-		for (uint32_t i = 0; i < 2; ++i)
-		{
-			if (!shaders[i])
-				break;
-			const auto& ss = shaders[i]->GetDescriptorSetStructure();
-			for (auto& set : ss)
-			{
-				auto& vecBinding = BindingMap[set.id];
-				for (auto& sampler : set.samplers) {
-					VkDescriptorSetLayoutBinding binding;
-					{
-						binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-						binding.descriptorCount = 1; // greater than 1 indicates that it's an array
-						binding.stageFlags = (i == 0) ? VK_SHADER_STAGE_VERTEX_BIT : VK_SHADER_STAGE_FRAGMENT_BIT;
-						binding.binding = sampler.binding;
-						binding.pImmutableSamplers = nullptr;// sampler are bound at run time, not the creating time!
-					}
-					vecBinding.push_back(binding);
-				}
-				for (auto& uniform : set.uniforms) {
-					VkDescriptorSetLayoutBinding binding;
-					{
-						binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-						binding.descriptorCount = 1; // greater than 1 indicates that it's an array
-						binding.stageFlags = (i == 0) ? VK_SHADER_STAGE_VERTEX_BIT : VK_SHADER_STAGE_FRAGMENT_BIT;
-						binding.binding = uniform.binding;
-						binding.pImmutableSamplers = nullptr;// uniform binding, must not have samplers
-					}
-					vecBinding.push_back(binding);
-				}
-			}
-		}
-		//
-		auto context = (ContextVk*)GetContextVulkan();
-		//
-		std::vector< ArgumentLayout > vecDescriptorLayout;
-		for (auto& p : setLayoutMap)
-		{
-			p.second.pBindings = BindingMap[p.first].data();
-			assert(p.second.bindingCount == BindingMap[p.first].size() && "count must be the same!");
-			VkDescriptorSetLayout layout;
-			VkResult rst = vkCreateDescriptorSetLayout(context->getDevice(), &p.second, nullptr, &layout);
-			if (VK_SUCCESS != rst) {
-				assert(false);
-				return vecDescriptorLayout;
-			}
-			vecDescriptorLayout.push_back({ layout, p.first });
-		}
-		return vecDescriptorLayout;
-	}
+// 	std::vector< ArgumentLayout > ShaderModuleVk::CreateDescriptorSetLayout(ShaderModuleVk* _vertexShader, ShaderModuleVk* _fragmentShader)
+// 	{
+// 		std::map< uint32_t, VkDescriptorSetLayoutCreateInfo> setLayoutMap;
+// 		std::map< uint32_t, std::vector< VkDescriptorSetLayoutBinding > > BindingMap;
+// 		//z
+// 		ShaderModuleVk* shaders[2] = { _vertexShader, _fragmentShader };
+// 		for (uint32_t i = 0; i < 2; ++i)
+// 		{
+// 			if (!shaders[i])
+// 				break;
+// 			const auto& ss = shaders[i]->GetDescriptorSetStructure();
+// 			for (auto& set : ss)
+// 			{
+// 				VkDescriptorSetLayoutCreateInfo* pCreateInfo = nullptr;
+// 				auto iter = setLayoutMap.find(set.id);
+// 				if (iter == setLayoutMap.end())
+// 				{
+// 					VkDescriptorSetLayoutCreateInfo setLayoutInfo; {
+// 						setLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+// 						setLayoutInfo.pNext = nullptr;
+// 						setLayoutInfo.flags = 0;//
+// 						setLayoutInfo.bindingCount = 0;
+// 						setLayoutInfo.pBindings = nullptr;
+// 					}
+// 					setLayoutMap[set.id] = setLayoutInfo;
+// 					pCreateInfo = &setLayoutMap[set.id];
+// 				}
+// 				else
+// 				{
+// 					pCreateInfo = &iter->second;
+// 				}
+// 				pCreateInfo->bindingCount += static_cast<uint32_t>(set.samplers.size());
+// 				pCreateInfo->bindingCount += static_cast<uint32_t>(set.uniforms.size());
+// 			}
+// 		}
+// 		// construct bindings
+// 		for (uint32_t i = 0; i < 2; ++i)
+// 		{
+// 			if (!shaders[i])
+// 				break;
+// 			const auto& ss = shaders[i]->GetDescriptorSetStructure();
+// 			for (auto& set : ss)
+// 			{
+// 				auto& vecBinding = BindingMap[set.id];
+// 				for (auto& sampler : set.samplers) {
+// 					VkDescriptorSetLayoutBinding binding;
+// 					{
+// 						binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+// 						binding.descriptorCount = 1; // greater than 1 indicates that it's an array
+// 						binding.stageFlags = (i == 0) ? VK_SHADER_STAGE_VERTEX_BIT : VK_SHADER_STAGE_FRAGMENT_BIT;
+// 						binding.binding = sampler.binding;
+// 						binding.pImmutableSamplers = nullptr;// sampler are bound at run time, not the creating time!
+// 					}
+// 					vecBinding.push_back(binding);
+// 				}
+// 				for (auto& uniform : set.uniforms) {
+// 					VkDescriptorSetLayoutBinding binding;
+// 					{
+// 						binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+// 						binding.descriptorCount = 1; // greater than 1 indicates that it's an array
+// 						binding.stageFlags = (i == 0) ? VK_SHADER_STAGE_VERTEX_BIT : VK_SHADER_STAGE_FRAGMENT_BIT;
+// 						binding.binding = uniform.binding;
+// 						binding.pImmutableSamplers = nullptr;// uniform binding, must not have samplers
+// 					}
+// 					vecBinding.push_back(binding);
+// 				}
+// 			}
+// 		}
+// 		//
+// 		auto context = (ContextVk*)GetContextVulkan();
+// 		//
+// 		std::vector< ArgumentLayout > vecDescriptorLayout;
+// 		for (auto& p : setLayoutMap)
+// 		{
+// 			p.second.pBindings = BindingMap[p.first].data();
+// 			assert(p.second.bindingCount == BindingMap[p.first].size() && "count must be the same!");
+// 			VkDescriptorSetLayout layout;
+// 			VkResult rst = vkCreateDescriptorSetLayout(context->getDevice(), &p.second, nullptr, &layout);
+// 			if (VK_SUCCESS != rst) {
+// 				assert(false);
+// 				return vecDescriptorLayout;
+// 			}
+// 			vecDescriptorLayout.push_back({ layout, p.first });
+// 		}
+// 		return vecDescriptorLayout;
+// 	}
 
 	ShaderModuleVk* ContextVk::createShaderModule(const char * _text, const char * _entryPoint, VkShaderStageFlagBits _stage) const {
 		// step.1
