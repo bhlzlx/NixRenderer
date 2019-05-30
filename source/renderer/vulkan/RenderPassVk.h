@@ -59,7 +59,7 @@ namespace nix {
 		}
 		~RenderPassVk();
 		//
-		virtual bool begin() override;
+		virtual bool begin( IGraphicsQueue* _queue ) override;
 		virtual void resize(uint32_t _width, uint32_t _height) override;
 		virtual void end() override; 
 		virtual void setClear( const RpClear& _clear ) override;
@@ -115,7 +115,7 @@ namespace nix {
 		void update(std::vector<VkImage>& _images, uint32_t _width, uint32_t _height, VkFormat _format);
 		void cleanup();
 		//
-		virtual bool begin() override;
+		virtual bool begin( IGraphicsQueue* _queue ) override;
 		//
 		virtual void resize(uint32_t _width, uint32_t _height) override;
 

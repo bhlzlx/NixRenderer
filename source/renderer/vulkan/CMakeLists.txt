@@ -31,8 +31,8 @@ set( RendererSource
     ${CMAKE_CURRENT_SOURCE_DIR}/PipelineVk.h
     ${CMAKE_CURRENT_SOURCE_DIR}/QueueVk.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/QueueVk.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/ShaderVk.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ShaderVk.h
+    #${CMAKE_CURRENT_SOURCE_DIR}/ShaderVk.cpp
+    #${CMAKE_CURRENT_SOURCE_DIR}/ShaderVk.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorSetVk.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorSetVk.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ArgumentVk.cpp
@@ -47,13 +47,13 @@ set( RendererSource
     ${CMAKE_CURRENT_SOURCE_DIR}/vkhelper/helper.h
     ${CMAKE_CURRENT_SOURCE_DIR}/vkhelper/helper.cpp
     # glsl compiler
-    ${CMAKE_CURRENT_SOURCE_DIR}/compiler/SPIRVReflection.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/compiler/SPIRVReflection.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/compiler/ResourceLimits.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/compiler/ResourceLimits.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/compiler/GLSLCompiler.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/compiler/GLSLCompiler.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/compiler/VEZ.h
+    #${CMAKE_CURRENT_SOURCE_DIR}/compiler/SPIRVReflection.cpp
+    #${CMAKE_CURRENT_SOURCE_DIR}/compiler/SPIRVReflection.h
+    #${CMAKE_CURRENT_SOURCE_DIR}/compiler/ResourceLimits.cpp
+    #${CMAKE_CURRENT_SOURCE_DIR}/compiler/ResourceLimits.h
+    #${CMAKE_CURRENT_SOURCE_DIR}/compiler/GLSLCompiler.cpp
+    #${CMAKE_CURRENT_SOURCE_DIR}/compiler/GLSLCompiler.h
+    #${CMAKE_CURRENT_SOURCE_DIR}/compiler/VEZ.h
 	# compress texture format 
 	${CMAKE_CURRENT_SOURCE_DIR}/DDSLoader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/DDSLoader.h

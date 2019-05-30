@@ -83,7 +83,7 @@ namespace nix {
 		void reset();
 	};
 
-	class NIX_API_DECL GraphicsQueueVk
+	class NIX_API_DECL GraphicsQueueVk : public IGraphicsQueue
 	{
 		friend class ContextVk;
 	private:
@@ -144,7 +144,6 @@ namespace nix {
 		const CommandBufferVk* commandBuffer() const;
 		void endFrame();
 		void waitForIdle() const;
-
 	};
 
 	class NIX_API_DECL UploadQueueVk

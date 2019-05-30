@@ -68,7 +68,7 @@ namespace nix {
 			return m_archieve;
 		}
 		virtual inline ILogger* getLogger() override {
-			&m_logger;
+			return &m_logger;
 		}
 
 	private:

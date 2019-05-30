@@ -158,7 +158,6 @@ namespace nix {
 		cmdbuff->begin();
 		//
 		m_readyForRendering = VK_TRUE;
-		m_context->m_renderCommandBuffer = *cmdbuff;
 	}
 
 	const CommandBufferVk* GraphicsQueueVk::commandBuffer() const

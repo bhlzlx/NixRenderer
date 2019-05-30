@@ -283,4 +283,7 @@ namespace nix {
 		m_graphicsQueue->endFrame();
 		m_swapchain.present();
 	}
+	inline IGraphicsQueue* ContextVk::getGraphicsQueue(uint32_t _index) {
+		return m_graphicsQueue;
+	}
 }

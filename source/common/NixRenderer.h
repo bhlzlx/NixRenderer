@@ -473,6 +473,7 @@ namespace nix {
 
 	class IRenderPass;
 	class IContext;
+	class IGraphicsQueue;
 
     class NIX_API_DECL ITexture {
 	public:
@@ -510,13 +511,18 @@ namespace nix {
 		OffscreenRenderPass
 	};
 
+	class IGraphicsQueue {
+	private:
+	public:
+	};
+
 	class IArgument;
 	class IRenderable;
 	class IPipeline;
     class NIX_API_DECL IRenderPass {
     private:
     public:
-        virtual bool begin() = 0;
+        virtual bool begin( IGraphicsQueue* _queue = nullptr ) = 0;
         virtual void end() = 0;
 		virtual void release() = 0;
 		virtual void setClear( const RpClear& _clear ) = 0;
@@ -647,6 +653,7 @@ namespace nix {
 		virtual void resize(uint32_t _width, uint32_t _height) = 0;
 		virtual bool beginFrame() = 0;
 		virtual void endFrame() = 0;
+		virtual IGraphicsQueue* getGraphicsQueue( uint32_t index = 0) = 0;
 		virtual IRenderPass* getRenderPass() = 0;
 		virtual IDriver* getDriver() = 0;
     };

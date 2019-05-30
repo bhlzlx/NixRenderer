@@ -177,9 +177,10 @@ namespace nix {
 		delete this;
 	}
 
-	bool RenderPassVk::begin()
+	bool RenderPassVk::begin( IGraphicsQueue* _queue )
 	{
-		auto cmdbuff = m_context->getGraphicsQueue()->commandBuffer();
+		GraphicsQueueVk* queue = (GraphicsQueueVk*)_queue;
+		auto cmdbuff = queue->commandBuffer();
 		m_commandBuffer = (const VkCommandBuffer&)cmdbuff;
 		// transform attachment image layout
 		for (auto& attachment : m_colorAttachments) {
@@ -539,9 +540,10 @@ namespace nix {
 		}
 	}
 
-	bool RenderPassSwapchainVk::begin()
+	bool RenderPassSwapchainVk::begin(IGraphicsQueue* _queue)
 	{
-		auto cmdbuff = m_context->getGraphicsQueue()->commandBuffer();
+		GraphicsQueueVk* queue = (GraphicsQueueVk*)_queue;
+		auto cmdbuff = queue->commandBuffer();
 		m_commandBuffer = *cmdbuff;
 		// transform attachment image layout
 		m_vecColors[m_imageIndex]->transformImageLayout(m_commandBuffer, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);

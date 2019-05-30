@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <cassert>
+#include <stdexcept>
 
 namespace vkhelper
 {
