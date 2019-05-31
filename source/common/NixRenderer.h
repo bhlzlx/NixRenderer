@@ -636,8 +636,8 @@ namespace nix {
 
     class NIX_API_DECL IContext {
 	public:
-		virtual IBuffer* createStableVBO( const void* _data, size_t _size) = 0;
-		virtual IBuffer* createTransientVBO(size_t _size) = 0;
+		virtual IBuffer* createStaticVertexBuffer( const void* _data, size_t _size) = 0;
+		virtual IBuffer* createCahcedVertexBuffer(size_t _size) = 0;
 		virtual IBuffer* createIndexBuffer(const void* _data, size_t _size) = 0;
 		//virtual IUniformBuffer* createUniformBuffer(size_t _size) = 0;
         virtual ITexture* createTexture(const TextureDescription& _desc, TextureUsageFlags _usage = TextureUsageNone ) = 0;
@@ -645,7 +645,7 @@ namespace nix {
 		virtual ITexture* createTextureKTX(const void* _data, size_t _length) = 0;
 		virtual IAttachment* createAttachment(NixFormat _format,uint32_t _width, uint32_t _height ) = 0;
         virtual IRenderPass* createRenderPass( const RenderPassDescription& _desc, IAttachment** _colorAttachments, IAttachment* _depthStencil ) = 0;
-		virtual IMaterial* createMaterial( const MaterialDescription& _desc );
+		virtual IMaterial* createMaterial( const MaterialDescription& _desc ) = 0;
         //virtual IPipeline* createPipeline( const MaterialDescription& _desc ) = 0;
 		virtual NixFormat swapchainFormat() const = 0;
 		virtual void captureFrame(IFrameCapture * _capture, FrameCaptureCallback _callback ) = 0;
@@ -657,8 +657,8 @@ namespace nix {
 		virtual IRenderPass* getRenderPass() = 0;
 		virtual IDriver* getDriver() = 0;
     };
+ }
 
-	extern "C" {
-
-	}	
+ extern "C" {
+	 NIX_API_DECL nix::IDriver* createDriver();
  }

@@ -21,10 +21,8 @@ namespace nix {
 
 	nix::BufferVk BufferVk::CreateBuffer(size_t _size, VkBufferUsageFlags _usage, ContextVk* _context )
 	{
-
 		VmaAllocationCreateInfo allocInfo = {}; {
 			allocInfo.usage = MappingVmaMemoryUsage(_usage);
-			allocInfo.flags = VMA_ALLOCATION_CREATE_STRATEGY_MIN_MEMORY_BIT;
 			if (allocInfo.usage == VMA_MEMORY_USAGE_CPU_ONLY) {
 				allocInfo.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
 			}
@@ -91,7 +89,7 @@ namespace nix {
 		return VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_ONLY;
 	}
 	//
-	IBuffer* ContextVk::createStableVBO(const void* _data, size_t _size) {
+	IBuffer* ContextVk::createStaticVertexBuffer(const void* _data, size_t _size) {
 		auto buffer = BufferVk::CreateBuffer(_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, this);
 		if (_data) {
 			buffer.uploadDataImmediatly(_data, _size, 0);
@@ -111,7 +109,7 @@ namespace nix {
 		m_buffer.updateDataQueued(_data, _size, _offset);
 	}
 
-	IBuffer* ContextVk::createTransientVBO(size_t _size) {
+	IBuffer* ContextVk::createCahcedVertexBuffer(size_t _size) {
 		// transient buffer should use `persistent mapping` feature
 		auto buffer = BufferVk::CreateBuffer(_size * MaxFlightCount, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, this);
 		auto dvb = new CachedVertexBuffer(std::move(buffer), _size);

@@ -10,49 +10,6 @@
 
 #define PIPELINE_CACHE_FILENAME "pipeline_cache.bin"
 
-// create sampler must be a thread safe function
-// engine may be create resources in a background thread
-// std::map< SamplerState, VkSampler > SamplerMapVk;
-// std::mutex SamplerMapMutex;
-// VkSampler GetSampler(const SamplerState& _state)
-// {
-// 	// construct a `key`
-// 	union {
-// 		struct alignas(1) {
-// 			uint8_t AddressU;
-// 			uint8_t AddressV;
-// 			uint8_t AddressW;
-// 			uint8_t MinFilter;
-// 			uint8_t MagFilter;
-// 			uint8_t MipFilter;
-// 			uint8_t TexCompareMode;
-// 			uint8_t TexCompareFunc;
-// 		} u;
-// 		SamplerState k;
-// 	} key = {
-// 		static_cast<uint8_t>(_state.u),
-// 		static_cast<uint8_t>(_state.v),
-// 		static_cast<uint8_t>(_state.w),
-// 		static_cast<uint8_t>(_state.min),
-// 		static_cast<uint8_t>(_state.mag),
-// 		static_cast<uint8_t>(_state.mip),
-// 		static_cast<uint8_t>(_state.compareMode),
-// 		static_cast<uint8_t>(_state.compareFunction)
-// 	};
-// 	SamplerMapMutex.lock();
-// 	// find a sampler by `key`
-// 	auto rst = SamplerMapVk.find(key.k);
-// 	if (rst != SamplerMapVk.end()) {
-// 		SamplerMapMutex.unlock();
-// 		return rst->second;
-// 	}
-// 	// cannot find a `sampler`, create a new one
-// 	auto sampler = m_context->createSampler(_state);
-// 	SamplerMapVk[key.k] = sampler; // insert the sampler to the map
-// 	SamplerMapMutex.unlock();
-// 	return sampler;
-// }
-
 namespace nix {
 	class GraphicsQueueVk;
 	class UploadQueueVk;
@@ -103,8 +60,8 @@ namespace nix {
 		{
 		}
 
-		virtual IBuffer* createStableVBO(const void* _data, size_t _size) override;
-		virtual IBuffer* createTransientVBO(size_t _size) override;
+		virtual IBuffer* createStaticVertexBuffer(const void* _data, size_t _size) override;
+		virtual IBuffer* createCahcedVertexBuffer(size_t _size) override;
 		virtual IBuffer* createIndexBuffer(const void* _data, size_t _size) override;
 		virtual ITexture* createTexture(const TextureDescription& _desc, TextureUsageFlags _usage = TextureUsageNone) override;
 		virtual ITexture* createTextureDDS(const void* _data, size_t _length) override;

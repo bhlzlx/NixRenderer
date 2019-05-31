@@ -11,9 +11,9 @@
 #include <Windows.h>
 #endif
 
-PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT = nullptr;
-PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT = nullptr;
-PFN_vkDebugReportMessageEXT vkDebugReportMessageEXT = nullptr;
+// PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT = nullptr;
+// PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT = nullptr;
+// PFN_vkDebugReportMessageEXT vkDebugReportMessageEXT = nullptr;
 
 namespace nix {
 

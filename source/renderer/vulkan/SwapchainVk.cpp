@@ -279,11 +279,11 @@ namespace nix {
 		swapchain.m_flightIndex = 0;
 		swapchain.m_imageIndex = 0;
 		swapchain.m_swapchain = VK_NULL_HANDLE;
-		swapchain.m_graphicsQueue = (const VkQueue&)(*_context->getGraphicsQueue());
+		//swapchain.m_graphicsQueue = (const VkQueue&)(*_context->getGraphicsQueue());
 		//swapchain.m_renderPass = renderPass;
 		swapchain.m_nextImageAvailable = _context->createSemaphore();
 		swapchain.m_readyToPresent = _context->createSemaphore();
-		swapchain.m_renderPass = new RenderPassSwapchainVk();
+		swapchain.m_renderPass = new RenderPassSwapchainVk( _context );
 		swapchain.m_context = _context;
 		//
 		return swapchain;

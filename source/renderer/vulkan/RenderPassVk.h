@@ -102,7 +102,9 @@ namespace nix {
 		//uint8_t m_clearCount; // clear count
 		VkClearValue m_clearValues[2]; // color & depth-stencil clear values
 	public:
-		RenderPassSwapchainVk() : m_renderPass( VK_NULL_HANDLE)
+		RenderPassSwapchainVk( ContextVk* _context ) 
+			: m_context(_context)
+			, m_renderPass( VK_NULL_HANDLE)
 			, m_depthStencil(nullptr)
 			, m_imageIndex(0)
 		{

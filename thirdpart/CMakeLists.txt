@@ -1,5 +1,13 @@
-project( thirdpart )
-
-add_subdirectory(
-    nix
-)
+SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
+add_subdirectory( nix )
+add_subdirectory( SPIRV-Cross )
+SET_PROPERTY(TARGET nix PROPERTY FOLDER "Thirdpart")
+SET_PROPERTY(TARGET spirv-cross-core PROPERTY FOLDER "Thirdpart")
+# SET_PROPERTY(TARGET spirv-cross-cpp PROPERTY FOLDER "Thirdpart")
+# SET_PROPERTY(TARGET spirv-cross-glsl PROPERTY FOLDER "Thirdpart")
+# SET_PROPERTY(TARGET spirv-cross-hlsl PROPERTY FOLDER "Thirdpart")
+# SET_PROPERTY(TARGET spirv-cross-msl PROPERTY FOLDER "Thirdpart")
+# SET_PROPERTY(TARGET spirv-cross-reflect PROPERTY FOLDER "Thirdpart")
+# SET_PROPERTY(TARGET spirv-cross-util PROPERTY FOLDER "Thirdpart")
+# SET_PROPERTY(TARGET spirv-cross-c PROPERTY FOLDER "Thirdpart")
+# SET_PROPERTY(TARGET spirv-cross PROPERTY FOLDER "Thirdpart")

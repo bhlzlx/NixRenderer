@@ -18,14 +18,16 @@ namespace nix {
 		if (m_freeList.empty()) {
 			this->m_vecBuffer.resize( m_vecBuffer.size() + 1);
 			uint32_t bufferSize = m_unitSize * m_unitCount * MaxFlightCount;
-			*m_vecBuffer.rbegin() = std::move(BufferVk::CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, m_context));
+			BufferVk* newBuffer = new BufferVk();
+			*newBuffer = std::move(BufferVk::CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, m_context));
+			*m_vecBuffer.rbegin() = newBuffer;
 			for (uint32_t i = 0; i < m_unitCount; ++i) {
 				m_freeList.push_back({
 					(const VkBuffer&)m_vecBuffer.back(),
 					i * m_unitSize* MaxFlightCount,
 					m_unitSize,
 					m_index,
-					m_vecBuffer.back().raw()
+					m_vecBuffer.back()->raw()
 					});
 			}
 		}
@@ -49,7 +51,7 @@ namespace nix {
 			m_vecPool.resize(m_vecPool.size() + 1);
 			uint32_t unitCount = 64;
 			if (unitSize == 128) {
-				unitCount = 512; // 64KB * MaxFlightCount
+				unitCount = 2048; // 256KB * MaxFlightCount
 			}
 			else if (unitSize == 256) {
 				unitCount = 1024; // 256 KB * MaxFlightCount

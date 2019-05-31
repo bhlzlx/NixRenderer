@@ -1,7 +1,8 @@
 #include "DriverVk.h"
-#include <nix/io/archieve.h>
+#include <NixRenderer.h>
 #include "vkinc.h"
 #include "vkhelper/helper.h"
+#include <nix/io/archieve.h>
 #include <map>
 
 #ifdef _WIN32
@@ -28,11 +29,6 @@ PFN_vkCreateAndroidSurfaceKHR vkCreateWin32SurfaceKHR;
 #endif
 
 namespace nix {
-
-	DriverVk* CreateVulkanDriver() {
-		DriverVk* driver = new DriverVk();
-		return driver;
-	}
 
 	bool DriverVk::initialize( IArchieve* _arch, DeviceType _type) {
 #ifdef _WIN32
@@ -363,6 +359,13 @@ namespace nix {
 			return false;
 		}
 		return true;
+	}
+}
+
+extern "C" {
+	NIX_API_DECL nix::IDriver* createDriver() {
+		nix::DriverVk* driver = new nix::DriverVk();
+		return driver;
 	}
 }
 

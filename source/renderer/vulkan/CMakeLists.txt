@@ -5,6 +5,7 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdpart/SPIRV-Cross )
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdpart/GLSLang )
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/../../common )
 
+add_definitions( "-DNIX_DYNAMIC_LINK" )
 
 project( NixVulkan )
 
@@ -73,7 +74,7 @@ add_library( NixVulkan SHARED
 if( ANDROID )
     target_link_libraries(
         NixVulkan
-        OGLCompiler
+        #OGLCompiler
         SPIRV
         glslang
         OSDependent
@@ -85,10 +86,10 @@ if( ANDROID )
 else()
     target_link_libraries(
         NixVulkan
-        OGLCompiler
-        SPIRV
-        glslang
-        OSDependent
+        #OGLCompiler
+        #SPIRV
+        #glslang
+        #OSDependent
         spirv-cross-core
         nix
         ${vulkan-1}

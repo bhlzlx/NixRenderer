@@ -1,8 +1,8 @@
 #include "MaterialVk.h"
-#include "RenderableVk.h"
 #include "ContextVk.h"
-#include "BufferVk.h"
+#include "RenderableVk.h"
 #include "DescriptorSetVk.h"
+#include "ContextVk.h"
 
 namespace nix {
 
@@ -102,11 +102,6 @@ namespace nix {
 
 	IMaterial* ContextVk::createMaterial(const MaterialDescription& _desc) {
 		return MaterialVk::CreateMaterial(this, _desc);
-	}
-
-	IArgument* MaterialVk::createArgument( uint32_t _index )
-	{
-		return m_context->getDescriptorSetPool().allocateArgument(this, _index);
 	}
 
 	void MaterialVk::destroyArgument(IArgument* _argument)

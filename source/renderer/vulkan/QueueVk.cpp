@@ -82,7 +82,7 @@ namespace nix {
 		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		poolInfo.pNext = nullptr;
 		poolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-		poolInfo.queueFamilyIndex = m_transferQueueID >> 16;
+		poolInfo.queueFamilyIndex = _family;
 		VkCommandPool commandPool;
 		// assign command pool object
 		if (VK_SUCCESS != vkCreateCommandPool( m_logicalDevice, &poolInfo, nullptr, &commandPool)) {

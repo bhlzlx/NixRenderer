@@ -80,10 +80,15 @@ namespace nix {
 				context->m_queueFamilies.push_back(queueFamily);
 			}
 		}
+		context->m_driver = this;
+		context->m_physicalDevice = this->m_PhDevice;
+
 		context->m_swapchain = SwapchainVk::CreateSwapchain(context);
 		context->m_renderPass = context->m_swapchain.renderPass();
-		context->m_graphicsQueue = context->createGraphicsQueue(graphicsQueue, graphicQueueReq.family, graphicQueueReq.index );
-		context->m_uploadQueue = context->createUploadQueue(uploadQueue, uploadQueueReq.family, uploadQueueReq.index );
+
+		context->m_graphicsQueue = context->createGraphicsQueue(graphicsQueue, graphicQueueReq.family, graphicQueueReq.index);
+		context->m_uploadQueue = context->createUploadQueue(uploadQueue, uploadQueueReq.family, uploadQueueReq.index);
+
 		context->m_swapchain.setGraphicsQueue((const VkQueue&)* context->m_graphicsQueue);
 		//
 		VmaAllocatorCreateInfo allocatorInfo = {};
@@ -283,6 +288,7 @@ namespace nix {
 		m_graphicsQueue->endFrame();
 		m_swapchain.present();
 	}
+
 	inline IGraphicsQueue* ContextVk::getGraphicsQueue(uint32_t _index) {
 		return m_graphicsQueue;
 	}

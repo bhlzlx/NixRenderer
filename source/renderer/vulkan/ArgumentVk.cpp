@@ -11,8 +11,6 @@
 
 namespace nix {
 
-	VkSampler GetSampler(const SamplerState& _state);
-
 	IArgument* MaterialVk::createArgument(uint32_t _index) {
 		ArgumentVk* argument = m_context->getDescriptorSetPool().allocateArgument(this, _index);
 		return argument;
@@ -100,7 +98,7 @@ namespace nix {
 			if (write.dstBinding == descriptor.binding) {
 				VkDescriptorImageInfo* imageInfo = const_cast<VkDescriptorImageInfo*>(write.pImageInfo);
 				imageInfo->imageView = ((TextureVk*)_texture)->getImageView();
-				imageInfo->sampler = GetSampler(_sampler);
+				imageInfo->sampler = m_context->getSampler(_sampler);
 				imageInfo->imageLayout = ((TextureVk*)_texture)->getImageLayout();
 				m_needUpdate = true;
 				break;

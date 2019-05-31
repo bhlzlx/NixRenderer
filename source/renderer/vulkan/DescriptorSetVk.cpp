@@ -10,8 +10,6 @@
 
 namespace nix {
 
-	VkSampler GetSampler(const SamplerState& _state);
-
 	VkDescriptorSet ArgumentAllocator::allocateDescriptorSet( MaterialVk* _material, uint32_t _index, uint32_t& _poolIndex ) {
 		const ArgumentLayout& layout = _material->getDescriptorSetLayout(_index);
 		if (layout.m_descriptorSetLayout == VK_NULL_HANDLE) {

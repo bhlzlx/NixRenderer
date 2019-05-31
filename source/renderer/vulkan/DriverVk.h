@@ -40,7 +40,7 @@ namespace nix {
 		}
 	};
 
-	class DriverVk : IDriver {
+	class DriverVk : public IDriver {
 	private:
 		VkInstance							m_instance;
 		VkPhysicalDevice					m_PhDevice;
@@ -84,6 +84,4 @@ namespace nix {
 		inline VkInstance getInstance() { return m_instance; }
 		inline const VkPhysicalDeviceProperties& getPhysicalDeviceProperties() { return m_deviceProps; }
 	};
-
-	DriverVk* CreateVulkanDriver();
 }

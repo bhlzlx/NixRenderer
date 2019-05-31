@@ -23,7 +23,7 @@ namespace nix {
 
 	class UniformPool {
 	private:
-		std::vector< BufferVk >				m_vecBuffer;
+		std::vector< BufferVk* >			m_vecBuffer;
 		std::vector< uint8_t* >				m_vecRaw;
 		uint32_t							m_unitSize;
 		uint32_t							m_unitCount;
