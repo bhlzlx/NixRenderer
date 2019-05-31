@@ -19,6 +19,8 @@ endif()
 
 add_subdirectory( HelloWorld )
 add_subdirectory( ClearScreen )
+add_subdirectory( Triangle )
 
 SET_PROPERTY(TARGET HelloWorld PROPERTY FOLDER "Samples")
 SET_PROPERTY(TARGET ClearScreen PROPERTY FOLDER "Samples")
+SET_PROPERTY(TARGET Triangle PROPERTY FOLDER "Samples")
