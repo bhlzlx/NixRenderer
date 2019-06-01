@@ -7,7 +7,7 @@
 namespace nix {
 
 	bool MaterialVk::ValidationShaderDescriptor( const ShaderDescriptor& _descriptor, const uint32_t _setIndex, const spirv_cross::Compiler& _compiler, const spirv_cross::ShaderResources& _resources, ContextVk* _context, spirv_cross::Resource& res ) {
-		if (_descriptor.type == SDT_UniformChunk) 
+		if (_descriptor.type == SDT_UniformBlock) 
 		{
 			for (auto& shaderRes : _resources.uniform_buffers) 
 			{
@@ -154,12 +154,12 @@ namespace nix {
 		// 3. get the push constants information
 
 		//\ 1 - vertex layout validation
-		if (_desc.vertexLayout.vertexAttributeCount != vertexResource.stage_inputs.size()) {
+		if (_desc.vertexLayout.attributeCount != vertexResource.stage_inputs.size()) {
 			return nullptr;
 		}
 		for (auto& vertexInput : vertexResource.stage_inputs) {
 			auto location = vertCompiler.get_decoration(vertexInput.id, spv::Decoration::DecorationLocation);
-			if (_desc.vertexLayout.vertexAttributes[location].name != vertexInput.name) {
+			if (_desc.vertexLayout.attributes[location].name != vertexInput.name) {
 				assert("name does not match!" && false);
 				return nullptr;
 			}
@@ -195,7 +195,7 @@ namespace nix {
 				switch (descinfo.type) {
 				case SDT_Sampler:
 					argumentLayouts[argumentIndex].m_samplerImageDescriptor.push_back(descinfo); break;
-				case SDT_UniformChunk:
+				case SDT_UniformBlock:
 					argumentLayouts[argumentIndex].m_uniformBlockDescriptor.push_back(descinfo); break;
 				case SDT_SSBO:
 					argumentLayouts[argumentIndex].m_storageBufferDescriptor.push_back(descinfo); break;
@@ -203,7 +203,7 @@ namespace nix {
 					argumentLayouts[argumentIndex].m_texelBufferDescriptor.push_back(descinfo); break;
 				}
 
-				if (descinfo.type == SDT_UniformChunk) {
+				if (descinfo.type == SDT_UniformBlock) {
 					uint32_t i = 0;
 					while (true) {
 						const auto & name = compiler->get_member_qualified_name(resItem.type_id, i);
@@ -252,7 +252,7 @@ namespace nix {
 			{
 				for ( auto& descriptor : arguments.descriptors )
 				{
-					if (descriptor.type == SDT_UniformChunk)
+					if (descriptor.type == SDT_UniformBlock)
 					{
 						VkDescriptorSetLayoutBinding binding;
 						binding.binding = descriptor.binding;
@@ -325,7 +325,7 @@ namespace nix {
 	{
 		uint32_t i = 0;
 		for (; i < m_uniformBlockDescriptor.size(); ++i) {
-			if (m_uniformBlockDescriptor.at(i).type == SDT_UniformChunk) {
+			if (m_uniformBlockDescriptor.at(i).type == SDT_UniformBlock) {
 				if (m_uniformBlockDescriptor.at(i).name == _name) {
 					return &m_uniformBlockDescriptor.at(i);
 				}

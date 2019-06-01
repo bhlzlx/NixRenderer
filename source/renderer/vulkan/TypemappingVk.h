@@ -127,13 +127,13 @@ namespace nix {
 	{
 		switch (_mode)
 		{
-		case None:
+		case CullNone:
 			return VK_CULL_MODE_NONE;
-		case Back:
+		case CullBack:
 			return VK_CULL_MODE_BACK_BIT;
-		case Front:
+		case CullFront:
 			return VK_CULL_MODE_FRONT_BIT;
-		case FrontAndBack:
+		case CullAll:
 			return VK_CULL_MODE_FRONT_AND_BACK;
 		}
 		return VK_CULL_MODE_NONE;

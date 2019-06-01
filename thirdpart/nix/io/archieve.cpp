@@ -278,7 +278,7 @@ namespace nix
     {
         StdArchieve* arch = new StdArchieve();
         arch->_root = FormatFilePath(_path);
-        arch->_root.push_back('/');
+		arch->_root.push_back('/');
         return arch;
     }
 

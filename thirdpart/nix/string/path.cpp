@@ -30,6 +30,7 @@ namespace nix
 							}
 							fpath.pop_back();
 						}
+						fpath.pop_back(); // pop back '/'
 					}
 					else
 					{

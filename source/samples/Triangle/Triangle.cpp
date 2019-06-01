@@ -1,5 +1,11 @@
 #include <NixApplication.h>
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
+#include <NixJpDecl.h>
 #include <NixRenderer.h>
+
 #include <nix/io/archieve.h>
 #include <cstdio>
 #include <cassert>
@@ -47,11 +53,13 @@ namespace nix {
 			clear.stencil = 1;
 			m_mainRenderPass->setClear(clear);
 			//
-// 			MaterialDescription mtl = {}; {
-// 				mtl.pologonMode = PMFill;
-// 				mtl.topologyMode = TMTriangleList;
-// 			}
-// 			m_context->createMaterial();
+			MaterialDescription mtlDesc;
+			nix::TextReader mtlReader;
+			mtlReader.openFile(_archieve, "materials/triangle.json");
+			mtlDesc.parse(mtlReader.getText());
+
+
+ 			//m_context->createMaterial();
 
 
 			return true;

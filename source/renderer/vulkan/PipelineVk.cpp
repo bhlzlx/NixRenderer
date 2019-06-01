@@ -52,13 +52,13 @@ namespace nix {
 			VkPipelineColorBlendAttachmentState& colorAttachmentBlendState = blendAttachmentState[0];
 			{
 				colorAttachmentBlendState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-				colorAttachmentBlendState.blendEnable = m_description.renderState.blendState.blendEnable;
-				colorAttachmentBlendState.alphaBlendOp = NixBlendOpToVk(m_description.renderState.blendState.blendOperation);
-				colorAttachmentBlendState.colorBlendOp = NixBlendOpToVk(m_description.renderState.blendState.blendOperation);
-				colorAttachmentBlendState.dstAlphaBlendFactor = NixBlendFactorToVk(m_description.renderState.blendState.blendDestination);
-				colorAttachmentBlendState.dstColorBlendFactor = NixBlendFactorToVk(m_description.renderState.blendState.blendDestination);
-				colorAttachmentBlendState.srcAlphaBlendFactor = NixBlendFactorToVk(m_description.renderState.blendState.blendSource);
-				colorAttachmentBlendState.srcColorBlendFactor = NixBlendFactorToVk(m_description.renderState.blendState.blendSource);
+				colorAttachmentBlendState.blendEnable = m_description.renderState.blendState.enable;
+				colorAttachmentBlendState.alphaBlendOp = NixBlendOpToVk(m_description.renderState.blendState.op);
+				colorAttachmentBlendState.colorBlendOp = NixBlendOpToVk(m_description.renderState.blendState.op);
+				colorAttachmentBlendState.dstAlphaBlendFactor = NixBlendFactorToVk(m_description.renderState.blendState.dstFactor);
+				colorAttachmentBlendState.dstColorBlendFactor = NixBlendFactorToVk(m_description.renderState.blendState.dstFactor);
+				colorAttachmentBlendState.srcAlphaBlendFactor = NixBlendFactorToVk(m_description.renderState.blendState.srcFactor);
+				colorAttachmentBlendState.srcColorBlendFactor = NixBlendFactorToVk(m_description.renderState.blendState.srcFactor);
 				colorAttachmentBlendState.colorWriteMask = m_description.renderState.writeMask;
 				//
 				blendAttachmentState[1] = blendAttachmentState[0];
@@ -98,23 +98,23 @@ namespace nix {
 			depthStencilState.pNext = nullptr;
 			depthStencilState.flags = 0;
 			depthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-			depthStencilState.depthTestEnable = m_description.renderState.depthState.depthTestEnable;
-			depthStencilState.depthWriteEnable = m_description.renderState.depthState.depthWriteEnable;
-			depthStencilState.depthCompareOp = NixCompareOpToVk(m_description.renderState.depthState.depthFunction);
+			depthStencilState.depthTestEnable = m_description.renderState.depthState.testable;
+			depthStencilState.depthWriteEnable= m_description.renderState.depthState.writable;
+			depthStencilState.depthCompareOp = NixCompareOpToVk(m_description.renderState.depthState.cmpFunc);
 			depthStencilState.depthBoundsTestEnable = VK_FALSE;
-			depthStencilState.back.failOp = NixStencilOpToVk(m_description.renderState.stencilState.stencilFail);
-			depthStencilState.back.depthFailOp = NixStencilOpToVk(m_description.renderState.stencilState.stencilZFail);
-			depthStencilState.back.passOp = NixStencilOpToVk(m_description.renderState.stencilState.stencilPass);
-			depthStencilState.back.writeMask = m_description.renderState.stencilState.stencilMask;
+			depthStencilState.back.failOp = NixStencilOpToVk(m_description.renderState.stencilState.opFail);
+			depthStencilState.back.depthFailOp = NixStencilOpToVk(m_description.renderState.stencilState.opZFail);
+			depthStencilState.back.passOp = NixStencilOpToVk(m_description.renderState.stencilState.opPass);
+			depthStencilState.back.writeMask = m_description.renderState.stencilState.mask;
 			depthStencilState.back.compareMask = 0xff;
-			depthStencilState.back.compareOp = NixCompareOpToVk(m_description.renderState.stencilState.stencilFunction);
+			depthStencilState.back.compareOp = NixCompareOpToVk(m_description.renderState.stencilState.cmpFunc);
 			depthStencilState.minDepthBounds = 0;
 			depthStencilState.maxDepthBounds = 1.0;
-			depthStencilState.stencilTestEnable = m_description.renderState.stencilState.stencilEnable;
+			depthStencilState.stencilTestEnable = m_description.renderState.stencilState.enable;
 			depthStencilState.front = depthStencilState.back;
-			depthStencilState.back.failOp = NixStencilOpToVk(m_description.renderState.stencilState.stencilFailCCW);
-			depthStencilState.back.depthFailOp = NixStencilOpToVk(m_description.renderState.stencilState.stencilZFailCCW);
-			depthStencilState.back.passOp = NixStencilOpToVk(m_description.renderState.stencilState.stencilPassCCW);
+			depthStencilState.back.failOp = NixStencilOpToVk(m_description.renderState.stencilState.opFailCCW);
+			depthStencilState.back.depthFailOp = NixStencilOpToVk(m_description.renderState.stencilState.opZFailCCW);
+			depthStencilState.back.passOp = NixStencilOpToVk(m_description.renderState.stencilState.opPassCCW);
 		}
 		VkPipelineMultisampleStateCreateInfo multisampleState = {};
 		multisampleState.pNext = nullptr;
@@ -124,26 +124,26 @@ namespace nix {
 
 		std::array< VkVertexInputBindingDescription, 16 > vertexInputBindings;
 		std::array<VkVertexInputAttributeDescription, 16 > vertexInputAttributs;
-		for (uint32_t i = 0; i < m_description.vertexLayout.vertexBufferCount; ++i)
+		for (uint32_t i = 0; i < m_description.vertexLayout.bufferCount; ++i)
 		{
 			vertexInputBindings[i].binding = i;
-			vertexInputBindings[i].stride = m_description.vertexLayout.vertexBuffers[i].stride;
-			vertexInputBindings[i].inputRate = m_description.vertexLayout.vertexBuffers[i].instanceMode ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX;
+			vertexInputBindings[i].stride = m_description.vertexLayout.buffers[i].stride;
+			vertexInputBindings[i].inputRate = m_description.vertexLayout.buffers[i].instanceMode ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX;
 		}
 
-		for (uint32_t i = 0; i < m_description.vertexLayout.vertexAttributeCount; ++i)
+		for (uint32_t i = 0; i < m_description.vertexLayout.attributeCount; ++i)
 		{
-			vertexInputAttributs[i].binding = m_description.vertexLayout.vertexAttributes[i].bufferIndex;
+			vertexInputAttributs[i].binding = m_description.vertexLayout.attributes[i].bufferIndex;
 			vertexInputAttributs[i].location = i;
-			vertexInputAttributs[i].format = NixVertexFormatToVK(m_description.vertexLayout.vertexAttributes[i].type);
-			vertexInputAttributs[i].offset = m_description.vertexLayout.vertexAttributes[i].offset;
+			vertexInputAttributs[i].format = NixVertexFormatToVK(m_description.vertexLayout.attributes[i].type);
+			vertexInputAttributs[i].offset = m_description.vertexLayout.attributes[i].offset;
 		}
 		// Vertex input state used for pipeline creation
 		VkPipelineVertexInputStateCreateInfo vertexInputState = {};
 		vertexInputState.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputState.vertexBindingDescriptionCount = m_description.vertexLayout.vertexBufferCount;
+		vertexInputState.vertexBindingDescriptionCount = m_description.vertexLayout.bufferCount;
 		vertexInputState.pVertexBindingDescriptions = &vertexInputBindings[0];
-		vertexInputState.vertexAttributeDescriptionCount = m_description.vertexLayout.vertexAttributeCount;
+		vertexInputState.vertexAttributeDescriptionCount = m_description.vertexLayout.attributeCount;
 		vertexInputState.pVertexAttributeDescriptions = vertexInputAttributs.data();
 		// Shaders
 		std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages{};

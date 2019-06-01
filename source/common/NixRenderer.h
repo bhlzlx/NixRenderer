@@ -156,10 +156,10 @@ namespace nix {
     };
 
     enum CullMode :uint8_t {
-        None = 0,
-        Back = 1,
-        Front = 2,
-		FrontAndBack = 3
+        CullNone = 0,
+        CullBack = 1,
+        CullFront = 2,
+		CullAll = 3
     };
 
     enum WindingMode : uint8_t {
@@ -332,42 +332,42 @@ namespace nix {
     };
 
     struct VertexLayout {
-        uint32_t                    vertexAttributeCount;
-        VertexAttribueDescription   vertexAttributes[MaxVertexAttribute];
-        uint32_t                    vertexBufferCount;
-        VertexBufferDescription     vertexBuffers[MaxVertexBufferBinding];
-        VertexLayout(): vertexAttributeCount(0), vertexBufferCount(0) {
+        uint32_t                    attributeCount;
+        VertexAttribueDescription   attributes[MaxVertexAttribute];
+        uint32_t                    bufferCount;
+        VertexBufferDescription     buffers[MaxVertexBufferBinding];
+        VertexLayout(): attributeCount(0), bufferCount(0) {
         }
-		NIX_JSON( vertexAttributeCount, vertexAttributes, vertexBufferCount, vertexBuffers )
+		NIX_JSON(attributeCount, attributes, bufferCount, buffers)
     };
 
 	struct DepthState {
-		uint8_t             depthWriteEnable = 1;
-		uint8_t             depthTestEnable = 1;
-		CompareFunction     depthFunction = CompareFunction::LessEqual;
-		NIX_JSON(depthWriteEnable, depthTestEnable, depthFunction)
+		uint8_t             writable = 1;
+		uint8_t             testable = 1;
+		CompareFunction     cmpFunc = CompareFunction::LessEqual;
+		NIX_JSON(writable, testable, cmpFunc)
 	};
 
 	struct BlendState {
-		uint8_t             blendEnable = 1;
-		BlendFactor         blendSource = SourceAlpha;
-		BlendFactor         blendDestination = InvertSourceAlpha;
-		BlendOperation      blendOperation = BlendOpAdd;
-		NIX_JSON(blendEnable, blendSource, blendDestination, blendOperation)
+		uint8_t             enable = 1;
+		BlendFactor         srcFactor = SourceAlpha;
+		BlendFactor         dstFactor = InvertSourceAlpha;
+		BlendOperation      op = BlendOpAdd;
+		NIX_JSON(enable, srcFactor, dstFactor, op)
 	};
 
 	struct StencilState {
-		uint8_t             stencilEnable = 0;
-		StencilOperation    stencilFail = StencilOpKeep;
-		StencilOperation    stencilZFail = StencilOpKeep;
-		StencilOperation    stencilPass = StencilOpKeep;
-		uint8_t             twoSideStencil = 0;
-		StencilOperation    stencilFailCCW = StencilOpKeep;
-		StencilOperation    stencilZFailCCW = StencilOpKeep;
-		StencilOperation    stencilPassCCW = StencilOpKeep;
-		CompareFunction     stencilFunction = Greater;
-		uint32_t            stencilMask = 0xffffffff;
-		NIX_JSON(stencilEnable, stencilFail, stencilZFail, stencilPass, twoSideStencil, stencilFailCCW, stencilZFailCCW, stencilPassCCW, stencilFunction, stencilMask )
+		uint8_t             enable = 0;
+		StencilOperation    opFail = StencilOpKeep;
+		StencilOperation    opZFail = StencilOpKeep;
+		StencilOperation    opPass = StencilOpKeep;
+		uint8_t             enableCCW = 0;
+		StencilOperation    opFailCCW = StencilOpKeep;
+		StencilOperation    opZFailCCW = StencilOpKeep;
+		StencilOperation    opPassCCW = StencilOpKeep;
+		CompareFunction     cmpFunc = Greater;
+		uint32_t            mask = 0xffffffff;
+		NIX_JSON(enable, opFail, opZFail, opPass, enableCCW, opFailCCW, opZFailCCW, opPassCCW, cmpFunc, mask)
 	};
 
     enum ColorMask {
@@ -379,7 +379,7 @@ namespace nix {
 
     struct RenderState {
 		uint8_t				writeMask;
-		CullMode            cullMode = CullMode::None;
+		CullMode            cullMode = CullMode::CullNone;
 		WindingMode         windingMode = Clockwise;
 		uint8_t             scissorEnable = 1;
 		DepthState			depthState;
@@ -436,7 +436,7 @@ namespace nix {
 	};
 
 	enum ShaderDescriptorType {
-		SDT_UniformChunk,
+		SDT_UniformBlock,
 		SDT_Sampler,
 		SDT_SSBO,
 		SDT_TBO,
@@ -468,7 +468,7 @@ namespace nix {
 		TopologyMode							topologyMode;
 		PolygonMode								pologonMode;
 		//
-		NIX_JSON(vertexShader, fragmentShader, renderPassDescription, renderState, material)
+		NIX_JSON(vertexShader, fragmentShader, vertexLayout, argumentLayouts, renderState, topologyMode, pologonMode)
 	};
 
 	class IRenderPass;

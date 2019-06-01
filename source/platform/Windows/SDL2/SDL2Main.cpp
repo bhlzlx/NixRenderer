@@ -30,7 +30,7 @@ extern "C" int main(int argc, char** argv)
 #else
 	const char * basePath = SDL_GetBasePath();
 	std::string assetRoot = basePath;
-    assetRoot.append("/../");
+    assetRoot.append("../../"); // remove "Windows/x64"
 #endif
 	// uint32_t rendererType = object->rendererType();
 
