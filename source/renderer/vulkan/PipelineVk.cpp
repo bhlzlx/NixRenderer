@@ -69,7 +69,7 @@ namespace nix {
 		VkPipelineColorBlendStateCreateInfo colorBlendState = {};
 		colorBlendState.pNext = nullptr;
 		colorBlendState.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		colorBlendState.attachmentCount = _renderPass.colorAttachmentCount;
+		colorBlendState.attachmentCount = _renderPass.colorCount;
 		colorBlendState.pAttachments = blendAttachmentState;
 		// Viewport state sets the number of viewports and scissor used in this pipeline
 		// Note: This is actually overriden by the dynamic states (see below) ���ﶯ̬������

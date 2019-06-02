@@ -37,4 +37,4 @@ thirdpart/*
 .vs/*
 build/*
 out/*
-bin/*
+bin/Windows/*

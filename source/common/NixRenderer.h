@@ -405,25 +405,25 @@ namespace nix {
 	// load action
 #pragma pack( push, 1 )
 	struct AttachmentDescription {
-		NixFormat						format;
-		MultiSampleType					multisample;
-		AttachmentLoadAction			loadAction;
-		AttachmentUsageBits				usage;
+		NixFormat						format = NixInvalidFormat;
+		MultiSampleType					multisample = MsaaNone;
+		AttachmentLoadAction			loadAction = DontCare;
+		AttachmentUsageBits				usage = AOU_ColorAttachment;
 		//
 		NIX_JSON(format, multisample, loadAction, usage)
 	};
 	struct RenderPassDescription {
 		// render pass behavior
-		uint32_t colorAttachmentCount;
+		uint32_t colorCount;
 		// framebuffer description
-		AttachmentDescription colorAttachment[MaxRenderTarget];
+		AttachmentDescription colors[MaxRenderTarget];
 		AttachmentDescription depthStencil;
-		uint32_t inputAttachmentCount;
-		AttachmentDescription inputAttachment[MaxRenderTarget];
+		uint32_t inputCount;
+		AttachmentDescription inputs[MaxRenderTarget];
 		//
-		AttachmentDescription resolveAttachment;
+		AttachmentDescription resolve;
 
-		NIX_JSON(colorAttachmentCount, colorAttachment, depthStencil)
+		NIX_JSON(colorCount, colors, depthStencil)
 	};
 #pragma pack (pop)
 

@@ -55,8 +55,15 @@ namespace nix {
 			//
 			MaterialDescription mtlDesc;
 			nix::TextReader mtlReader;
-			mtlReader.openFile(_archieve, "materials/triangle.json");
+			mtlReader.openFile(_archieve, "material/triangle.json");
 			mtlDesc.parse(mtlReader.getText());
+			RenderPassDescription rpDesc;
+			nix::TextReader rpReader;
+			rpReader.openFile(_archieve, "renderpass/swapchain.json");
+			rpDesc.parse(rpReader.getText());
+
+
+			m_material = m_context->createMaterial(mtlDesc);
 
 
  			//m_context->createMaterial();

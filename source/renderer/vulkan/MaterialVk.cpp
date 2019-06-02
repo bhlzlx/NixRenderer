@@ -132,22 +132,27 @@ namespace nix {
 		// load SPV from disk!
 		auto arch = _context->getDriver()->getArchieve();
 		nix::IFile * vertexSPV = arch->open(VULKAN_SHADER_PATH(_desc.vertexShader));
+		nix::IFile* vertexSPVMem = CreateMemoryBuffer(vertexSPV->size());
 		if (!vertexSPV) { assert(false); return nullptr; }
-		nix::IFile * fragmentSPV = arch->open(VULKAN_SHADER_PATH(_desc.vertexShader));
+		vertexSPV->read(vertexSPV->size(), vertexSPVMem);
+
+		nix::IFile * fragmentSPV = arch->open(VULKAN_SHADER_PATH(_desc.fragmentShader));
 		if (!vertexSPV) { assert(false); return nullptr; }
+		nix::IFile* fragSPVMem = CreateMemoryBuffer(fragmentSPV->size());
+		fragmentSPV->read(fragmentSPV->size(), fragSPVMem);
 		// create shader module
-		VkShaderModule vertSM = NixCreateShaderModule(device, vertexSPV->constData(), vertexSPV->size());
+		VkShaderModule vertSM = NixCreateShaderModule(device, vertexSPVMem->constData(), vertexSPVMem->size());
 		if (VK_NULL_HANDLE == vertSM) {
 			assert(false); return nullptr;
 		}
-		VkShaderModule fragSM = NixCreateShaderModule(device, fragmentSPV->constData(), fragmentSPV->size());
+		VkShaderModule fragSM = NixCreateShaderModule(device, fragSPVMem->constData(), fragSPVMem->size());
 		if (VK_NULL_HANDLE == fragSM) {
 			assert(false); return nullptr;
 		}
 		// reflect the resource information
-		spirv_cross::Compiler vertCompiler((const uint32_t*)fragmentSPV->constData(), fragmentSPV->size() / sizeof(uint32_t));
+		spirv_cross::Compiler vertCompiler((const uint32_t*)vertexSPVMem->constData(), vertexSPVMem->size() / sizeof(uint32_t));
 		spirv_cross::ShaderResources vertexResource = vertCompiler.get_shader_resources();
-		spirv_cross::Compiler fragCompiler( (const uint32_t*)fragmentSPV->constData(), fragmentSPV->size() / sizeof(uint32_t) );
+		spirv_cross::Compiler fragCompiler( (const uint32_t*)fragSPVMem->constData(), fragSPVMem->size() / sizeof(uint32_t) );
 		spirv_cross::ShaderResources fragmentResource = fragCompiler.get_shader_resources();
 		// 1. verify the vertex input layout
 		// 2. verify the descriptor set description
@@ -248,9 +253,10 @@ namespace nix {
 		VkDescriptorSetLayout layouts[MaxArgumentCount];
 		for (uint32_t layoutIndex = 0; layoutIndex < _desc.argumentLayouts.size(); ++layoutIndex) {
 			std::vector<VkDescriptorSetLayoutBinding> bindings;
-			for (auto& arguments : _desc.argumentLayouts) 
-			{
-				for ( auto& descriptor : arguments.descriptors )
+			auto& argument = _desc.argumentLayouts[layoutIndex];
+			//for (auto& arguments : _desc.argumentLayouts) 
+			//{
+				for ( auto& descriptor : argument.descriptors )
 				{
 					if (descriptor.type == SDT_UniformBlock)
 					{
@@ -284,7 +290,7 @@ namespace nix {
 					}
 					
 				}
-			}
+			//}
 
 			VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {}; {
 				layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
