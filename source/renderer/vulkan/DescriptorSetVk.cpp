@@ -169,7 +169,8 @@ namespace nix {
 		}
 		for ( uint32_t i = 0; i<_poolCount; ++i ) {
 			m_freeTable[_pools[i].type].descriptorCount = _pools[i].descriptorCount;
-			assert(m_freeTable[_pools[i].type].type == _pools[i].type);
+			m_freeTable[_pools[i].type].type = _pools[i].type;
+			//assert(m_freeTable[_pools[i].type].type == _pools[i].type);
 		}
 		m_device = _device;
 	}

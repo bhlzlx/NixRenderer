@@ -154,6 +154,18 @@ namespace nix {
 		return VK_PRIMITIVE_TOPOLOGY_MAX_ENUM;
 	}
 
+	static inline VkPolygonMode NixPolygonModeToVk(PolygonMode _mode) {
+		switch (_mode) {
+		case PolygonMode::PMFill:
+			return VkPolygonMode::VK_POLYGON_MODE_FILL;
+		case PolygonMode::PMLine:
+			return VkPolygonMode::VK_POLYGON_MODE_LINE;
+		case PolygonMode::PMPoint:
+			return VkPolygonMode::VK_POLYGON_MODE_POINT;
+		}
+		return VkPolygonMode::VK_POLYGON_MODE_FILL;
+	}
+
 	static inline VkPolygonMode NixTopolygyPolygonMode( TopologyMode _mode )
 	{
 		switch (_mode)

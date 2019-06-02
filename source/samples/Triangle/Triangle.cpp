@@ -24,9 +24,15 @@ namespace nix {
 		//
 		IMaterial*					m_material;
 		IArgument*					m_argCommon;
+		uint32_t					m_samBase;
+		uint32_t					m_matGlobal;
+		uint32_t					m_matLocal;
 		IArgument*					m_argInstance;
 		IRenderable*				m_renderable;
 		IPipeline*					m_pipeline;
+
+		ITexture*					m_texture;
+
 		//
 		virtual bool initialize(void* _wnd, nix::IArchieve* _archieve ) {
 			printf("%s", "Triangle is initializing!");
@@ -64,6 +70,26 @@ namespace nix {
 
 
 			m_material = m_context->createMaterial(mtlDesc);
+
+			TextureDescription texDesc;
+			texDesc.depth = 1;
+			texDesc.format = NixRGBA8888_UNORM;
+			texDesc.height = 64;
+			texDesc.width = 64;
+			texDesc.mipmapLevel = 1;
+			texDesc.type = nix::TextureType::Texture2D;
+
+			m_texture = m_context->createTexture( texDesc );
+
+			m_argCommon = m_material->createArgument(0);
+			bool rst = false;
+			rst = m_argCommon->getSampler("samBase", &m_samBase);
+			rst = m_argCommon->getUniformBlock("GlobalArgument", &m_matGlobal);
+			m_argInstance = m_material->createArgument(1);
+			rst = m_argInstance->getUniformBlock("LocalArgument", &m_matLocal);
+
+			SamplerState ss;
+			m_argCommon->setSampler(m_samBase, ss, m_texture);
 
 
  			//m_context->createMaterial();

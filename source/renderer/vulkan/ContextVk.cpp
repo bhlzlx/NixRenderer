@@ -99,6 +99,7 @@ namespace nix {
 			return false;
 		//DVBOVk::Initialize();
 		context->m_uniformAllocator.initialize( context );
+		context->m_descriptorSetPool.initialize(context);
 		// Initialize glslang library.
 		//glslang::InitializeProcess();
 		//

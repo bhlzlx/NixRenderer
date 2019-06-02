@@ -2,6 +2,7 @@
 #include "ContextVk.h"
 #include "RenderableVk.h"
 #include "DescriptorSetVk.h"
+#include "TypemappingVk.h"
 #include "ContextVk.h"
 
 namespace nix {
@@ -300,6 +301,8 @@ namespace nix {
 				layoutCreateInfo.pBindings = bindings.data();
 			}
 			vkCreateDescriptorSetLayout(device, &layoutCreateInfo, nullptr, &layouts[layoutIndex]);
+			argumentLayouts[layoutIndex].m_descriptorSetIndex = layoutIndex;
+			argumentLayouts[layoutIndex].m_descriptorSetLayout = layouts[layoutIndex];
 		}
 		// create pipeline layout
 		VkPipelineLayoutCreateInfo info; {
@@ -323,6 +326,8 @@ namespace nix {
 		material->m_descriptorSetLayoutCount = (uint32_t)_desc.argumentLayouts.size();
 		material->m_pipelineLayout = pipelineLayout;
 		material->m_argumentLayouts = argumentLayouts;
+		material->m_topology = NixTopologyToVk( _desc.topologyMode );
+		material->m_pologonMode = NixPolygonModeToVk(_desc.pologonMode);
 		//
 		return material;
 	}
