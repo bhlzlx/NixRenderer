@@ -343,7 +343,7 @@ namespace nix {
 			return false;
 		}
 		const PipelineCacheHeader* header = ( const PipelineCacheHeader*)_data;
-		if (header->headerSize > 0xffff ) {
+		if (header->headerSize != sizeof(PipelineCacheHeader) ) {
 			return false;
 		}
 		if (header->headerVersion != VK_PIPELINE_CACHE_HEADER_VERSION_ONE) {

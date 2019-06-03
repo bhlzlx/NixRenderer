@@ -166,7 +166,6 @@ namespace nix {
 		m_renderPass->release();
 		m_graphicsQueue->release();
 		delete m_uploadQueue;
-		savePipelineCache();
 		m_swapchain.cleanup();
 		//
 		delete this;
