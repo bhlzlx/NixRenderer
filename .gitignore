@@ -38,3 +38,4 @@ thirdpart/*
 build/*
 out/*
 bin/Windows/*
+bin/pipeline_cache.bin
