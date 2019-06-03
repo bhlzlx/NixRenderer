@@ -99,7 +99,7 @@ namespace nix {
 			return false;
 		//DVBOVk::Initialize();
 		context->m_uniformAllocator.initialize( context );
-		context->m_descriptorSetPool.initialize(context);
+		context->m_argumentAllocator.initialize(context);
 		// Initialize glslang library.
 		//glslang::InitializeProcess();
 		//
@@ -167,6 +167,8 @@ namespace nix {
 		m_graphicsQueue->release();
 		delete m_uploadQueue;
 		m_swapchain.cleanup();
+		m_argumentAllocator.cleanup();
+		m_uniformAllocator.cleanup();
 		//
 		delete this;
 	}

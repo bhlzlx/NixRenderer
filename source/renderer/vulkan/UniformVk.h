@@ -33,11 +33,13 @@ namespace nix {
 		ContextVk*							m_context;
 	public:
 		void initialize( ContextVk* _context, uint32_t _unitSize, uint32_t _unitCount, uint32_t _poolIndex);
+		void cleanup();
 		UniformAllocation allocate();
 		void free( const UniformAllocation& _allocation );
 		uint32_t unitSize() {
 			return m_unitSize;
 		}
+		~UniformPool();
 	};
 
 	class UniformAllocator {
@@ -45,6 +47,7 @@ namespace nix {
 		std::vector< UniformPool > m_vecPool;
 	public:
 		void initialize( ContextVk* _context );
+		void cleanup();
 		bool allocate( uint32_t _size, UniformAllocation& _allocation );
 		void free( const UniformAllocation& _allocation );
 	};

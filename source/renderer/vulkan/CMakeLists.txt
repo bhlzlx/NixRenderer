@@ -65,8 +65,6 @@ set( RendererSource
     ${CMAKE_CURRENT_SOURCE_DIR}/vkinc.cpp
 )
 
-add_definitions( -DKS_DYNAMIC_LINK )
-
 add_library( NixVulkan SHARED
     ${RendererSource}
 )

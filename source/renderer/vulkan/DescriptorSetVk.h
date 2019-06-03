@@ -33,12 +33,14 @@ namespace nix {
 	private:
 		VkDescriptorPool			m_pool;
 		VkDevice					m_device;
-		VkDescriptorPoolSize		m_freeTable[VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT];
+		VkDescriptorPoolSize		m_freeTable[VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT + 1];
 	public:
 		ArgumentPoolChunk();
 		void initialize( VkDevice _device, const VkDescriptorPoolSize* _pools, uint32_t _poolCount );
+		void cleanup();
 		VkDescriptorSet allocate( VkDevice _device, MaterialVk* _material, uint32_t _argumentIndex );
 		void free( VkDevice _device, VkDescriptorSet _descSet );
+		~ArgumentPoolChunk();
 	};
 
 	class NIX_API_DECL ArgumentAllocator
@@ -54,8 +56,11 @@ namespace nix {
 		{
 		}
 		void initialize(ContextVk* _context);
+		void cleanup();
 		//
 		ArgumentVk* allocateArgument(MaterialVk* _material, uint32_t _descIndex);
 		void free( ArgumentVk* _argument );
+
+		~ArgumentAllocator();
 	};
 }

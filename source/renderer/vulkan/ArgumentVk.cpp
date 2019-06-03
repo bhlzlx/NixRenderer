@@ -12,7 +12,8 @@
 namespace nix {
 
 	IArgument* MaterialVk::createArgument(uint32_t _index) {
-		ArgumentVk* argument = m_context->getDescriptorSetPool().allocateArgument(this, _index);
+		ArgumentAllocator& allocator = m_context->getDescriptorSetPool();
+		ArgumentVk* argument = allocator.allocateArgument(this, _index);
 		argument->assignUniformChunks();
 		return argument;
 	}

@@ -13,6 +13,15 @@ namespace nix {
 		m_context = _context;
 	}
 
+	void UniformPool::cleanup()
+	{
+		m_freeList.clear();
+		for (auto buffer : m_vecBuffer) {
+			buffer->unmap();
+			delete buffer;
+		}
+	}
+
 	nix::UniformAllocation UniformPool::allocate()
 	{
 		if (m_freeList.empty()) {
@@ -39,6 +48,9 @@ namespace nix {
 	void UniformPool::free(const UniformAllocation& _allocation)
 	{
 		m_freeList.push_back(_allocation);
+	}
+
+	inline UniformPool::~UniformPool() {
 	}
 
 	void UniformAllocator::initialize(ContextVk* _context)
@@ -72,6 +84,13 @@ namespace nix {
 			m_vecPool.back().initialize(_context, unitSize, unitCount, (uint32_t)m_vecPool.size() - 1);
 			//
 			unitSize = unitSize << 1;
+		}
+	}
+
+	void UniformAllocator::cleanup()
+	{
+		for (auto& chunk : m_vecPool) {
+			chunk.cleanup();
 		}
 	}
 

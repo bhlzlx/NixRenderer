@@ -51,23 +51,23 @@ namespace nix {
 		argument->m_activeIndex = 0;
 		argument->m_material = _material;
 		argument->m_context = _material->getContext();
-
+		
 		const ArgumentLayout& argLayout = _material->m_argumentLayouts[_descIndex];
-
+		
 		uint32_t bufferCounter = 0, imageCounter = 0;
 		bufferCounter += argLayout.m_uniformBlockDescriptor.size();
 		bufferCounter += argLayout.m_storageBufferDescriptor.size();
 		//bufferCounter += argLayout.m_texelBufferDescriptor.size();
 		//
 		imageCounter += argLayout.m_samplerImageDescriptor.size();
-
+		
 		argument->m_vecDescriptorBufferInfo.resize(bufferCounter);
 		argument->m_vecDescriptorImageInfo.resize(imageCounter);
 		argument->m_vecDescriptorWrites.resize(imageCounter + bufferCounter);
 		//
 		bufferCounter = 0, imageCounter = 0;
 		uint32_t writeCounter = 0;
-
+		
 		for ( auto& uniform : argLayout.m_uniformBlockDescriptor )
 		{
 			argument->m_vecDescriptorWrites[writeCounter] = {};{
@@ -85,7 +85,7 @@ namespace nix {
 			++bufferCounter;
 			++writeCounter;
 		}
-
+		
 		for (auto& ssbo : argLayout.m_storageBufferDescriptor)
 		{
 			argument->m_vecDescriptorWrites[writeCounter] = {}; {
@@ -103,7 +103,7 @@ namespace nix {
 			++bufferCounter;
 			++writeCounter;
 		}
-
+		
 		for (auto& sampler : argLayout.m_samplerImageDescriptor)
 		{
 			argument->m_vecDescriptorWrites[writeCounter] = {}; {
@@ -150,6 +150,10 @@ namespace nix {
 		delete _argument;
 	}
 
+	inline ArgumentAllocator::~ArgumentAllocator() {
+
+	}
+
 	inline ArgumentPoolChunk::ArgumentPoolChunk() : m_pool(VK_NULL_HANDLE) {
 	}
 
@@ -176,9 +180,13 @@ namespace nix {
 		for ( uint32_t i = 0; i<_poolCount; ++i ) {
 			m_freeTable[_pools[i].type].descriptorCount = _pools[i].descriptorCount;
 			m_freeTable[_pools[i].type].type = _pools[i].type;
-			//assert(m_freeTable[_pools[i].type].type == _pools[i].type);
 		}
 		m_device = _device;
+	}
+
+	void ArgumentPoolChunk::cleanup()
+	{
+		vkDestroyDescriptorPool(m_device, m_pool, nullptr);
 	}
 
 	VkDescriptorSet ArgumentPoolChunk::allocate(VkDevice _device, MaterialVk* _material, uint32_t _argumentIndex) {
@@ -225,7 +233,19 @@ namespace nix {
 		assert(rst == VK_SUCCESS);
 	}
 
+	inline ArgumentPoolChunk::~ArgumentPoolChunk() {
+
+	}
+
 	void ArgumentAllocator::initialize(ContextVk* _context) {
 		m_context = _context;
+	}
+
+	void ArgumentAllocator::cleanup()
+	{
+		for (auto& chunk : this->m_descriptorChunks) {
+			chunk.cleanup();
+		}
+		m_descriptorChunks.clear();
 	}
 }

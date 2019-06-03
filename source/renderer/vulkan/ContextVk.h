@@ -41,7 +41,7 @@ namespace nix {
 		// buffer object manager
 		UniformAllocator		m_uniformAllocator;
 		// descriptor set manager
-		ArgumentAllocator		m_descriptorSetPool;
+		ArgumentAllocator		m_argumentAllocator;
 		//
 		VmaAllocator			m_vmaAllocator;
 		//
@@ -61,6 +61,10 @@ namespace nix {
 			m_archieve(nullptr),
 			m_frameCounter(0)
 		{
+		}
+
+		~ContextVk() {
+
 		}
 
 		virtual IBuffer* createStaticVertexBuffer(const void* _data, size_t _size) override;
@@ -91,7 +95,7 @@ namespace nix {
 		void savePipelineCache();
 
 		inline UniformAllocator& getUniformAllocator(){ return m_uniformAllocator; }
-		inline ArgumentAllocator& getDescriptorSetPool(){ return m_descriptorSetPool; }
+		inline ArgumentAllocator& getDescriptorSetPool(){ return m_argumentAllocator; }
 		inline VmaAllocator getVmaAllocator() { return m_vmaAllocator;  }
 		inline uint64_t getFrameCounter() const { return m_frameCounter; }
 		//
