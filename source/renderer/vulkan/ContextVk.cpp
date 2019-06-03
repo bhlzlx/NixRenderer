@@ -94,7 +94,7 @@ namespace nix {
 		VmaAllocatorCreateInfo allocatorInfo = {};
 		allocatorInfo.physicalDevice = m_PhDevice;
 		allocatorInfo.device = context->m_logicalDevice;
-		rst = vmaCreateAllocator(&allocatorInfo, &NixVMAAllocator);
+		rst = vmaCreateAllocator(&allocatorInfo, &context->m_vmaAllocator);
 		if (rst != VK_SUCCESS)
 			return false;
 		//DVBOVk::Initialize();

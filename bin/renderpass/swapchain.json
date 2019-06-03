@@ -3,11 +3,11 @@
 	"colors" : [{
 		"format" : "NixBGRA8888_UNORM",
 		"multisample" : "MsaaNone",
-		"loadAction" : "DontCare",
+		"loadAction" : "Clear",
 		"usage" : "AOU_Present"
 	}],
 	"depthStencil" : {
-		"format" : "NixDepth32F",
+		"format" : "NixDepth24FStencil8",
 		"multisample" : "MsaaNone",
 		"loadAction" : "Clear",
 		"usage" : "AOU_DepthStencilAttachment"

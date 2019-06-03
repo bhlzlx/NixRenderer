@@ -414,13 +414,12 @@ namespace nix {
 	};
 	struct RenderPassDescription {
 		// render pass behavior
-		uint32_t colorCount;
+		uint32_t colorCount = 0;
 		// framebuffer description
 		AttachmentDescription colors[MaxRenderTarget];
 		AttachmentDescription depthStencil;
-		uint32_t inputCount;
+		uint32_t inputCount = 0;
 		AttachmentDescription inputs[MaxRenderTarget];
-		//
 		AttachmentDescription resolve;
 
 		NIX_JSON(colorCount, colors, depthStencil)

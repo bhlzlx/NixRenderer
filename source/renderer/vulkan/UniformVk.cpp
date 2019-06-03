@@ -23,7 +23,7 @@ namespace nix {
 			*m_vecBuffer.rbegin() = newBuffer;
 			for (uint32_t i = 0; i < m_unitCount; ++i) {
 				m_freeList.push_back({
-					(const VkBuffer&)m_vecBuffer.back(),
+					(const VkBuffer&)(*m_vecBuffer.back()),
 					i * m_unitSize* MaxFlightCount,
 					m_unitSize,
 					m_index,
@@ -80,6 +80,7 @@ namespace nix {
 		for (auto& pool : m_vecPool) {
 			if (pool.unitSize() >= _size) {
 				_allocation = pool.allocate();
+				return true;
 			}
 		}
 		assert(false);

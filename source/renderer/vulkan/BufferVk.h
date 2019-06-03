@@ -18,7 +18,6 @@
 
 namespace nix {
 	// global vulkan memory allocator
-	extern VmaAllocator NixVMAAllocator;
 	//
 	class ContextVk;
 
@@ -55,6 +54,7 @@ namespace nix {
 			m_raw(nullptr){
 		}
 		BufferVk(BufferVk&& _buffer) {
+			m_context = _buffer.m_context;
 			m_buffer = _buffer.m_buffer;
 			m_size = _buffer.m_size;
 			m_usage = _buffer.m_usage;
@@ -72,6 +72,7 @@ namespace nix {
 			m_usage = _buffer.m_usage;
 			m_allocation = _buffer.m_allocation;
 			m_raw = _buffer.m_raw;
+			m_context = _buffer.m_context;
 			_buffer.m_buffer = VK_NULL_HANDLE;
 			_buffer.m_size = 0;
 			_buffer.m_usage = 0;
@@ -84,14 +85,8 @@ namespace nix {
 			return m_buffer;
 		}
 		~BufferVk();
-		void* map() {
-			void* ptr;
-			vmaMapMemory(NixVMAAllocator, m_allocation, &ptr);
-			return ptr;
-		}
-		void unmap() {
-			vmaUnmapMemory(NixVMAAllocator, m_allocation);
-		}
+		void* map();
+		void unmap();
 		uint8_t* raw() {
 			return m_raw;
 		}
@@ -105,7 +100,6 @@ namespace nix {
 		size_t size() const {
 			return static_cast<size_t>(m_size);
 		}
-		static bool InitMemoryAllocator(VkPhysicalDevice _physicalDevice, VkDevice _device);
 		static BufferVk CreateBuffer(size_t _size, VkBufferUsageFlags _usage, ContextVk* _context);
 	};
 

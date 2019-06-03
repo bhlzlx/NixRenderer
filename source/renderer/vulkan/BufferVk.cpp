@@ -8,17 +8,6 @@ namespace nix {
 
 	VmaMemoryUsage MappingVmaMemoryUsage(VkBufferUsageFlags _usageFlags);
 
-	bool BufferVk::InitMemoryAllocator(VkPhysicalDevice _physicalDevice, VkDevice _device)
-	{
-		VmaAllocatorCreateInfo allocatorInfo = {};
-		allocatorInfo.physicalDevice = _physicalDevice;
-		allocatorInfo.device = _device;
-		VkResult rst = vmaCreateAllocator(&allocatorInfo, &NixVMAAllocator);
-		if (rst != VK_SUCCESS)
-			return false;
-		return true;
-	}
-
 	nix::BufferVk BufferVk::CreateBuffer(size_t _size, VkBufferUsageFlags _usage, ContextVk* _context )
 	{
 		VmaAllocationCreateInfo allocInfo = {}; {
@@ -42,7 +31,7 @@ namespace nix {
 		BufferVk obj;
 		VkBuffer buffer;
 		VmaAllocation allocation;
-		VkResult rst = vmaCreateBuffer(NixVMAAllocator, &bufferInfo, &allocInfo, &buffer, &allocation, nullptr);
+		VkResult rst = vmaCreateBuffer( _context->getVmaAllocator(), &bufferInfo, &allocInfo, &buffer, &allocation, nullptr);
 		if (rst != VK_SUCCESS) {
 			return std::move(obj);
 		}
@@ -52,7 +41,10 @@ namespace nix {
 		obj.m_usage = _usage;
 		obj.m_allocation = allocation;
 		obj.m_raw = nullptr;
-		vmaMapMemory(NixVMAAllocator, allocation, (void**)&obj.m_raw);
+		obj.m_context = _context;
+		if (allocInfo.flags & VMA_ALLOCATION_CREATE_MAPPED_BIT) {
+			vmaMapMemory(_context->getVmaAllocator(), allocation, (void**)&obj.m_raw);
+		}
 		//
 		return std::move(obj);
 	}
@@ -148,8 +140,20 @@ namespace nix {
 	BufferVk::~BufferVk()
 	{
 		if (m_buffer && m_allocation) {
-			vmaDestroyBuffer(NixVMAAllocator, m_buffer, m_allocation);
+			vmaDestroyBuffer(m_context->getVmaAllocator(), m_buffer, m_allocation);
 		}
+	}
+
+	void* BufferVk::map()
+	{
+		void* ptr;
+		vmaMapMemory(m_context->getVmaAllocator(), m_allocation, &ptr);
+		return ptr;
+	}
+
+	void BufferVk::unmap()
+	{
+		vmaUnmapMemory(m_context->getVmaAllocator(), m_allocation);
 	}
 
 	void VertexBuffer::release()

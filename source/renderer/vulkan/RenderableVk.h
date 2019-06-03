@@ -6,16 +6,23 @@ namespace nix {
 
 	class BufferVk;
 	class ContextVk;
+	class MaterialVk;
 
 	class RenderableVk : public IRenderable {
+		friend class Material;
 	private:
 		std::vector< VkBuffer >			m_vecBuffer;
 		std::vector< VkDeviceSize >		m_vecBufferOffset;
 		VkBuffer						m_indexBuffer;
 		VkDeviceSize					m_indexBufferOffset;
 		TopologyMode					m_topologyMode; // will no use, only for debugging
+		//
+		MaterialVk*						m_material;
 		ContextVk*						m_context;
 	public:
+
+		RenderableVk(MaterialVk* _material);
+
 		inline size_t getBufferCount() {
 			return m_vecBuffer.size();
 		}

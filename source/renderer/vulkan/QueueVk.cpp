@@ -99,6 +99,7 @@ namespace nix {
 		VkCommandBuffer command;
 		vkAllocateCommandBuffers(m_logicalDevice, &bufferInfo, &command);
 		queue->m_commandBuffer.m_commandBuffer = command;
+		queue->m_commandBuffer.m_contextVk = queue->m_context;
 		//
 		return queue;
 	}
@@ -305,7 +306,7 @@ namespace nix {
 		copy.dstOffset = _offset;
 		copy.size = _size;
 		VkBufferMemoryBarrier barrierBefore; {
-			barrierBefore.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+			barrierBefore.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
 			barrierBefore.srcAccessMask = VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
 			barrierBefore.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 			barrierBefore.pNext = nullptr;
@@ -316,7 +317,7 @@ namespace nix {
 			barrierBefore.buffer = *_buffer;
 		}
 		VkBufferMemoryBarrier barrierAfter; {
-			barrierAfter.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+			barrierAfter.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
 			barrierAfter.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 			barrierAfter.dstAccessMask = VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
 			barrierAfter.pNext = nullptr;

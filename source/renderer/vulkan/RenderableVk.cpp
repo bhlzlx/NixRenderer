@@ -5,6 +5,26 @@
 
 namespace nix {
 
+	IRenderable* MaterialVk::createRenderable()
+	{
+		RenderableVk* renderable = new RenderableVk(this);
+		return renderable;
+	}
+
+	void MaterialVk::destroyRenderable(IRenderable* _renderable)
+	{
+		RenderableVk* renderable = (RenderableVk*)_renderable;
+		delete renderable;
+	}
+
+	RenderableVk::RenderableVk(MaterialVk* _material)
+		:m_material(_material)
+		,m_context(_material->getContext())
+	{
+		m_vecBuffer.resize(_material->getDescription().vertexLayout.bufferCount);
+		m_vecBufferOffset.resize( m_vecBuffer.size() );
+	}
+
 	uint32_t RenderableVk::getVertexBufferCount()
 	{
 		return m_vecBuffer.size();

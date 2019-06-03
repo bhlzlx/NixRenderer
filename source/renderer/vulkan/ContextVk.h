@@ -5,6 +5,7 @@
 #include "SwapchainVk.h"
 #include "DescriptorSetVk.h"
 #include "DebuggerVk.h"
+#include "vk_mem_alloc.h"
 #include <nix/io/archieve.h>
 #include <vector>
 
@@ -41,6 +42,8 @@ namespace nix {
 		UniformAllocator		m_uniformAllocator;
 		// descriptor set manager
 		ArgumentAllocator		m_descriptorSetPool;
+		//
+		VmaAllocator			m_vmaAllocator;
 		//
 		IArchieve*				m_archieve;
 		//
@@ -89,6 +92,7 @@ namespace nix {
 
 		inline UniformAllocator& getUniformAllocator(){ return m_uniformAllocator; }
 		inline ArgumentAllocator& getDescriptorSetPool(){ return m_descriptorSetPool; }
+		inline VmaAllocator getVmaAllocator() { return m_vmaAllocator;  }
 		inline uint64_t getFrameCounter() const { return m_frameCounter; }
 		//
 		VkSemaphore createSemaphore() const;

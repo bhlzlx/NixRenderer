@@ -155,11 +155,17 @@ namespace nix {
 
 	void ArgumentPoolChunk::initialize( VkDevice _device, const VkDescriptorPoolSize* _pools, uint32_t _poolCount)
 	{
+		std::vector<VkDescriptorPoolSize> pools;
+		for (uint32_t i = 0; i < _poolCount; ++i) {
+			if (_pools[i].descriptorCount != 0) {
+				pools.push_back(_pools[i]);
+			}
+		}
 		VkDescriptorPoolCreateInfo descriptorPoolInfo = {}; {
 			descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 			descriptorPoolInfo.pNext = nullptr;
-			descriptorPoolInfo.poolSizeCount = _poolCount;
-			descriptorPoolInfo.pPoolSizes = _pools;
+			descriptorPoolInfo.poolSizeCount = pools.size();
+			descriptorPoolInfo.pPoolSizes = pools.data();
 			descriptorPoolInfo.maxSets = 128;
 		}
 		// create!

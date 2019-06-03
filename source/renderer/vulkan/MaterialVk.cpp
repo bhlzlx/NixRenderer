@@ -115,16 +115,6 @@ namespace nix {
 		throw std::logic_error("The method or operation is not implemented.");
 	}
 
-	IRenderable* MaterialVk::createRenderable()
-	{
-		throw std::logic_error("The method or operation is not implemented.");
-	}
-
-	void MaterialVk::destroyRenderable(IRenderable* _renderable)
-	{
-
-	}
-
 #define VULKAN_SHADER_PATH( SHADER_NAME ) "/shader/vulkan/" + std::string(SHADER_NAME)
 
 	MaterialVk* MaterialVk::CreateMaterial(ContextVk* _context, const MaterialDescription& _desc)
@@ -303,6 +293,7 @@ namespace nix {
 			vkCreateDescriptorSetLayout(device, &layoutCreateInfo, nullptr, &layouts[layoutIndex]);
 			argumentLayouts[layoutIndex].m_descriptorSetIndex = layoutIndex;
 			argumentLayouts[layoutIndex].m_descriptorSetLayout = layouts[layoutIndex];
+			argumentLayouts[layoutIndex].updateDynamicalBindings();
 		}
 		// create pipeline layout
 		VkPipelineLayoutCreateInfo info; {
