@@ -297,6 +297,20 @@ namespace nix {
 		vkQueueWaitIdle(m_queue);
 	}
 
+	void GraphicsQueueVk::release()
+	{
+		//
+		vkDestroyCommandPool(m_device, m_commandPool, nullptr);
+		for (uint32_t i = 0; i < MaxFlightCount; ++i) {
+			vkDestroyFence(m_device, m_updatingFences[i], nullptr);
+			vkDestroyFence(m_device, m_renderFences[i], nullptr);
+		}
+		vkDestroySemaphore(m_device, m_renderCompleteSemaphore, nullptr);
+		vkDestroySemaphore(m_device, m_imageAvailSemaphore, nullptr);
+		//
+		delete this;
+	}
+
 	void CommandBufferVk::updateBuffer(BufferVk* _buffer, size_t _offset, size_t _size, const void* _data)
 	{
 		BufferVk stageBuffer = BufferVk::CreateBuffer(_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_contextVk);
@@ -700,6 +714,11 @@ namespace nix {
 		vkQueueSubmit(m_uploadQueue, 1, &submit, 0);
 		vkQueueWaitIdle(m_uploadQueue);
 		m_uploadMutex.unlock();
+	}
+
+	UploadQueueVk::~UploadQueueVk()
+	{
+		vkDestroyCommandPool(m_context->getDevice(), m_uploadCommandPool, nullptr);
 	}
 
 	ScreenCapture::ScreenCapture() :

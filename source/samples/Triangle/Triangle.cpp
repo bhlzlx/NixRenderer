@@ -98,14 +98,12 @@ namespace nix {
 			texDesc.type = nix::TextureType::Texture2D;
 
 			m_texture = m_context->createTexture(texDesc);
-
+			bool rst = false;
 			m_material = m_context->createMaterial(mtlDesc); {
 				{ // graphics pipeline 
 					m_pipeline = m_material->createPipeline(rpDesc);
 				}
 				{ // arguments
-
-					bool rst = false;
 					m_argCommon = m_material->createArgument(0);
 					rst = m_argCommon->getSampler("samBase", &m_samBase);
 					rst = m_argCommon->getUniformBlock("GlobalArgument", &m_matGlobal);
@@ -141,19 +139,17 @@ namespace nix {
 
 		virtual void release() {
 			printf("destroyed");
+			m_context->release();
 		}
 
 		virtual void tick() {
 			if (m_context->beginFrame()) {
-
 				m_mainRenderPass->begin(m_primQueue); {
-
 					glm::mat4x4 identity;
-
 					m_argCommon->setUniform(m_matGlobal, 0, &identity, 64);
 					m_argCommon->setUniform(m_matGlobal, 64, &identity, 64);
 					m_argInstance->setUniform(m_matLocal, 0, &identity, 64);
-
+					//
 					m_mainRenderPass->bindPipeline(m_pipeline);
 					m_mainRenderPass->bindArgument(m_argCommon);
 					m_mainRenderPass->bindArgument(m_argInstance);

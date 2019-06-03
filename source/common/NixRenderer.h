@@ -513,6 +513,7 @@ namespace nix {
 	class IGraphicsQueue {
 	private:
 	public:
+		virtual void release() = 0;
 	};
 
 	class IArgument;
@@ -655,6 +656,7 @@ namespace nix {
 		virtual IGraphicsQueue* getGraphicsQueue( uint32_t index = 0) = 0;
 		virtual IRenderPass* getRenderPass() = 0;
 		virtual IDriver* getDriver() = 0;
+		virtual void release() = 0;
     };
  }
 

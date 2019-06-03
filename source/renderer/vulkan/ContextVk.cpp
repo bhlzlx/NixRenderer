@@ -111,10 +111,15 @@ namespace nix {
 		cacheInfo.initialDataSize = 0;
 		cacheInfo.pInitialData = nullptr;
 		cacheInfo.flags = 0;
-		if (pcFile && this->validatePipelineCache(pcFile->constData(), pcFile->size())) {
-			cacheInfo.pInitialData = pcFile->constData();
-			cacheInfo.initialDataSize = pcFile->size();
+		if (pcFile) {
+			IFile* pcMem = CreateMemoryBuffer(pcFile->size());
+			pcFile->read(pcFile->size(), pcMem);
+			if (this->validatePipelineCache(pcMem->constData(), pcMem->size())) {
+				cacheInfo.pInitialData = pcMem->constData();
+				cacheInfo.initialDataSize = pcMem->size();
+			}
 			pcFile->release();
+			pcMem->release();
 		}
 		vkCreatePipelineCache( context->m_logicalDevice, &cacheInfo, nullptr, &context->m_pipelineCache);
 		//
@@ -151,6 +156,20 @@ namespace nix {
 	nix::GraphicsQueueVk* ContextVk::getGraphicsQueue() const
 	{
 		return m_graphicsQueue;
+	}
+
+	void ContextVk::release()
+	{
+		vkDeviceWaitIdle( m_logicalDevice );
+		savePipelineCache();
+		//
+		m_renderPass->release();
+		m_graphicsQueue->release();
+		delete m_uploadQueue;
+		savePipelineCache();
+		m_swapchain.cleanup();
+		//
+		delete this;
 	}
 
 	nix::SwapchainVk* ContextVk::getSwapchain()

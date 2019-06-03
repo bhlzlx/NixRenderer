@@ -67,6 +67,7 @@ extern "C" int main(int argc, char** argv)
 		}
 		object->tick();
 	}
+	object->release();
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 	return 0;

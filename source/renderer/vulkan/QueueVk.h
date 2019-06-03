@@ -144,6 +144,8 @@ namespace nix {
 		const CommandBufferVk* commandBuffer() const;
 		void endFrame();
 		void waitForIdle() const;
+
+		virtual void release() override;
 	};
 
 	class NIX_API_DECL UploadQueueVk
@@ -165,5 +167,6 @@ namespace nix {
 		//
 		void uploadBuffer( BufferVk* _buffer, size_t _offset, size_t _size, const void * _data);
 		void uploadTexture(TextureVk* _texture, const void* _data, size_t _length, const TextureRegion& _region);
+		~UploadQueueVk();
 	};
 }

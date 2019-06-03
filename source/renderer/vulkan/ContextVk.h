@@ -107,5 +107,6 @@ namespace nix {
 		virtual inline IDriver* getDriver() override { return (IDriver*)m_driver; }
 		virtual IGraphicsQueue* getGraphicsQueue(uint32_t _index) override;
 		virtual inline IRenderPass* getRenderPass() override { return m_swapchain.renderPass(); }
+		virtual void release() override;
 	};
 }
