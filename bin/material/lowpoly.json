@@ -1,0 +1,77 @@
+{
+	"vertexShader" : "lowpoly/lowpoly.vert.spv",
+	"fragmentShader" : "lowpoly/lowpoly.frag.spv",
+	"topologyMode" : "TMTriangleList",
+	"pologonMode" : "PMFill",
+	"vertexLayout" : {
+		"attributeCount" : 2,
+		"attributes" : [{
+			"name" : "vert_position",
+			"bufferIndex" : 0,
+			"offset" : 0,
+			"type" : "VertexTypeFloat3"
+		},{
+			"name" : "vert_color",
+			"bufferIndex" : 1,
+			"offset" : 0,
+			"type" : "VertexTypeFloat3"
+		}],
+		"bufferCount" : 2,
+		"buffers" : [{
+			"stride": 12,
+			"instanceMode" : 0,
+			"rate" : 1
+		},{
+			"stride": 12,
+			"instanceMode" : 0,
+			"rate" : 1
+		}]
+	},
+	"argumentLayouts" : [{
+		"index" : 0,
+		"descriptors" : [{
+			"type" : "SDT_UniformBlock",
+			"binding" : 0,
+			"name" : "GlobalArgument",
+			"shaderStage" : "VertexShader",
+			"dataSize" : 128
+		}]
+	},{
+		"index" : 1,
+		"descriptors" : [{
+			"type" : "SDT_UniformBlock",
+			"binding" : 0,
+			"name" : "LocalArgument",
+			"shaderStage" : "VertexShader",
+			"dataSize" : 64
+		}]
+	}],
+	"renderState" : {
+		"writeMask" : 15,
+		"cullMode" : "CullNone",
+		"windingMode" : "Clockwise",
+		"scissorEnable" : 1,
+		"depthState" : {
+			"writable": 1,
+			"testable" : 1,
+			"cmpFunc" : "LessEqual"
+		},
+		"stencilState" : {
+			"enable" : 0,
+			"opFail" : "StencilOpKeep",
+			"opZFail" : "StencilOpKeep",
+			"opPass" : "StencilOpKeep",
+			"enableCCW" : 0,
+			"opFailCCW" : "StencilOpKeep",
+			"opZFailCCW" : "StencilOpKeep",
+			"opPassCCW" : "StencilOpKeep",
+			"cmpFunc" : "Greater"
+		},
+		"blendState" : {
+			"enable" : 0,
+			"dscFactor" : "SourceAlpha",
+			"dstFactor" : "InvertSourceAlpha",
+			"op" : "BlendOpAdd"
+		}
+	}
+}

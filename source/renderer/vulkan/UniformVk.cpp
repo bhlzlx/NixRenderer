@@ -36,7 +36,7 @@ namespace Nix {
 					i * m_unitSize* MaxFlightCount,
 					m_unitSize,
 					m_index,
-					m_vecBuffer.back()->raw()
+					m_vecBuffer.back()->raw() + (i * MaxFlightCount * m_unitSize)
 					});
 			}
 		}

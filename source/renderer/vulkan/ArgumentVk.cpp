@@ -41,6 +41,7 @@ namespace Nix {
 				write.dstSet = m_descriptorSets[m_activeIndex];
 			}
 			vkUpdateDescriptorSets(m_context->getDevice(), static_cast<uint32_t>(m_vecDescriptorWrites.size()), m_vecDescriptorWrites.data(), 0, nullptr);
+			m_needUpdate = false;
 		}
 		vkCmdBindDescriptorSets(
 			_commandBuffer,
