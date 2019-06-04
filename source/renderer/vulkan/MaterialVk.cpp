@@ -5,7 +5,7 @@
 #include "TypemappingVk.h"
 #include "ContextVk.h"
 
-namespace nix {
+namespace Nix {
 
 	bool MaterialVk::ValidationShaderDescriptor( const ShaderDescriptor& _descriptor, const uint32_t _setIndex, const spirv_cross::Compiler& _compiler, const spirv_cross::ShaderResources& _resources, ContextVk* _context, spirv_cross::Resource& res ) {
 		if (_descriptor.type == SDT_UniformBlock) 
@@ -74,11 +74,11 @@ namespace nix {
 	VkShaderStageFlagBits NixShaderStageToVk(ShaderModuleType _stage) {
 		switch (_stage)
 		{
-		case nix::VertexShader:
+		case Nix::VertexShader:
 			return VK_SHADER_STAGE_VERTEX_BIT;
-		case nix::FragmentShader:
+		case Nix::FragmentShader:
 			return VK_SHADER_STAGE_FRAGMENT_BIT;
-		case nix::ComputeShader:
+		case Nix::ComputeShader:
 			return VK_SHADER_STAGE_COMPUTE_BIT;
 		default:
 			break;
@@ -122,14 +122,14 @@ namespace nix {
 		VkDevice device = _context->getDevice();
 		// load SPV from disk!
 		auto arch = _context->getDriver()->getArchieve();
-		nix::IFile * vertexSPV = arch->open(VULKAN_SHADER_PATH(_desc.vertexShader));
-		nix::IFile* vertexSPVMem = CreateMemoryBuffer(vertexSPV->size());
+		Nix::IFile * vertexSPV = arch->open(VULKAN_SHADER_PATH(_desc.vertexShader));
+		Nix::IFile* vertexSPVMem = CreateMemoryBuffer(vertexSPV->size());
 		if (!vertexSPV) { assert(false); return nullptr; }
 		vertexSPV->read(vertexSPV->size(), vertexSPVMem);
 
-		nix::IFile * fragmentSPV = arch->open(VULKAN_SHADER_PATH(_desc.fragmentShader));
+		Nix::IFile * fragmentSPV = arch->open(VULKAN_SHADER_PATH(_desc.fragmentShader));
 		if (!vertexSPV) { assert(false); return nullptr; }
-		nix::IFile* fragSPVMem = CreateMemoryBuffer(fragmentSPV->size());
+		Nix::IFile* fragSPVMem = CreateMemoryBuffer(fragmentSPV->size());
 		fragmentSPV->read(fragmentSPV->size(), fragSPVMem);
 		// create shader module
 		VkShaderModule vertSM = NixCreateShaderModule(device, vertexSPVMem->constData(), vertexSPVMem->size());

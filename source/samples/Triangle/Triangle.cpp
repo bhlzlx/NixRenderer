@@ -16,7 +16,7 @@
     #include <Windows.h>
 #endif
 
-namespace nix {
+namespace Nix {
 
 	float PlaneVertices[] = {
 		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
@@ -55,7 +55,7 @@ namespace nix {
 		ITexture*					m_texture;
 
 		//
-		virtual bool initialize(void* _wnd, nix::IArchieve* _archieve ) {
+		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve ) {
 			printf("%s", "Triangle is initializing!");
 
 			HMODULE library = ::LoadLibrary("NixVulkan.dll");
@@ -81,11 +81,11 @@ namespace nix {
 			m_mainRenderPass->setClear(clear);
 			//
 			MaterialDescription mtlDesc;
-			nix::TextReader mtlReader;
+			Nix::TextReader mtlReader;
 			mtlReader.openFile(_archieve, "material/triangle.json");
 			mtlDesc.parse(mtlReader.getText());
 			RenderPassDescription rpDesc;
-			nix::TextReader rpReader;
+			Nix::TextReader rpReader;
 			rpReader.openFile(_archieve, "renderpass/swapchain.json");
 			rpDesc.parse(rpReader.getText());
 
@@ -95,9 +95,15 @@ namespace nix {
 			texDesc.height = 64;
 			texDesc.width = 64;
 			texDesc.mipmapLevel = 1;
-			texDesc.type = nix::TextureType::Texture2D;
+			texDesc.type = Nix::TextureType::Texture2D;
 
-			m_texture = m_context->createTexture(texDesc);
+			//Nix::IFile * texFile = _archieve->open("texture/texture_bc3.ktx");
+			Nix::IFile * texFile = _archieve->open("texture/texture_bc3.dds");
+			Nix::IFile* texMem = CreateMemoryBuffer(texFile->size());
+			texFile->read(texFile->size(), texMem);
+			//m_texture = m_context->createTexture(texDesc);
+			m_texture = m_context->createTextureDDS(texMem->constData(), texMem->size());
+
 			bool rst = false;
 			m_material = m_context->createMaterial(mtlDesc); {
 				{ // graphics pipeline 
@@ -172,7 +178,7 @@ namespace nix {
 	};
 }
 
-nix::Triangle theapp;
+Nix::Triangle theapp;
 
 NixApplication* GetApplication() {
     return &theapp;

@@ -4,11 +4,11 @@
 #include "DeferredDeletor.h"
 #include <cassert>
 
-namespace nix {
+namespace Nix {
 
 	VmaMemoryUsage MappingVmaMemoryUsage(VkBufferUsageFlags _usageFlags);
 
-	nix::BufferVk BufferVk::CreateBuffer(size_t _size, VkBufferUsageFlags _usage, ContextVk* _context )
+	Nix::BufferVk BufferVk::CreateBuffer(size_t _size, VkBufferUsageFlags _usage, ContextVk* _context )
 	{
 		VmaAllocationCreateInfo allocInfo = {}; {
 			allocInfo.usage = MappingVmaMemoryUsage(_usage);

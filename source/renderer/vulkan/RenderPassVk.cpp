@@ -11,7 +11,7 @@
 #include "nix/string/encoding.h"
 #include <cassert>
 
-namespace nix {
+namespace Nix {
 	//
 	std::map< uint64_t, VkRenderPass > RenderPassVk::m_renderPassMapTable;
 	//
@@ -157,13 +157,13 @@ namespace nix {
 		return m_texture;
 	}
 
-	void nix::AttachmentVk::release() {
+	void Nix::AttachmentVk::release() {
 		if (!m_isRef) {
 			m_texture->release();
 		}
 	}
 
-	nix::NixFormat nix::AttachmentVk::getFormat() const {
+	Nix::NixFormat Nix::AttachmentVk::getFormat() const {
 		return m_format;
 	}
 
@@ -282,7 +282,7 @@ namespace nix {
 		renderable->drawElementInstanced(m_commandBuffer, _indexOffset, _indexCount, _baseInstance, _instanceCount);
 	}
 
-	const nix::RenderPassDescription& RenderPassVk::getDescption() const
+	const Nix::RenderPassDescription& RenderPassVk::getDescption() const
 	{
 		return m_desc;
 	}
@@ -292,12 +292,12 @@ namespace nix {
 		return m_framebuffer;
 	}
 
-	const nix::Size<uint32_t>& RenderPassVk::getSize() const
+	const Nix::Size<uint32_t>& RenderPassVk::getSize() const
 	{
 		return m_size;
 	}
 
-	VkAttachmentLoadOp RTLoadOpToVk(nix::AttachmentLoadAction _load) {
+	VkAttachmentLoadOp RTLoadOpToVk(Nix::AttachmentLoadAction _load) {
 		switch (_load) {
 		case Clear:
 			return VK_ATTACHMENT_LOAD_OP_CLEAR;

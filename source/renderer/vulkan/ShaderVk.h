@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-namespace nix {
+namespace Nix {
 
 	struct SamplerBindingPoint
 	{

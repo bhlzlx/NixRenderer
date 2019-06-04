@@ -1,6 +1,6 @@
 #include "path.h"
 
-namespace nix
+namespace Nix
 {
     std::string FormatFilePath(const std::string & _filepath)
 	{

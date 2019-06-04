@@ -15,7 +15,7 @@
 // PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT = nullptr;
 // PFN_vkDebugReportMessageEXT vkDebugReportMessageEXT = nullptr;
 
-namespace nix {
+namespace Nix {
 
 	bool DebugReporterVk::setupDebugReport(VkInstance _inst)
 	{

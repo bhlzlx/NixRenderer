@@ -11,7 +11,7 @@
 
 #define PIPELINE_CACHE_FILENAME "pipeline_cache.bin"
 
-namespace nix {
+namespace Nix {
 	class GraphicsQueueVk;
 	class UploadQueueVk;
 	class BufferVk;

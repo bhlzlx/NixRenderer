@@ -5,7 +5,7 @@
 #include <vector>
 #include <cassert>
 
-namespace nix {
+namespace Nix {
 
 	class TextureVk;
 

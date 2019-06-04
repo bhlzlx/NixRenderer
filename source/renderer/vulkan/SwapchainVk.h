@@ -3,7 +3,7 @@
 #include "vkinc.h"
 #include <vector>
 
-namespace nix {
+namespace Nix {
 
 	class ContextVk;
 	class RenderPassVk;

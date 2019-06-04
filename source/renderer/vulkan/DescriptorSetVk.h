@@ -9,7 +9,7 @@
 #include "ArgumentVk.h"
 #include <NixRenderer.h>
 
-namespace nix {
+namespace Nix {
 
 	class MaterialVk;
 	class TextureVk;

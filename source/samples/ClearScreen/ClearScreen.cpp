@@ -8,7 +8,7 @@
     #include <Windows.h>
 #endif
 
-namespace nix {
+namespace Nix {
 	class APITest : public NixApplication {
 	private:
 		IDriver* m_driver;
@@ -16,7 +16,7 @@ namespace nix {
 		IRenderPass* m_mainRenderPass;
 		IGraphicsQueue* m_primQueue;
 
-		virtual bool initialize(void* _wnd, nix::IArchieve* _archieve ) {
+		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve ) {
 			printf("%s", "APITest is initializing!");
 
 			HMODULE library = ::LoadLibrary("NixVulkan.dll");
@@ -71,7 +71,7 @@ namespace nix {
 	};
 }
 
-nix::APITest theapp;
+Nix::APITest theapp;
 
 NixApplication* GetApplication() {
     return &theapp;

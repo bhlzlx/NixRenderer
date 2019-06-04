@@ -19,7 +19,7 @@
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
 
-namespace nix {
+namespace Nix {
 
 	std::vector<VkDeviceQueueCreateInfo> createDeviceQueueCreateInfo(std::vector< QueueReqData > _queues) {
 
@@ -56,7 +56,7 @@ namespace nix {
 		return createInfos;
 	}
 
-	nix::IContext* DriverVk::createContext( void* _hwnd ){
+	Nix::IContext* DriverVk::createContext( void* _hwnd ){
 		VkResult rst = VK_SUCCESS;
 		//
 		ContextVk* context = new ContextVk();
@@ -126,7 +126,7 @@ namespace nix {
 		return context;
 	}
 
-	nix::NixFormat ContextVk::swapchainFormat() const
+	Nix::NixFormat ContextVk::swapchainFormat() const
 	{
 		return m_swapchain.format();
 	}
@@ -148,12 +148,12 @@ namespace nix {
 		return m_driver->getInstance();
 	}
 
-	nix::UploadQueueVk* ContextVk::getUploadQueue() const
+	Nix::UploadQueueVk* ContextVk::getUploadQueue() const
 	{
 		return m_uploadQueue;
 	}
 
-	nix::GraphicsQueueVk* ContextVk::getGraphicsQueue() const
+	Nix::GraphicsQueueVk* ContextVk::getGraphicsQueue() const
 	{
 		return m_graphicsQueue;
 	}
@@ -173,7 +173,7 @@ namespace nix {
 		delete this;
 	}
 
-	nix::SwapchainVk* ContextVk::getSwapchain()
+	Nix::SwapchainVk* ContextVk::getSwapchain()
 	{
 		return &m_swapchain;
 	}

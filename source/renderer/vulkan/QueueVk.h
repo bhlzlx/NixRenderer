@@ -8,12 +8,19 @@
 #include <cassert>
 #include "TypemappingVk.h"
 
-namespace nix {
+namespace Nix {
 
 	class RenderPassVk;
 	class SwapchainVk;
 	class BufferVk;
 	class TextureVk;
+
+	struct BufferImageUpload {
+		const void*						data;
+		uint32_t						length;
+		TextureRegion					baseMipRegion;
+		std::vector< VkDeviceSize >		mipDataOffsets;
+	};
 
 	class NIX_API_DECL CommandBufferVk
 	{
@@ -39,7 +46,7 @@ namespace nix {
 		void updateBuffer(BufferVk* _buffer, size_t _offset, size_t _size, const void* _data);
 		//
 		void updateTexture(TextureVk* _texture, const void* _data, size_t _length, const TextureRegion& _region) const;
-		void updateTexture(TextureVk* _texture, const void* _data, size_t _length, const TextureRegion& _baseMipRegion, uint32_t _mipCount ) const;
+		void updateTexture(TextureVk* _texture, BufferImageUpload _upload ) const;
 		void getFramePixels(TextureVk* _texture, BufferVk& _stagingBuffer);
 		//
 		void setViewport(VkViewport _vp);
@@ -139,7 +146,7 @@ namespace nix {
 		void updateBuffer( BufferVk* _buffer, size_t _offset, const void * _data, size_t _length );
 		//void updateTexture(TextureVk* _texture, const ImageRegion& _region, const void * _data, size_t _length);
 		void updateTexture(TextureVk* _texture, const TextureRegion& _region, const void * _data, size_t _length);
-		void updateTexture(TextureVk* _texture, const TextureRegion& _region, uint32_t _mipCount, const void * _data, size_t _length);
+		//void updateTexture(TextureVk* _texture, const TextureRegion& _region, uint32_t _mipCount, const void * _data, size_t _length);
 		void captureScreen(TextureVk* _texture, void * raw_, size_t _length, FrameCaptureCallback _callback, IFrameCapture* _capture);
 		const CommandBufferVk* commandBuffer() const;
 		void endFrame();
@@ -166,7 +173,7 @@ namespace nix {
 		}
 		//
 		void uploadBuffer( BufferVk* _buffer, size_t _offset, size_t _size, const void * _data);
-		void uploadTexture(TextureVk* _texture, const void* _data, size_t _length, const TextureRegion& _region);
+		void uploadTexture(TextureVk* _texture, const BufferImageUpload& _upload );
 		~UploadQueueVk();
 	};
 }

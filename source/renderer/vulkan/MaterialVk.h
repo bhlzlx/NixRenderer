@@ -4,7 +4,7 @@
 #include <array>
 #include <SPIRV-Cross/spirv_cross.hpp>
 
-namespace nix {
+namespace Nix {
 	//
 	class ContextVk;
 	class RenderableVk;

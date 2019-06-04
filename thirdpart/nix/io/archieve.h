@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace nix
+namespace Nix
 {
     enum SeekFlag
     {
@@ -64,12 +64,12 @@ namespace nix
     class TextReader
     {
     private:
-        nix::IFile* m_textMemory;
+        Nix::IFile* m_textMemory;
     public:
         TextReader() :
             m_textMemory(nullptr)
         {}
-        bool openFile(nix::IArchieve* _arch, const std::string& _filepath);
+        bool openFile(Nix::IArchieve* _arch, const std::string& _filepath);
         const char * getText();
         ~TextReader() {
             if (m_textMemory) {

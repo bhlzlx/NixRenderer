@@ -9,7 +9,7 @@
 #include "DeferredDeletor.h"
 #include "DriverVk.h"
 
-namespace nix {
+namespace Nix {
 
 	IArgument* MaterialVk::createArgument(uint32_t _index) {
 		ArgumentAllocator& allocator = m_context->getDescriptorSetPool();

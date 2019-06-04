@@ -5,7 +5,7 @@
 #include "RenderPassVk.h"
 #include "TypemappingVk.h"
 
-namespace nix {
+namespace Nix {
 
 	void SwapchainVk::resize(uint32_t _width, uint32_t _height)
 	{
@@ -150,7 +150,7 @@ namespace nix {
 		return true;
 	}
 
-	nix::SwapchainVk SwapchainVk::CreateSwapchain( ContextVk* _context )
+	Nix::SwapchainVk SwapchainVk::CreateSwapchain( ContextVk* _context )
 	{
 		SwapchainVk swapchain;
 		auto device = _context->getDevice();

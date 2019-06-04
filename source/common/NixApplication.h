@@ -6,7 +6,7 @@
 #else
 #endif
 
-namespace nix {
+namespace Nix {
     class IRenderer;
     class IArchieve;
 };
@@ -31,7 +31,7 @@ public:
 		MouseDown,
 		MouseUp
 	};
-	virtual bool initialize(void* _wnd, nix::IArchieve* _archieve) = 0;
+	virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve) = 0;
 	virtual void resize(uint32_t _width, uint32_t _height) = 0;
 	virtual void release() = 0;
 	virtual void tick() = 0;

@@ -3,7 +3,7 @@
 #include "BufferVk.h"
 #include "DriverVk.h"
 
-namespace nix {
+namespace Nix {
 
 	void UniformPool::initialize(ContextVk* _context, uint32_t _unitSize, uint32_t _unitCount, uint32_t _poolIndex )
 	{
@@ -22,7 +22,7 @@ namespace nix {
 		}
 	}
 
-	nix::UniformAllocation UniformPool::allocate()
+	Nix::UniformAllocation UniformPool::allocate()
 	{
 		if (m_freeList.empty()) {
 			this->m_vecBuffer.resize( m_vecBuffer.size() + 1);

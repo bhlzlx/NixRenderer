@@ -23,7 +23,7 @@
 #include <vector>
 #include <string>
 
-namespace nix {
+namespace Nix {
 
 	class IArchieve;
 
@@ -478,7 +478,7 @@ namespace nix {
 	public:
         virtual const TextureDescription& getDesc() const = 0;
         virtual void setSubData( const void * _data, size_t _length, const TextureRegion& _region ) = 0;
-		virtual void setSubData(const void * _data, size_t _length, const TextureRegion& _region, uint32_t _mipCount ) = 0;
+		//virtual void setSubData(const void * _data, size_t _length, const TextureRegion& _region, uint32_t _mipCount ) = 0;
         virtual void release() = 0;
     };
 
@@ -628,7 +628,7 @@ namespace nix {
 	//
 	class NIX_API_DECL IDriver {
 	public:
-		virtual bool initialize( nix::IArchieve* _arch, DeviceType _type) = 0;
+		virtual bool initialize( Nix::IArchieve* _arch, DeviceType _type) = 0;
 		virtual IContext* createContext(void* _hwnd) = 0;
 		virtual IArchieve* getArchieve() = 0;
 		virtual ILogger* getLogger() = 0;
@@ -661,5 +661,5 @@ namespace nix {
  }
 
  extern "C" {
-	 NIX_API_DECL nix::IDriver* createDriver();
+	 NIX_API_DECL Nix::IDriver* createDriver();
  }

@@ -4,7 +4,7 @@
 #include <list>
 #include <array>
 
-namespace nix {
+namespace Nix {
 
 	class BufferVk;
 	class TextureVk;

@@ -7,7 +7,7 @@
 #include "TypemappingVk.h"
 #include <cassert>
 
-namespace nix {
+namespace Nix {
 	//
 	ITexture* ContextVk::createTexture(const TextureDescription& _desc, TextureUsageFlags _usage ) {
 		return TextureVk::createTexture( this, VK_NULL_HANDLE, VK_NULL_HANDLE, _desc, _usage);
@@ -26,10 +26,10 @@ namespace nix {
 		m_context->getGraphicsQueue()->updateTexture(this, _region, _data, _length);
 	}
 
-	void TextureVk::setSubData(const void * _data, size_t _length, const TextureRegion& _baseMipRegion, uint32_t _mipCount)
-	{
-		m_context->getGraphicsQueue()->updateTexture(this, _baseMipRegion, _mipCount, _data, _length);
-	}
+// 	void TextureVk::setSubData(const void * _data, size_t _length, const TextureRegion& _baseMipRegion, uint32_t _mipCount)
+// 	{
+// 		m_context->getGraphicsQueue()->updateTexture(this, _baseMipRegion, _mipCount, _data, _length);
+// 	}
 
 	void TextureVk::release()
 	{
@@ -99,7 +99,7 @@ namespace nix {
 		m_imageLayout = _newLayout;
 	}
 
-	nix::TextureVk* TextureVk::createTexture(ContextVk* _context, VkImage _image, VkImageView _imageView, TextureDescription _desc, TextureUsageFlags _usage)
+	Nix::TextureVk* TextureVk::createTexture(ContextVk* _context, VkImage _image, VkImageView _imageView, TextureDescription _desc, TextureUsageFlags _usage)
 	{
 		VkFormat format = NixFormatToVk(_desc.format);
 		VkImageAspectFlags aspectMask = 0;

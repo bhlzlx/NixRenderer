@@ -5,7 +5,7 @@
 #include "PipelineVk.h"
 #include "ArgumentVk.h"
 
-namespace nix {
+namespace Nix {
 
 	GraphicsQueueAsyncTaskManager DeferredDeletor;
 
@@ -82,27 +82,27 @@ namespace nix {
 		}
 	};
 
-	nix::QueueAsyncTask * GraphicsQueueAsyncTaskManager::createDestroyTask(BufferVk * _buffer)
+	Nix::QueueAsyncTask * GraphicsQueueAsyncTaskManager::createDestroyTask(BufferVk * _buffer)
 	{
 		return new BufferDeleteItem(_buffer);
 	}
 
-	nix::QueueAsyncTask * GraphicsQueueAsyncTaskManager::createDestroyTask(TextureVk* _texture)
+	Nix::QueueAsyncTask * GraphicsQueueAsyncTaskManager::createDestroyTask(TextureVk* _texture)
 	{
 		return new TextureDeleteItem(_texture);
 	}
 
-	nix::QueueAsyncTask * GraphicsQueueAsyncTaskManager::createDestroyTask(RenderPassVk* _renderPass)
+	Nix::QueueAsyncTask * GraphicsQueueAsyncTaskManager::createDestroyTask(RenderPassVk* _renderPass)
 	{
 		return new RenderPassDeleteItem(_renderPass);
 	}
 
-	nix::QueueAsyncTask * GraphicsQueueAsyncTaskManager::createDestroyTask(ArgumentVk* _argument)
+	Nix::QueueAsyncTask * GraphicsQueueAsyncTaskManager::createDestroyTask(ArgumentVk* _argument)
 	{
 		return new ArgumentDeleteItem(_argument);
 	}
 
-	nix::QueueAsyncTask * GraphicsQueueAsyncTaskManager::createDestroyTask(PipelineVk* _pipeline)
+	Nix::QueueAsyncTask * GraphicsQueueAsyncTaskManager::createDestroyTask(PipelineVk* _pipeline)
 	{
 		return new PipelineDeleteItem(_pipeline);
 	}

@@ -7,7 +7,7 @@
 #include <NixRenderer.h>
 #include "vkinc.h"
 
-namespace nix {
+namespace Nix {
 
 	class BufferVk;
 	class ContextVk;

@@ -10,7 +10,7 @@
 #include <assert.h>
 #include "DriverVk.h"
 
-namespace nix {
+namespace Nix {
 
 	GraphicsQueueVk* ContextVk::createGraphicsQueue( VkQueue _id, uint32_t _family, uint32_t _index ) const {
 		GraphicsQueueVk* queue = new GraphicsQueueVk();
@@ -266,26 +266,26 @@ namespace nix {
 		}
 	}
 
-	void GraphicsQueueVk::updateTexture(TextureVk* _texture, const TextureRegion& _region, uint32_t _mipCount, const void * _data, size_t _length) 
-	{
-		if (!m_readyForRendering)
-		{
-			auto& cmdbuff = m_updatingBuffers[m_flightIndex];
-			if (!m_updatingBuffersActived[m_flightIndex]) {
-				cmdbuff.begin();
-				m_updatingBuffersActived[m_flightIndex] = VK_TRUE;
-			}
-			if (m_updatingFencesActived[m_flightIndex]) {
-				vkWaitForFences(m_device, 1, &m_updatingFences[m_flightIndex], VK_TRUE, uint64_t(-1));
-				m_updatingFencesActived[m_flightIndex] = VK_FALSE;
-			}
-			cmdbuff.updateTexture(_texture, _data, _length, _region, _mipCount);
-		}
-		else
-		{
-			m_renderBuffers[m_flightIndex].updateTexture(_texture, _data, _length, _region, _mipCount);
-		}
-	}
+// 	void GraphicsQueueVk::updateTexture(TextureVk* _texture, const TextureRegion& _region, uint32_t _mipCount, const void * _data, size_t _length) 
+// 	{
+// 		if (!m_readyForRendering)
+// 		{
+// 			auto& cmdbuff = m_updatingBuffers[m_flightIndex];
+// 			if (!m_updatingBuffersActived[m_flightIndex]) {
+// 				cmdbuff.begin();
+// 				m_updatingBuffersActived[m_flightIndex] = VK_TRUE;
+// 			}
+// 			if (m_updatingFencesActived[m_flightIndex]) {
+// 				vkWaitForFences(m_device, 1, &m_updatingFences[m_flightIndex], VK_TRUE, uint64_t(-1));
+// 				m_updatingFencesActived[m_flightIndex] = VK_FALSE;
+// 			}
+// 			cmdbuff.updateTexture(_texture, _data, _length, _region, _mipCount);
+// 		}
+// 		else
+// 		{
+// 			m_renderBuffers[m_flightIndex].updateTexture(_texture, _data, _length, _region, _mipCount);
+// 		}
+// 	}
 
 	void GraphicsQueueVk::captureScreen(TextureVk* _texture, void * _raw, size_t _length, FrameCaptureCallback _callback, IFrameCapture* _capture )
 	{
@@ -532,85 +532,81 @@ namespace nix {
 		deletor.destroyResource(TBuffer);
 	}
 
-	void CommandBufferVk::updateTexture(TextureVk* _texture, const void* _data, size_t _length, const TextureRegion& _baseMipRegion, uint32_t _mipCount) const {
-		_length = _length < 64 ? 64 : _length;
-		auto stageBuffer = BufferVk::CreateBuffer(_length, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_contextVk);
-		stageBuffer.writeDataImmediatly(_data,_length, 0);
+	void CommandBufferVk::updateTexture(TextureVk* _texture, BufferImageUpload _upload ) const {
+		auto stageBuffer = BufferVk::CreateBuffer( _upload.length, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_contextVk );
+		stageBuffer.writeDataImmediatly(_upload.data, _upload.length, 0);
 
-		assert(_baseMipRegion.mipLevel == 0);
-		assert(_baseMipRegion.baseLayer == 0);
-
-		uint32_t baseWidth = _baseMipRegion.size.width, baseHeight = _baseMipRegion.size.height;
-		uint32_t baseOffsetX = _baseMipRegion.offset.x, baseOffsetY = _baseMipRegion.offset.y;
+		uint32_t baseWidth = _upload.baseMipRegion.size.width, baseHeight = _upload.baseMipRegion.size.height;
+		uint32_t baseOffsetX = _upload.baseMipRegion.offset.x, baseOffsetY = _upload.baseMipRegion.offset.y;
 
 		std::vector< VkBufferImageCopy > copies;
-		for (uint32_t miplevel = 0; miplevel < _mipCount; ++miplevel) {
+		for (uint32_t miplevel = 0; miplevel < _upload.mipDataOffsets.size(); ++miplevel) {
 			VkBufferImageCopy copy; {
 				copy.imageOffset = {
-					(int32_t)baseOffsetX >> miplevel, (int32_t)baseOffsetY >> miplevel, (int32_t)_baseMipRegion.offset.z
+					(int32_t)baseOffsetX >> miplevel, (int32_t)baseOffsetY >> miplevel, (int32_t)_upload.baseMipRegion.offset.z
 				};
 				copy.imageExtent = {
-					baseWidth >> miplevel, baseHeight >> miplevel, _baseMipRegion.size.depth
+					baseWidth >> miplevel, baseHeight >> miplevel, _upload.baseMipRegion.size.depth
 				};
 				copy.imageSubresource = {
 					VK_IMAGE_ASPECT_COLOR_BIT, // only color texture supported
 					miplevel,
-					_baseMipRegion.baseLayer,
-					_baseMipRegion.size.depth
+					_upload.baseMipRegion.baseLayer,
+					_upload.baseMipRegion.size.depth
 				};
-				copy.bufferOffset = 0;
+				copy.bufferOffset = _upload.mipDataOffsets[miplevel];
 				copy.bufferImageHeight = 0;
 				copy.bufferRowLength = 0;
 			}
-			const VkImageMemoryBarrier barrierBefore = {
-				VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER, // sType 
-				nullptr, // pNext
-				VK_ACCESS_SHADER_READ_BIT, // srcAccessMask
-				VK_ACCESS_TRANSFER_WRITE_BIT, // dstAccessMask
-				_texture->getImageLayout(), // oldLayout
-				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, // newLayout
-				VK_QUEUE_FAMILY_IGNORED, // srcQueueFamilyIndex 
-				VK_QUEUE_FAMILY_IGNORED, // dstQueueFamilyIndex 
-				_texture->getImage(), // image 
-				{ // subresourceRange 
-					VK_IMAGE_ASPECT_COLOR_BIT, // aspectMask 
-					miplevel, // baseMipLevel 
-					1, // levelCount
-					_baseMipRegion.baseLayer + _baseMipRegion.offset.z, // baseArrayLayer
-					_baseMipRegion.size.depth // layerCount
-				}
-			};
-			const VkImageMemoryBarrier barrierAfter = {
-				VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER, // sType 
-				nullptr, // pNext
-				VK_ACCESS_TRANSFER_WRITE_BIT, // srcAccessMask
-				VK_ACCESS_SHADER_READ_BIT, // dstAccessMask
-				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, // oldLayout
-				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, // newLayout
-				VK_QUEUE_FAMILY_IGNORED, // srcQueueFamilyIndex 
-				VK_QUEUE_FAMILY_IGNORED, // dstQueueFamilyIndex 
-				_texture->getImage(), // image 
-				{ // subresourceRange 
-					VK_IMAGE_ASPECT_COLOR_BIT, // aspectMask 
-					miplevel, // baseMipLevel 
-					1, // levelCount
-					_baseMipRegion.baseLayer + _baseMipRegion.offset.z, // baseArrayLayer
-					_baseMipRegion.size.depth // layerCount
-				}
-			};
-
-			vkCmdPipelineBarrier(
-				m_commandBuffer, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
-				0, nullptr, 0, nullptr,
-				1, &barrierBefore);
-			vkCmdCopyBufferToImage(m_commandBuffer, (const VkBuffer&)stageBuffer, _texture->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, static_cast<uint32_t>(copies.size()), copies.data());
-			//
-			vkCmdPipelineBarrier(
-				m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
-				0, nullptr, 0, nullptr,
-				1, &barrierAfter);
-			//
+			copies.push_back(copy);
 		}
+		const VkImageMemoryBarrier barrierBefore = {
+			VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER, // sType 
+			nullptr, // pNext
+			VK_ACCESS_SHADER_READ_BIT, // srcAccessMask
+			VK_ACCESS_TRANSFER_WRITE_BIT, // dstAccessMask
+			_texture->getImageLayout(), // oldLayout
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, // newLayout
+			VK_QUEUE_FAMILY_IGNORED, // srcQueueFamilyIndex 
+			VK_QUEUE_FAMILY_IGNORED, // dstQueueFamilyIndex 
+			_texture->getImage(), // image 
+			{ // subresourceRange 
+				VK_IMAGE_ASPECT_COLOR_BIT, // aspectMask 
+				0, // baseMipLevel 
+				_upload.mipDataOffsets.size(), // levelCount
+				_upload.baseMipRegion.baseLayer + _upload.baseMipRegion.offset.z, // baseArrayLayer
+				_upload.baseMipRegion.size.depth // layerCount
+			}
+		};
+		const VkImageMemoryBarrier barrierAfter = {
+			VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER, // sType 
+			nullptr, // pNext
+			VK_ACCESS_TRANSFER_WRITE_BIT, // srcAccessMask
+			VK_ACCESS_SHADER_READ_BIT, // dstAccessMask
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, // oldLayout
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, // newLayout
+			VK_QUEUE_FAMILY_IGNORED, // srcQueueFamilyIndex 
+			VK_QUEUE_FAMILY_IGNORED, // dstQueueFamilyIndex 
+			_texture->getImage(), // image 
+			{ // subresourceRange 
+				VK_IMAGE_ASPECT_COLOR_BIT, // aspectMask 
+				0, // baseMipLevel 
+				_upload.mipDataOffsets.size(), // levelCount
+				_upload.baseMipRegion.baseLayer + _upload.baseMipRegion.offset.z, // baseArrayLayer
+				_upload.baseMipRegion.size.depth // layerCount
+			}
+		};
+
+		vkCmdPipelineBarrier(
+			m_commandBuffer, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
+			0, nullptr, 0, nullptr,
+			1, &barrierBefore);
+		vkCmdCopyBufferToImage(m_commandBuffer, (const VkBuffer&)stageBuffer, _texture->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, static_cast<uint32_t>(copies.size()), copies.data());
+		//
+		vkCmdPipelineBarrier(
+			m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+			0, nullptr, 0, nullptr,
+			1, &barrierAfter);
 		//
 		_texture->setImageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		//
@@ -695,11 +691,11 @@ namespace nix {
 		m_uploadMutex.unlock();
 	}
 
-	void UploadQueueVk::uploadTexture(TextureVk* _texture, const void* _data, size_t _length, const TextureRegion& _region)
+	void UploadQueueVk::uploadTexture(TextureVk* _texture, const BufferImageUpload& _upload )
 	{
 		m_uploadMutex.lock();
 		m_commandBuffer.begin();
-		m_commandBuffer.updateTexture(_texture, _data, _length, _region);
+		m_commandBuffer.updateTexture(_texture, _upload);
 		m_commandBuffer.end();
 		VkSubmitInfo submit;
 		submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

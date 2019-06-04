@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <utility>
 
-namespace nix {
+namespace Nix {
 
 	VkDescriptorSet ArgumentAllocator::allocateDescriptorSet( MaterialVk* _material, uint32_t _index, uint32_t& _poolIndex ) {
 		const ArgumentLayout& layout = _material->getDescriptorSetLayout(_index);

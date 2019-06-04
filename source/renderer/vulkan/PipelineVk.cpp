@@ -14,7 +14,7 @@
 #include "MaterialVk.h"
 #include <cassert>
 
-namespace nix {
+namespace Nix {
 
 	IPipeline* MaterialVk::createPipeline(const RenderPassDescription& _renderPass)
 	{

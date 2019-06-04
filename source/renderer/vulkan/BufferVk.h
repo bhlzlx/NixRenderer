@@ -16,7 +16,7 @@
 // destroy a buffer object will call `delete` right now
 // but the BufferVk resource handler will move to `deferred deleter`
 
-namespace nix {
+namespace Nix {
 	// global vulkan memory allocator
 	//
 	class ContextVk;

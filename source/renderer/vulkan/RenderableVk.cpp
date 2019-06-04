@@ -3,7 +3,7 @@
 #include "MaterialVk.h"
 #include "BufferVk.h"
 
-namespace nix {
+namespace Nix {
 
 	IRenderable* MaterialVk::createRenderable()
 	{
@@ -30,7 +30,7 @@ namespace nix {
 		return m_vecBuffer.size();
 	}
 
-	nix::TopologyMode RenderableVk::getTopologyMode()
+	Nix::TopologyMode RenderableVk::getTopologyMode()
 	{
 		return m_topologyMode;
 	}
@@ -42,22 +42,22 @@ namespace nix {
 		auto type = _buffer->getType();
 		switch (type)
 		{
-		case nix::SVBO: {
+		case Nix::SVBO: {
 			VertexBuffer* vertexBuffer = (VertexBuffer*)_buffer;
 			buffer = *vertexBuffer;
 			offset = vertexBuffer->getOffset();
 			break;
 		}
-		case nix::CVBO: {
+		case Nix::CVBO: {
 			CachedVertexBuffer* vertexBuffer = (CachedVertexBuffer*)_buffer;
 			buffer = *vertexBuffer;
 			offset = vertexBuffer->getOffset();
 			break;
 		}
-		case nix::IBO:
-		case nix::UBO:
-		case nix::SSBO:
-		case nix::TBO:
+		case Nix::IBO:
+		case Nix::UBO:
+		case Nix::SSBO:
+		case Nix::TBO:
 		default:
 			assert(false);
 			break;
@@ -73,17 +73,17 @@ namespace nix {
 		auto type = _buffer->getType();
 		switch (type)
 		{
-		case nix::IBO: {
+		case Nix::IBO: {
 			IndexBuffer* indexBuffer = (IndexBuffer*)_buffer;
 			buffer = *indexBuffer;
 			offset = indexBuffer->getOffset();
 			break;
 		}
-		case nix::SVBO:
-		case nix::CVBO:
-		case nix::UBO:
-		case nix::SSBO:
-		case nix::TBO:
+		case Nix::SVBO:
+		case Nix::CVBO:
+		case Nix::UBO:
+		case Nix::SSBO:
+		case Nix::TBO:
 		default:
 			assert(false);
 			break;

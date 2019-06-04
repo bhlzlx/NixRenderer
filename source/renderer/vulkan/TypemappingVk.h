@@ -2,7 +2,7 @@
 #include <NixRenderer.h>
 #include "vkinc.h"
 
-namespace nix {
+namespace Nix {
 
 	static inline uint32_t NixFormatBits( NixFormat _format )
 	{

@@ -1,4 +1,4 @@
-using namespace nix;
+using namespace Nix;
 
 KS_JSON_ENUM_TABLE
 	KS_JSON_ENUM_TYPE(NixFormat)

@@ -1,16 +1,18 @@
 #include "KTXLoader.h"
+#include "ContextVk.h"
+#include "QueueVk.h"
 #include "TypemappingVk.h"
 #include <GLES3/gl31.h>
 #include <GLES2/gl2ext.h>
 
-namespace nix {
+namespace Nix {
 
-	nix::TextureVk* TextureVk::createTextureKTX( ContextVk* _context ,const void * _data, size_t _length )
+	Nix::TextureVk* TextureVk::createTextureKTX( ContextVk* _context ,const void * _data, size_t _length )
 	{
 		return KtxLoader::CreateTexture(_context, _data, _length);
 	}
     
-	nix::TextureVk* KtxLoader::CreateTexture(ContextVk* _context,const void* _data, size_t _length)
+	Nix::TextureVk* KtxLoader::CreateTexture(ContextVk* _context,const void* _data, size_t _length)
 	{
 		const uint8_t * ptr = (const uint8_t *)_data;
 		const uint8_t * end = ptr + _length;
@@ -98,22 +100,44 @@ namespace nix {
 		// should care about the alignment of the cube slice & mip slice
 		// but reference to the ETC2 & EAC & `KTX format reference`, for 4x4 block compression type, the alignment should be zero
 		// so we can ignore the alignment
-
 		// read all mip level var loop!
+		auto* contentStart = ptr;
+		std::vector< VkDeviceSize > offsets;
+		uint32_t pixelContentSize = 0;
+		for (uint32_t mipLevel = 0; mipLevel < header->mipLevelCount; ++mipLevel) {
+			offsets.push_back(pixelContentSize);
+			uint32_t mipBytes = *(uint32_t*)(ptr);
+			pixelContentSize += mipBytes * desc.depth;
+			ptr += sizeof(mipBytes);
+			ptr += mipBytes * desc.depth;
+		}
+		char * content = new char[pixelContentSize];
+		ptr = contentStart;
+		char * contentR = content;
 		for (uint32_t mipLevel = 0; mipLevel < header->mipLevelCount; ++mipLevel) {
 			uint32_t mipBytes = *(uint32_t*)(ptr);
 			ptr += sizeof(mipBytes);
-			for( uint32_t arrayIndex = 0; arrayIndex < desc.depth; ++arrayIndex ) {
-                TextureRegion region; {
-                    region.baseLayer = arrayIndex;
-                    region.mipLevel = mipLevel;
-                    region.offset = { 0, 0, 0 };
-                    region.size = { header->pixelWidth >> mipLevel, header->pixelHeight >> mipLevel, 1 };
-                }
-                texture->setSubData(ptr, mipBytes, region);
-                ptr += mipBytes;
+			for (uint32_t arrayIndex = 0; arrayIndex < desc.depth; ++arrayIndex) {
+				memcpy(contentR, ptr, mipBytes);
+				ptr += mipBytes;
+				contentR += mipBytes;
 			}
 		}
+		TextureRegion region;
+		region.baseLayer = 0;
+		region.mipLevel = 0;
+		region.offset.x = region.offset.y = region.offset.z = 0;
+		region.size.width = desc.width;
+		region.size.height = desc.height;
+		region.size.depth = desc.depth;
+
+		BufferImageUpload upload;
+		upload.baseMipRegion = region;
+		upload.data = content;
+		upload.length = pixelContentSize;
+		upload.mipDataOffsets = std::move(offsets);
+		_context->getUploadQueue()->uploadTexture(texture, upload);
+		delete[]content;
 		return texture;
 	}
 

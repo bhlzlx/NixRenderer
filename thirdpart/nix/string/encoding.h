@@ -13,7 +13,7 @@
 #endif
 #include <stdint.h>
 
-namespace nix
+namespace Nix
 {
 	// msvc10		: wchar_t	text[] = WSTR16("Hello,World!");
 	// gcc/clang	: char16_t	text[] = WSTR16("Hello,World!");

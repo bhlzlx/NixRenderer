@@ -18,7 +18,7 @@ std::vector< std::vector< char > > sudoMat =
 };
 
 class HelloWorld : public NixApplication {
-	virtual bool initialize( void* _wnd, nix::IArchieve* ) {
+	virtual bool initialize( void* _wnd, Nix::IArchieve* ) {
         printf("%s", "HelloWorld is initializing!");
 		return true;
     }

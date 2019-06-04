@@ -28,7 +28,7 @@ PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR;
 PFN_vkCreateAndroidSurfaceKHR vkCreateWin32SurfaceKHR;
 #endif
 
-namespace nix {
+namespace Nix {
 
 	bool DriverVk::initialize( IArchieve* _arch, DeviceType _type) {
 #ifdef _WIN32
@@ -363,8 +363,8 @@ namespace nix {
 }
 
 extern "C" {
-	NIX_API_DECL nix::IDriver* createDriver() {
-		nix::DriverVk* driver = new nix::DriverVk();
+	NIX_API_DECL Nix::IDriver* createDriver() {
+		Nix::DriverVk* driver = new Nix::DriverVk();
 		return driver;
 	}
 }

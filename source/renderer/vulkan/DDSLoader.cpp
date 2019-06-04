@@ -1,8 +1,10 @@
 #include "DDSLoader.h"
 #define TINYDDSLOADER_IMPLEMENTATION
 #include "tinyddsloader.h"
+#include "QueueVk.h"
+#include "ContextVk.h"
 
-namespace nix {
+namespace Nix {
 	//
 	static_assert(sizeof(DDS_HEADER) == 124, "size does not match");
 	
@@ -73,8 +75,31 @@ namespace nix {
 				return nullptr;
 			}
 		}
-		TextureVk* texture = TextureVk::createTexture( _context, VK_NULL_HANDLE, VK_NULL_HANDLE, desc, nix::TextureUsageTransferDestination | nix::TextureUsageSampled);
+		TextureVk* texture = TextureVk::createTexture(_context, VK_NULL_HANDLE, VK_NULL_HANDLE, desc, Nix::TextureUsageTransferDestination | Nix::TextureUsageSampled);
+
+		std::vector<VkDeviceSize> offsets;
+		char* pixelContent = nullptr;
+		VkDeviceSize pixelContentSize = 0;
+
+		for (uint32_t mipIndex = 0; mipIndex < file.GetMipCount(); ++mipIndex)
+		{
+			uint32_t width = desc.width >> mipIndex;
+			uint32_t height = desc.height >> mipIndex;
+			if (desc.format == NixBC1_LINEAR_RGBA || desc.format == NixBC3_LINEAR_RGBA) {
+				if (width <= 4) {
+					width = 4;
+				}
+				if (height <= 4) {
+					height = 4;
+				}
+			}
+			uint32_t dataLength = width * height * file.GetBitsPerPixel(file.GetFormat()) / 8 * desc.depth;
+			offsets.push_back(pixelContentSize);
+			pixelContentSize += dataLength;
+		}
+		pixelContent = new char[pixelContentSize];
 		//
+		VkDeviceSize writeOffset = 0;
 		for (uint32_t mipIndex = 0; mipIndex < file.GetMipCount(); ++mipIndex)
 		{
 			uint32_t width = desc.width >> mipIndex;
@@ -90,15 +115,27 @@ namespace nix {
 			uint32_t dataLength = width * height * file.GetBitsPerPixel(file.GetFormat()) / 8;
 			for (uint32_t arrayIndex = 0; arrayIndex < file.GetArraySize(); ++arrayIndex) {
 				auto layerData = file.GetImageData(mipIndex, arrayIndex);
-				TextureRegion region = {}; {
-					region.mipLevel = mipIndex;
-					region.baseLayer = arrayIndex;
-					region.offset = { 0 , 0, 0 };
-					region.size = { width, height, 1 };
-				}
-				texture->setSubData(layerData->m_mem, dataLength, region);
+				memcpy( pixelContent + writeOffset, layerData->m_mem, dataLength );
+				writeOffset += dataLength;
 			}
 		}
+
+		TextureRegion region;
+		region.baseLayer = 0;
+		region.mipLevel = 0;
+		region.offset.x = region.offset.y = region.offset.z = 0;
+		region.size.width = desc.width;
+		region.size.height = desc.height;
+		region.size.depth = desc.depth;
+
+		BufferImageUpload upload;
+		upload.baseMipRegion = region;
+		upload.data = pixelContent;
+		upload.length = pixelContentSize;
+		upload.mipDataOffsets = std::move(offsets);
+		_context->getUploadQueue()->uploadTexture(texture, upload);
+		delete[]pixelContent;
+
 		return texture;
 	}
 }

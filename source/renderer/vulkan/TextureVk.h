@@ -8,7 +8,7 @@
 // pass the pointer to the `deferred deleter`
 // and the deleter will destroy it when not used any longer!
 
-namespace nix {
+namespace Nix {
 	class ContextVk;
 
 	class NIX_API_DECL TextureVk : public ITexture {
@@ -45,7 +45,7 @@ namespace nix {
 		// need graphics queue support
 		// can update whole image,once with a chunk of memory
 		virtual void setSubData(const void * _data, size_t _length, const TextureRegion& _region) override;
-		virtual void setSubData(const void * _data, size_t _length, const TextureRegion& _baseMipRegion, uint32_t _mipCount) override;
+		//virtual void setSubData(const void * _data, size_t _length, const TextureRegion& _baseMipRegion, uint32_t _mipCount) override;
 		// deferred deleter
 		virtual void release() override;
 		//

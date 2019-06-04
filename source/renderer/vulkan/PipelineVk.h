@@ -3,7 +3,7 @@
 #include "vkinc.h"
 #include <map>
 
-namespace nix {
+namespace Nix {
 
 	class PipelineVk;
 	class TextureVk;

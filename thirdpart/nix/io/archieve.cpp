@@ -1,7 +1,7 @@
 #include "archieve.h"
 #include "../string/path.h"
 
-namespace nix
+namespace Nix
 {
     class StdFile: public IFile
     {
@@ -303,14 +303,14 @@ namespace nix
 		return buffer;
 	}
 
-    bool TextReader::openFile( nix::IArchieve* _arch, const std::string& _filepath)
+    bool TextReader::openFile( Nix::IArchieve* _arch, const std::string& _filepath)
     {
         if (m_textMemory)
             m_textMemory->release();
         auto file = _arch->open(_filepath.c_str());
         if (!file)
             return false;
-        m_textMemory = nix::CreateMemoryBuffer(file->size() + 1);
+        m_textMemory = Nix::CreateMemoryBuffer(file->size() + 1);
         m_textMemory->write(file->size(), file);
         m_textMemory->write(1, "\0");
         file->release();

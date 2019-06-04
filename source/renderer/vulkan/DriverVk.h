@@ -7,7 +7,7 @@
 #include <NixRenderer.h>
 #include <iostream>
 
-namespace nix {
+namespace Nix {
 
 	class ContextVk;
 	class IArchieve;
@@ -62,7 +62,7 @@ namespace nix {
 		{
 		}
 
-		virtual bool initialize( nix::IArchieve* _arch, DeviceType _type ) override;
+		virtual bool initialize( Nix::IArchieve* _arch, DeviceType _type ) override;
 		virtual IContext* createContext( void* _hwnd ) override;
 		virtual inline IArchieve* getArchieve() override {
 			return m_archieve;

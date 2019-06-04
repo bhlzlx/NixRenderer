@@ -4,7 +4,7 @@
 #include "UniformVk.h"
 #include "vkinc.h"
 
-namespace nix {
+namespace Nix {
 	class PipelineVk;
 	class ContextVk;
 	class TextureVk;
