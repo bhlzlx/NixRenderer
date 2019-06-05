@@ -1,0 +1,19 @@
+project( Sphere )
+
+set( PROJECT_SOURCE
+    ${PLATFORM_SOURCE}
+    ${CMAKE_CURRENT_SOURCE_DIR}/Sphere.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/../../common/NixJpImp.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../thirdpart/tiny_obj_loader.cc
+)
+
+add_executable( Sphere WIN32
+    ${PROJECT_SOURCE}
+)
+
+target_link_libraries(
+    Sphere
+    SDL2
+    SDL2Main
+    nix
+)
