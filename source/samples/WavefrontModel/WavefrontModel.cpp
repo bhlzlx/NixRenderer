@@ -37,11 +37,12 @@ namespace Nix {
 		uint32_t					m_matLocal;
 
 
-		std::vector<IRenderable*>	m_vecRenderable;
-		std::vector<uint32_t>		m_vecIndicesCount;
-		std::vector<IBuffer*>		m_vertices;
-		std::vector<IBuffer*>		m_colors;
-		std::vector<IBuffer*>		m_indices;
+		IRenderable*				m_renderable;
+		
+		IBuffer*					m_indexBuffer;
+		uint32_t					m_indexCount;
+		IBuffer*					m_vertPosition;
+		IBuffer*					m_vertNormal;
 		//
 		IPipeline*					m_pipeline;
 
@@ -115,31 +116,46 @@ namespace Nix {
 					tinyobj::ObjReaderConfig objReaderConfig;
 
 					objReaderConfig.triangulate = true;
-					objReaderConfig.vertex_color = true;
 					const std::string objText(objTextReader.getText());
 					const std::string mtlText(mtlTextReader.getText());
 					readRst = objReader.ParseFromString(objText, mtlText, objReaderConfig);
 					assert(readRst);
 
-					auto vertexBuffer = m_context->createStaticVertexBuffer(objReader.GetAttrib().vertices.data(), sizeof(float) * objReader.GetAttrib().vertices.size());
-					auto colorBuffer = m_context->createStaticVertexBuffer(objReader.GetAttrib().colors.data(), sizeof(float) * objReader.GetAttrib().colors.size());
-					m_vertices.push_back(vertexBuffer);
-					m_colors.push_back(colorBuffer);
+					
+					std::vector<float> arrangedNormalData;
+					std::vector<uint16_t> arrangedIndicesBuffer;
+
+					const std::vector<float>& normalData = objReader.GetAttrib().normals;
+
+					auto normalBuffer = m_context->createStaticVertexBuffer(objReader.GetAttrib().normals.data(), sizeof(float) * objReader.GetAttrib().normals.size());
+		
 					const auto& shapes = objReader.GetShapes();
 					for (auto& shape : shapes) {
-						auto renderable = m_material->createRenderable();
-						m_vecRenderable.push_back(renderable);
-						std::vector<uint16_t> indices;
 						for (auto& index : shape.mesh.indices) {
-							indices.push_back((uint16_t)index.vertex_index);
+							// arrange the normal attribute
+							if (index.normal_index != -1) {
+								arrangedNormalData.push_back(normalData[index.normal_index] * 3);
+								arrangedNormalData.push_back(normalData[index.normal_index] * 3 + 1);
+								arrangedNormalData.push_back(normalData[index.normal_index] * 3 + 2);
+							}
+							else 
+							{
+								arrangedNormalData.push_back(0);
+								arrangedNormalData.push_back(1);
+								arrangedNormalData.push_back(0);
+							}
+							//
+							arrangedIndicesBuffer.push_back((uint16_t)index.vertex_index);
 						}
-						auto indexBuffer = m_context->createIndexBuffer(indices.data(), indices.size() * sizeof(uint16_t));
-						m_indices.push_back(indexBuffer);
-						m_vecIndicesCount.push_back((uint32_t)indices.size());
-						renderable->setIndexBuffer(indexBuffer, 0);
-						renderable->setVertexBuffer(colorBuffer, 0, 1);
-						renderable->setVertexBuffer(vertexBuffer, 0, 0);
 					}
+					m_renderable = m_material->createRenderable();
+					m_indexBuffer = m_context->createIndexBuffer(arrangedIndicesBuffer.data(), arrangedIndicesBuffer.size() * sizeof(uint16_t));
+					m_indexCount = arrangedIndicesBuffer.size();
+					m_vertPosition = m_context->createStaticVertexBuffer(objReader.GetAttrib().vertices.data(), sizeof(float) * objReader.GetAttrib().vertices.size());
+					m_vertNormal = m_context->createStaticVertexBuffer(arrangedNormalData.data(), sizeof(float) * arrangedNormalData.size());
+					m_renderable->setIndexBuffer( m_indexBuffer, 0);
+					m_renderable->setVertexBuffer( m_vertNormal, 0, 1);
+					m_renderable->setVertexBuffer( m_vertPosition, 0, 0);
 				}
 			}
 			return true;
@@ -156,7 +172,7 @@ namespace Nix {
 			ss.size = { (int)_width, (int)_height };
 			//
 			m_projection = glm::perspective<float>(90, (float)_width / (float)_height, 0.01f, 200.0f);
-			m_view = glm::lookAt(glm::vec3(-80, 40 , -80), glm::vec3(0, 0, 0), glm::vec3(0,1,0));
+			m_view = glm::lookAt(glm::vec3( -120, 20 , 0), glm::vec3(0, 0, 0), glm::vec3(0,1,0));
 			m_pipeline->setViewport(vp);
 			m_pipeline->setScissor(ss);
 		}
@@ -167,20 +183,24 @@ namespace Nix {
 		}
 
 		virtual void tick() {
+			static float angle = 0.0f;
+			angle += 0.01;
+			m_model = glm::rotate<float>(glm::mat4(), angle / 180.0f * 3.1415926, glm::vec3(0,1,0));
+			glm::vec3 light(200, 200, 0);
 			if (m_context->beginFrame()) {
 				m_mainRenderPass->begin(m_primQueue); {
 					glm::mat4x4 identity;
 					m_argCommon->setUniform(m_matGlobal, 0, &m_projection, 64);
 					m_argCommon->setUniform(m_matGlobal, 64, &m_view, 64);
-					m_argInstance->setUniform(m_matLocal, 0, &identity, 64);
+					m_argCommon->setUniform(m_matGlobal, 128, &light, sizeof(light));
+					m_argInstance->setUniform(m_matLocal, 0, &m_model, 64);
 					//
 					m_mainRenderPass->bindPipeline(m_pipeline);
 					m_mainRenderPass->bindArgument(m_argCommon);
 					m_mainRenderPass->bindArgument(m_argInstance);
-					//
-					for (uint32_t i = 0; i < m_vecRenderable.size(); ++i) {
-						m_mainRenderPass->drawElements( m_vecRenderable[i], 0, m_vecIndicesCount[i]);
-					}
+					//					
+					m_mainRenderPass->drawElements( m_renderable, 0, m_indexCount);
+					
 				}
 				m_mainRenderPass->end();
 

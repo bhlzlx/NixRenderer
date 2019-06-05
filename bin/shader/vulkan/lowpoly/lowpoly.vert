@@ -3,18 +3,20 @@
 #extension GL_ARB_shading_language_420pack : enable
 
 layout (location = 0) in vec3 vert_position;
-layout (location = 1) in vec3 vert_color;
+layout (location = 1) in vec3 vert_normal;
 
-layout (location = 0) out vec3 frag_color;
+layout (location = 0) out float	frag_brightness;
+
 
 out gl_PerVertex 
 {
-    vec4 gl_Position;   
+    vec4 	gl_Position;
 };
 
 layout( set = 0, binding = 0 ) uniform GlobalArgument {
 	mat4 projection;
 	mat4 view;
+	vec3 light;
 };
 
 layout( set = 1, binding = 0 ) uniform LocalArgument {
@@ -23,8 +25,10 @@ layout( set = 1, binding = 0 ) uniform LocalArgument {
 
 void main() 
 {
-	gl_Position = projection * view * model * vec4(vert_position, 1.0);
-	//gl_Position = vec4(vert_position, 1.0f);
-	frag_color = vert_color;	
+	vec4 worldPosition = model * vec4(vert_position, 1.0f);
+	worldPosition = worldPosition / worldPosition.w;
+	gl_Position = projection * view * model * worldPosition;
+	vec4 tNormal = model * vec4( normalize(vert_normal), 0.0f );
+	frag_brightness = dot( normalize(tNormal.xyz), normalize(light - worldPosition.xyz ));
 	gl_Position.y *= -1;
 }

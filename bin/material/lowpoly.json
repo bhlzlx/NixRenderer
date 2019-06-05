@@ -11,7 +11,7 @@
 			"offset" : 0,
 			"type" : "VertexTypeFloat3"
 		},{
-			"name" : "vert_color",
+			"name" : "vert_normal",
 			"bufferIndex" : 1,
 			"offset" : 0,
 			"type" : "VertexTypeFloat3"
@@ -34,7 +34,7 @@
 			"binding" : 0,
 			"name" : "GlobalArgument",
 			"shaderStage" : "VertexShader",
-			"dataSize" : 128
+			"dataSize" : 140
 		}]
 	},{
 		"index" : 1,
@@ -48,8 +48,8 @@
 	}],
 	"renderState" : {
 		"writeMask" : 15,
-		"cullMode" : "CullNone",
-		"windingMode" : "Clockwise",
+		"cullMode" : "CullBack",
+		"windingMode" : "CounterClockwise",
 		"scissorEnable" : 1,
 		"depthState" : {
 			"writable": 1,
