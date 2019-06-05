@@ -322,13 +322,12 @@ namespace Nix {
     struct VertexBufferDescription {
         uint32_t stride;
         uint32_t instanceMode;
-        uint32_t rate;
         VertexBufferDescription():
         stride(0),
-        instanceMode(0),
-        rate(1){
+        instanceMode(0)
+		{
         }
-		NIX_JSON( stride, instanceMode, rate )
+		NIX_JSON( stride, instanceMode )
     };
 
     struct VertexLayout {

@@ -29,6 +29,6 @@ void main()
 	worldPosition = worldPosition / worldPosition.w;
 	gl_Position = projection * view * worldPosition;
 	vec4 tNormal = model * vec4( normalize(vert_normal), 0.0f );
-	frag_brightness = dot( normalize(tNormal.xyz), normalize(light - worldPosition.xyz));
+	frag_brightness = 1.0f - clamp( dot( normalize(tNormal.xyz), normalize(light - worldPosition.xyz)), 0.0f, 1.0f);
 	gl_Position.y *= -1;
 }

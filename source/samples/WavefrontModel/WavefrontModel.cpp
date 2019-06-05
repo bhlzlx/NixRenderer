@@ -50,6 +50,7 @@ namespace Nix {
 		IBuffer*					m_indexBuffer;
 		uint32_t					m_indexCount;
 		IBuffer*					m_vertPosition;
+		uint32_t					m_vertCount;
 		IBuffer*					m_vertNormal;
 		//
 		IPipeline*					m_pipeline;
@@ -130,40 +131,39 @@ namespace Nix {
 					readRst = objReader.ParseFromString(objText, mtlText, objReaderConfig);
 					assert(readRst);
 
-					
-					std::vector<float> arrangedNormalData;
-					std::vector<uint16_t> arrangedIndicesBuffer;
-
-					const std::vector<float>& normalData = objReader.GetAttrib().normals;
-
-					auto normalBuffer = m_context->createStaticVertexBuffer(objReader.GetAttrib().normals.data(), sizeof(float) * objReader.GetAttrib().normals.size());
+					std::vector< glm::vec3 > positionData;
+					std::vector< glm::vec3 > normalData;
 		
 					const auto& shapes = objReader.GetShapes();
 					for (auto& shape : shapes) {
 						for (auto& index : shape.mesh.indices) {
 							// arrange the normal attribute
-							if (index.normal_index != -1) 
-							{
-								arrangedNormalData.push_back(normalData[index.normal_index] * 3);
-								arrangedNormalData.push_back(normalData[index.normal_index] * 3 + 1);
-								arrangedNormalData.push_back(normalData[index.normal_index] * 3 + 2);
-							}
-							else 
-							{
-								arrangedNormalData.push_back(0);
-								arrangedNormalData.push_back(1);
-								arrangedNormalData.push_back(0);
-							}
-							//
-							arrangedIndicesBuffer.push_back((uint16_t)index.vertex_index);
+							positionData.push_back(
+								glm::vec3(
+									objReader.GetAttrib().vertices[0 + index.vertex_index * 3],
+									objReader.GetAttrib().vertices[1 + index.vertex_index * 3],
+									objReader.GetAttrib().vertices[2 + index.vertex_index * 3]
+								)
+							);
 						}
 					}
+
+					for (uint32_t triangleIndex = 0; triangleIndex < positionData.size() / 3; ++triangleIndex) {
+						glm::vec3 vec1 = positionData[triangleIndex * 3 + 2] - positionData[triangleIndex * 3 + 1];
+						glm::vec3 vec2 = positionData[triangleIndex * 3 + 1] - positionData[triangleIndex * 3];
+						glm::vec3 normal = glm::cross(vec1, vec2);
+						normalData.push_back(normal);
+						normalData.push_back(normal);
+						normalData.push_back(normal);
+					}
+
+
 					m_renderable = m_material->createRenderable();
-					m_indexBuffer = m_context->createIndexBuffer(arrangedIndicesBuffer.data(), arrangedIndicesBuffer.size() * sizeof(uint16_t));
-					m_indexCount = arrangedIndicesBuffer.size();
-					m_vertPosition = m_context->createStaticVertexBuffer(objReader.GetAttrib().vertices.data(), sizeof(float) * objReader.GetAttrib().vertices.size());
-					m_vertNormal = m_context->createStaticVertexBuffer(arrangedNormalData.data(), sizeof(float) * arrangedNormalData.size());
-					m_renderable->setIndexBuffer( m_indexBuffer, 0);
+					//m_indexBuffer = m_context->createIndexBuffer(arrangedIndicesBuffer.data(), arrangedIndicesBuffer.size() * sizeof(uint16_t));
+					//m_indexCount = arrangedIndicesBuffer.size();
+					m_vertPosition = m_context->createStaticVertexBuffer( positionData.data(), positionData.size() * sizeof(glm::vec3) );
+					m_vertNormal = m_context->createStaticVertexBuffer(normalData.data(), sizeof(glm::vec3) * normalData.size());
+					m_vertCount = positionData.size();
 					m_renderable->setVertexBuffer( m_vertNormal, 0, 1);
 					m_renderable->setVertexBuffer( m_vertPosition, 0, 0);
 				}
@@ -221,7 +221,8 @@ namespace Nix {
 					m_mainRenderPass->bindArgument(m_argCommon);
 					m_mainRenderPass->bindArgument(m_argInstance);
 					//					
-					m_mainRenderPass->drawElements( m_renderable, 0, m_indexCount);
+					m_mainRenderPass->draw(m_renderable, 0, m_vertCount);
+					//m_mainRenderPass->drawElements( m_renderable, 0, m_indexCount);
 				}
 				m_mainRenderPass->end();
 

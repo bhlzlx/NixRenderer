@@ -19,12 +19,10 @@
 		"bufferCount" : 2,
 		"buffers" : [{
 			"stride": 12,
-			"instanceMode" : 0,
-			"rate" : 1
+			"instanceMode" : 0
 		},{
 			"stride": 12,
-			"instanceMode" : 0,
-			"rate" : 1
+			"instanceMode" : 0
 		}]
 	},
 	"argumentLayouts" : [{
