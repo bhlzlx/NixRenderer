@@ -4,9 +4,9 @@
 
 layout (location = 0) in vec3 vert_position;
 layout (location = 1) in vec3 vert_normal;
+layout (location = 2) in vec3 vert_uv;
 
 layout (location = 0) out float	frag_brightness;
-
 
 out gl_PerVertex 
 {
@@ -29,6 +29,6 @@ void main()
 	worldPosition = worldPosition / worldPosition.w;
 	gl_Position = projection * view * worldPosition;
 	vec4 tNormal = model * vec4( normalize(vert_normal), 0.0f );
-	frag_brightness = dot( normalize(tNormal.xyz), normalize(light - worldPosition.xyz));
+	frag_brightness = dot( normalize(tNormal.xyz), normalize(light - worldPosition.xyz ));
 	gl_Position.y *= -1;
 }

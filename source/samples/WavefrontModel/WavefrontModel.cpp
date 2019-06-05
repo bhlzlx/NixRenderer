@@ -19,6 +19,14 @@
 
 namespace Nix {
 
+	struct Config {
+		float eye[3];
+		float lookat[3];
+		float up[3];
+		float light[3];
+		NIX_JSON(eye, lookat, up, light)
+	};
+
 	class WavefrontModel : public NixApplication {
 	private:
 		IArchieve*					m_arch;
@@ -49,6 +57,7 @@ namespace Nix {
 		glm::mat4					m_model;
 		glm::mat4					m_view;
 		glm::mat4					m_projection;
+		glm::vec3					m_light;
 
 		//
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve ) {
@@ -133,7 +142,8 @@ namespace Nix {
 					for (auto& shape : shapes) {
 						for (auto& index : shape.mesh.indices) {
 							// arrange the normal attribute
-							if (index.normal_index != -1) {
+							if (index.normal_index != -1) 
+							{
 								arrangedNormalData.push_back(normalData[index.normal_index] * 3);
 								arrangedNormalData.push_back(normalData[index.normal_index] * 3 + 1);
 								arrangedNormalData.push_back(normalData[index.normal_index] * 3 + 2);
@@ -158,6 +168,20 @@ namespace Nix {
 					m_renderable->setVertexBuffer( m_vertPosition, 0, 0);
 				}
 			}
+
+			Config config;
+			{
+				Nix::TextReader cfgReader;
+				cfgReader.openFile(_archieve, "config/lowpoly.json");
+				config.parse(cfgReader.getText());
+			}
+			m_view = glm::lookAt(
+				glm::vec3(config.eye[0], config.eye[1], config.eye[2]),
+				glm::vec3(config.lookat[0], config.lookat[1], config.lookat[2]),
+				glm::vec3(config.up[0], config.up[1], config.up[2])
+			);
+			m_light = glm::vec3(config.light[0], config.light[1], config.light[2]);
+
 			return true;
 		}
 
@@ -171,8 +195,7 @@ namespace Nix {
 			ss.origin = { 0, 0 };
 			ss.size = { (int)_width, (int)_height };
 			//
-			m_projection = glm::perspective<float>(90, (float)_width / (float)_height, 0.01f, 200.0f);
-			m_view = glm::lookAt(glm::vec3( -120, 20 , 0), glm::vec3(0, 0, 0), glm::vec3(0,1,0));
+			m_projection = glm::perspective<float>(90, (float)_width / (float)_height, 0.01f, 400.0f);
 			m_pipeline->setViewport(vp);
 			m_pipeline->setScissor(ss);
 		}
@@ -186,13 +209,12 @@ namespace Nix {
 			static float angle = 0.0f;
 			angle += 0.01;
 			m_model = glm::rotate<float>(glm::mat4(), angle / 180.0f * 3.1415926, glm::vec3(0,1,0));
-			glm::vec3 light(200, 200, 0);
 			if (m_context->beginFrame()) {
 				m_mainRenderPass->begin(m_primQueue); {
 					glm::mat4x4 identity;
 					m_argCommon->setUniform(m_matGlobal, 0, &m_projection, 64);
 					m_argCommon->setUniform(m_matGlobal, 64, &m_view, 64);
-					m_argCommon->setUniform(m_matGlobal, 128, &light, sizeof(light));
+					m_argCommon->setUniform(m_matGlobal, 128, &m_light, sizeof(m_light));
 					m_argInstance->setUniform(m_matLocal, 0, &m_model, 64);
 					//
 					m_mainRenderPass->bindPipeline(m_pipeline);
@@ -200,7 +222,6 @@ namespace Nix {
 					m_mainRenderPass->bindArgument(m_argInstance);
 					//					
 					m_mainRenderPass->drawElements( m_renderable, 0, m_indexCount);
-					
 				}
 				m_mainRenderPass->end();
 

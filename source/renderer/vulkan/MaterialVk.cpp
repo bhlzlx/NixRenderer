@@ -151,6 +151,7 @@ namespace Nix {
 
 		//\ 1 - vertex layout validation
 		if (_desc.vertexLayout.attributeCount != vertexResource.stage_inputs.size()) {
+			_context->getDriver()->getLogger()->error("vertex attribute count mismatch! ");
 			return nullptr;
 		}
 		for (auto& vertexInput : vertexResource.stage_inputs) {
