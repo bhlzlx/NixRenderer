@@ -1,6 +1,7 @@
 #include <windows.h>
 #include "Resource.h"
 #include <NixApplication.h>
+#include <Nix/io/archieve.h>
 #include <string>
 #include <regex>
 
@@ -11,8 +12,6 @@ WCHAR szTitle[MAX_LOADSTRING];
 WCHAR szWindowClass[MAX_LOADSTRING];            
 
 NixApplication* object = nullptr;
-
-EGLContextInfo context;
 
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
@@ -61,7 +60,8 @@ int APIENTRY wWinMain
 		else
 		{
 			object->tick();
-			eglSwapBuffers(context.display, context.surface);
+			//eglSwapBuffers(context.display, context.surface);
+			Sleep(0);
 		}
 	}
 
@@ -99,11 +99,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	if (!hWnd) {
 		return FALSE;
 	}
-	context.nativeWindow = hWnd;
-	context.nativeDisplay = GetDC(hWnd);
-	bool rst = InitOpenGLES30Context(context);
-	if (!rst)
-		return FALSE;
+
 	object = GetApplication();
 
 	char pathBuff[256];
@@ -117,10 +113,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	if (succees) {
 		assetRoot = result[1];
 	}
-	assetRoot.append("/../");
-	auto archieve = nix::CreateStdArchieve( assetRoot );
-	if (!object->initialize(hWnd, archieve))
-	{
+	assetRoot.append("/../../");
+	auto archieve = Nix::CreateStdArchieve( assetRoot );
+	if (!object->initialize(hWnd, archieve)) {
 		return FALSE;
 	}
 	//

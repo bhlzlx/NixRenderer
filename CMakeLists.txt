@@ -2,8 +2,7 @@
 # 并包含子项目。
 #
 cmake_minimum_required (VERSION 3.4)
-
-project ( NixGraphics )
+project(NixGraphics)
 # if( ANDROID )
 # elseif( APPLE )
 #     if( IOS )
@@ -12,8 +11,8 @@ project ( NixGraphics )
 # elseif( WIN32 )
 # endif
 
-#set( WINDOW_SYSTEM Win32 )
-set( WINDOW_SYSTEM SDL2 )
+set( WINDOW_SYSTEM Win32 )
+#set( WINDOW_SYSTEM SDL2 )
 # set build variable && output directory
 if( ANDROID )
     # android platform

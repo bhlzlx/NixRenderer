@@ -211,7 +211,7 @@ namespace Nix {
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve ) {
 			printf("%s", "Sphere is initializing!");
 
-			HMODULE library = ::LoadLibrary("NixVulkan.dll");
+			HMODULE library = ::LoadLibraryA("NixVulkan.dll");
 			assert(library);
 
 			typedef IDriver*(* PFN_CREATE_DRIVER )();

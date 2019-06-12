@@ -20,6 +20,9 @@ if( ANDROID )
     SET_PROPERTY(TARGET NixApp PROPERTY FOLDER "Samples")
 else()
     if( WIN32 )
+	
+		add_definitions(-DUNICODE -D_UNICODE)
+		
         add_subdirectory( HelloWorld )
         add_subdirectory( ClearScreen )
         add_subdirectory( Triangle )
