@@ -5,7 +5,7 @@
 layout (location = 0) in vec3 vert_position;
 layout (location = 1) in vec3 vert_normal;
 
-layout (location = 0) out float	frag_brightness;
+layout (location = 0) out flat float frag_brightness;
 
 
 out gl_PerVertex 

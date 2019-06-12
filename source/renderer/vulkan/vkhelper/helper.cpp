@@ -1,5 +1,5 @@
 #include <NixRenderer.h>
-#include "../vkinc.h"
+#include "../VkInc.h"
 #include <vector>
 #include <string>
 #include <cassert>

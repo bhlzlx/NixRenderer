@@ -73,9 +73,9 @@ if( ANDROID )
     target_link_libraries(
         NixVulkan
         #OGLCompiler
-        SPIRV
-        glslang
-        OSDependent
+        #SPIRV
+        #glslang
+        #OSDependent
         spirv-cross-core
         nix
 		log

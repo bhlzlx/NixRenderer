@@ -1,5 +1,5 @@
 #pragma once
-#include "vkinc.h"
+#include "VkInc.h"
 #include <string>
 #include <vector>
 #include <set>

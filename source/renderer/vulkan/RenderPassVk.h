@@ -1,13 +1,14 @@
 #pragma once
 #include <NixRenderer.h>
 #include <map>
-#include "vkinc.h"
+#include "VkInc.h"
 #include <vector>
 #include <cassert>
 
 namespace Nix {
 
 	class TextureVk;
+    class ContextVk;
 
 	class NIX_API_DECL AttachmentVk:public IAttachment {
 		friend class ContextVk;

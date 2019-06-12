@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include <NixRenderer.h>
-#include "vkinc.h"
+#include "VkInc.h"
 
 namespace Nix {
 
@@ -235,7 +235,7 @@ namespace Nix {
 			break;
 		case Clear:return VK_ATTACHMENT_LOAD_OP_CLEAR;
 			break;
-		case DontCare:VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		case DontCare:return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			break;
 		}
 		return VK_ATTACHMENT_LOAD_OP_CLEAR;

@@ -150,7 +150,7 @@ namespace Nix {
 		delete _argument;
 	}
 
-	inline ArgumentAllocator::~ArgumentAllocator() {
+	ArgumentAllocator::~ArgumentAllocator() {
 
 	}
 

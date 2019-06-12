@@ -2,7 +2,7 @@
 #include <NixRenderer.h>
 #include <vector>
 #include "UniformVk.h"
-#include "vkinc.h"
+#include "VkInc.h"
 
 namespace Nix {
 	class PipelineVk;

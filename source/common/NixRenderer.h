@@ -656,6 +656,7 @@ namespace Nix {
 		virtual IRenderPass* getRenderPass() = 0;
 		virtual IDriver* getDriver() = 0;
 		virtual void release() = 0;
+        virtual ~IContext() { }
     };
  }
 

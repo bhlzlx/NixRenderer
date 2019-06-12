@@ -1,5 +1,5 @@
 #pragma once
-#include "vkinc.h"
+#include "VkInc.h"
 //
 extern PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT;
 extern PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT;

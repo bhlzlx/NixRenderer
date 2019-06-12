@@ -573,7 +573,7 @@ namespace Nix {
 			{ // subresourceRange 
 				VK_IMAGE_ASPECT_COLOR_BIT, // aspectMask 
 				0, // baseMipLevel 
-				_upload.mipDataOffsets.size(), // levelCount
+				(uint32_t)_upload.mipDataOffsets.size(), // levelCount
 				_upload.baseMipRegion.baseLayer + _upload.baseMipRegion.offset.z, // baseArrayLayer
 				_upload.baseMipRegion.size.depth // layerCount
 			}
@@ -591,7 +591,7 @@ namespace Nix {
 			{ // subresourceRange 
 				VK_IMAGE_ASPECT_COLOR_BIT, // aspectMask 
 				0, // baseMipLevel 
-				_upload.mipDataOffsets.size(), // levelCount
+				(uint32_t)_upload.mipDataOffsets.size(), // levelCount
 				_upload.baseMipRegion.baseLayer + _upload.baseMipRegion.offset.z, // baseArrayLayer
 				_upload.baseMipRegion.size.depth // layerCount
 			}

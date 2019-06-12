@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include <NixRenderer.h>
-#include "vkinc.h"
+#include "VkInc.h"
 #ifdef _MINWINDEF_
 #ifdef min
 #undef min

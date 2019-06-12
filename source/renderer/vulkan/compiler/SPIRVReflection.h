@@ -22,7 +22,7 @@
 #pragma once
 
 #include <vector>
-//#include <vkinc.h>
+//#include <VkInc.h>
 #include "VEZ.h"
 
 namespace vez

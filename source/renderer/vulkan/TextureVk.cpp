@@ -149,7 +149,10 @@ namespace Nix {
 			VmaAllocationCreateInfo allocInfo = {}; {
 				allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 			};
-			vmaCreateImage( _context->getVmaAllocator(), &info, &allocInfo, &_image, &allocation, nullptr);
+			VkResult rst = vmaCreateImage( _context->getVmaAllocator(), &info, &allocInfo, &_image, &allocation, nullptr);
+            if( rst != VK_SUCCESS ){
+                return nullptr;
+            }
 		}
 		
 		if (vkhelper::isDepthFormat(format))

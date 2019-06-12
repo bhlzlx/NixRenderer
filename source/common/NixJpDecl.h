@@ -57,12 +57,12 @@ _value.AddMember( #item, v##item, _allocator );\
 
 // 枚举
 template < class T >
-typename std::enable_if< std::is_enum< typename T >::value, bool >::type WriteItemAllType(rapidjson::Value& _object, T& _type, rapidjson::Document::AllocatorType& _allocator) {
+typename std::enable_if< std::is_enum< T >::value, bool >::type WriteItemAllType(rapidjson::Value& _object, T& _type, rapidjson::Document::AllocatorType& _allocator) {
 	auto it1 = NixJsonEnumTable.find(typeid(T).hash_code());
 	if (it1 != NixJsonEnumTable.end()) {
 		for (auto& p : it1->second) {
 			if (p.second == (uint32_t)_type) {
-				_object.SetString(p.first.c_str(), p.first.length());
+				_object.SetString(p.first.c_str(), (rapidjson::SizeType)p.first.length());
 				return true;
 			}
 		}
@@ -74,7 +74,7 @@ typename std::enable_if< std::is_enum< typename T >::value, bool >::type WriteIt
 
 // 非枚举
 template < class T >
-typename std::enable_if< !std::is_enum< typename T >::value, bool >::type WriteItemAllType(rapidjson::Value& _object, T& _type, rapidjson::Document::AllocatorType& _allocator) {
+typename std::enable_if< !std::is_enum< T >::value, bool >::type WriteItemAllType(rapidjson::Value& _object, T& _type, rapidjson::Document::AllocatorType& _allocator) {
 	return WriteItem(_object, _type, _allocator);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -122,7 +122,7 @@ bool WriteItem<int64_t>(rapidjson::Value& _object, int64_t& _type, rapidjson::Do
 
 template <>
 bool WriteItem<std::string>(rapidjson::Value& _object, std::string& _type, rapidjson::Document::AllocatorType& _allocator) {
-	_object.SetString( _type.c_str(), _type.length()); return true;
+	_object.SetString( _type.c_str(), (rapidjson::SizeType)_type.length()); return true;
 }
 
 template <>
@@ -144,7 +144,7 @@ bool WriteMember_(rapidjson::Value& _object, T& _type, rapidjson::Document::Allo
 template< class T, const size_t N >
 bool WriteMember_(rapidjson::Value& _object, T(&_type)[N], rapidjson::Document::AllocatorType& _allocator) {
 	_object.SetArray();
-	rapidjson::Value::Array& arr = _object.GetArray();
+	rapidjson::Value::Array arr = _object.GetArray();
 	arr.Reserve(N, _allocator);
 	for ( auto& ele : _type ) {
 		rapidjson::Value obj;
@@ -156,15 +156,15 @@ bool WriteMember_(rapidjson::Value& _object, T(&_type)[N], rapidjson::Document::
 
 template< const size_t N >
 bool WriteMember_(rapidjson::Value& _object, char(&_type)[N], rapidjson::Document::AllocatorType& _allocator) {
-	_object.SetString(&_type[0], strlen(&_type[0]));
+	_object.SetString(&_type[0], (rapidjson::SizeType)strlen(&_type[0]));
 	return true;
 }
 
 template< class T >
 bool WriteMember_(rapidjson::Value& _object, std::vector<T>& _type, rapidjson::Document::AllocatorType& _allocator) {
 	_object.SetArray();
-	rapidjson::Value::Array& arr = _object.GetArray();
-	arr.Reserve(_type.size(), _allocator);
+	rapidjson::Value::Array arr = _object.GetArray();
+	arr.Reserve((rapidjson::SizeType)_type.size(), _allocator);
 	for (auto& ele : _type) {
 		rapidjson::Value obj;
 		WriteItemAllType(obj, ele, _allocator);
@@ -184,45 +184,17 @@ bool WriteMember(rapidjson::Value& _object, T& _type, rapidjson::Document::Alloc
 #define DEFINE_JSON_PARSE_FUNC_BEGIN void parse( const char * _text ) {\
 rapidjson::Document doc;\
 doc.Parse(_text);\
-if(doc.HasParseError()) return; parse(doc.GetObject()); }\
+auto obj = doc.GetObject();\
+if(doc.HasParseError()) return; parse(obj); }\
 void parse(rapidjson::Value::Object& _object) {\
 
 #define PITEM__( item ) \
-	auto& iter##item = _object.FindMember(#item);\
+	auto iter##item = _object.FindMember(#item);\
 	if ( iter##item != _object.end()) {\
 	ParseAttribute(iter##item->value, item);}\
 
 
 #define DEFINE_JSON_PARSE_FUNC_END }
-
-template < class T >
-typename std::enable_if< std::is_enum< typename T >::value, bool >::type ParseJsonAllSupportType(rapidjson::Value& _object, T& _value) {
-	if (_object.IsString()) {
-		auto it1 = NixJsonEnumTable.find(typeid(T).hash_code());
-		if (it1 != NixJsonEnumTable.end()) {
-			auto it2 = it1->second.find(std::string(_object.GetString()));
-			if (it2 != it1->second.end()) {
-				_value = (T)it2->second;
-				return true;
-			} else {
-				return false;
-			}
-		}else{
-			return false;
-		}
-	}
-	else
-	{
-		_value = (T)_object.GetInt();
-		return true;
-	}
-}
-
-template < class T >
-typename std::enable_if< !std::is_enum<typename T>::value, bool >::type ParseJsonAllSupportType(rapidjson::Value& _object, T& _value) {
-	return ParseJsonItem(_object, _value);
-}
-
 
 template < class T >
 bool ParseJsonItem(rapidjson::Value& _object, T& _value) {
@@ -279,6 +251,35 @@ bool ParseJsonItem<bool>(rapidjson::Value& _object, bool& _value) {
 	return true;
 }
 
+
+template < class T >
+typename std::enable_if< std::is_enum< T >::value, bool >::type ParseJsonAllSupportType(rapidjson::Value& _object, T& _value) {
+	if (_object.IsString()) {
+		auto it1 = NixJsonEnumTable.find(typeid(T).hash_code());
+		if (it1 != NixJsonEnumTable.end()) {
+			auto it2 = it1->second.find(std::string(_object.GetString()));
+			if (it2 != it1->second.end()) {
+				_value = (T)it2->second;
+				return true;
+			} else {
+				return false;
+			}
+		}else{
+			return false;
+		}
+	}
+	else
+	{
+		_value = (T)_object.GetInt();
+		return true;
+	}
+}
+
+template < class T >
+typename std::enable_if< !std::is_enum<T>::value, bool >::type ParseJsonAllSupportType(rapidjson::Value& _object, T& _value) {
+	return ParseJsonItem(_object, _value);
+}
+
 template< class T >
 bool ParseMember_(rapidjson::Value& _object, T& _type) {
 	return ParseJsonAllSupportType(_object, _type);
@@ -287,8 +288,8 @@ bool ParseMember_(rapidjson::Value& _object, T& _type) {
 template< class T, const size_t N >
 bool ParseMember_(rapidjson::Value& _object, T(&_type)[N]) {
 	if (_object.IsArray()) {
-		auto& arr = _object.GetArray();
-		for (size_t i = 0; i < arr.Size() && i < N; ++i) {
+		auto arr = _object.GetArray();
+		for (rapidjson::SizeType i = 0; i < arr.Size() && i < N; ++i) {
 			ParseJsonAllSupportType(arr[i], _type[i]);
 		}
 		return true;
@@ -308,7 +309,7 @@ bool ParseMember_(rapidjson::Value& _object, char(&_type)[N]) {
 template< class T >
 bool ParseMember_(rapidjson::Value& _object, std::vector<T>& _type) {
 	if (_object.IsArray()) {
-		auto& arr = _object.GetArray();
+		auto arr = _object.GetArray();
 		for (auto& item : arr) {
 			_type.resize(_type.size() + 1);
 			ParseJsonAllSupportType(item, _type.back());
@@ -352,4 +353,6 @@ bool ParseAttribute(rapidjson::Value& _object, T& _type) {
 #define DEFINE_JSON_X_PARSE(...) DEFINE_JSON_PARSE_FUNC_BEGIN DEFINE_JSON_X_PARSE_ATTRS(__VA_ARGS__) DEFINE_JSON_PARSE_FUNC_END
 #define DEFINE_JSON_X_SAVE(...) DEFINE_JSON_SAVE_FUNC_BEGIN DEFINE_JSON_X_SAVE_ATTRS(__VA_ARGS__) DEFINE_JSON_SAVE_FUNC_END
 
-#define NIX_JSON(...) DEFINE_JSON_X_BEGIN  DEFINE_JSON_X_PARSE(__VA_ARGS__)  DEFINE_JSON_X_SAVE(__VA_ARGS__)  DEFINE_JSON_X_END
+#define NIX_JSON(...) DEFINE_JSON_X_BEGIN  DEFINE_JSON_X_PARSE(__VA_ARGS__)  DEFINE_JSON_X_END
+
+//DEFINE_JSON_X_SAVE(__VA_ARGS__)

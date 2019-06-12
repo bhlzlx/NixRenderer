@@ -1,5 +1,5 @@
 #pragma once
-#include "vkinc.h"
+#include "VkInc.h"
 #include <NixRenderer.h>
 
 namespace Nix {
@@ -49,10 +49,10 @@ namespace Nix {
 		// ------------------------------------------------------------------------
 		//     drawing
 		// ------------------------------------------------------------------------
-		void RenderableVk::draw(VkCommandBuffer _commandBuffer, uint32_t _vertexOffset, uint32_t _vertexCount);
-		void RenderableVk::drawElements(VkCommandBuffer _commandBuffer, uint32_t _indexOffset, uint32_t _indexCount);
-		void RenderableVk::drawInstanced(VkCommandBuffer _commandBuffer, uint32_t _vertexOffset, uint32_t _vertexCount, uint32_t _baseInstance, uint32_t _instanceCount);
-		void RenderableVk::drawElementInstanced(VkCommandBuffer _commandBuffer, uint32_t _indexOffset, uint32_t _indexCount, uint32_t _baseInstance, uint32_t _instanceCount);
+		void draw(VkCommandBuffer _commandBuffer, uint32_t _vertexOffset, uint32_t _vertexCount);
+		void drawElements(VkCommandBuffer _commandBuffer, uint32_t _indexOffset, uint32_t _indexCount);
+		void drawInstanced(VkCommandBuffer _commandBuffer, uint32_t _vertexOffset, uint32_t _vertexCount, uint32_t _baseInstance, uint32_t _instanceCount);
+		void drawElementInstanced(VkCommandBuffer _commandBuffer, uint32_t _indexOffset, uint32_t _indexCount, uint32_t _baseInstance, uint32_t _instanceCount);
 		//
 		virtual void release() override;
 

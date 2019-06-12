@@ -96,7 +96,7 @@ namespace Nix {
 		allocatorInfo.device = context->m_logicalDevice;
 		rst = vmaCreateAllocator(&allocatorInfo, &context->m_vmaAllocator);
 		if (rst != VK_SUCCESS)
-			return false;
+			return nullptr;
 		//DVBOVk::Initialize();
 		context->m_uniformAllocator.initialize( context );
 		context->m_argumentAllocator.initialize(context);
@@ -310,7 +310,7 @@ namespace Nix {
 		m_swapchain.present();
 	}
 
-	inline IGraphicsQueue* ContextVk::getGraphicsQueue(uint32_t _index) {
+	IGraphicsQueue* ContextVk::getGraphicsQueue(uint32_t _index) {
 		return m_graphicsQueue;
 	}
 }

@@ -5,7 +5,7 @@
 #include <cassert>
 #include <vector>
 #include <NixRenderer.h>
-#include "vkinc.h"
+#include "VkInc.h"
 
 namespace Nix {
 

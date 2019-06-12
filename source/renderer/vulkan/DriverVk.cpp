@@ -1,6 +1,6 @@
 #include "DriverVk.h"
 #include <NixRenderer.h>
-#include "vkinc.h"
+#include "VkInc.h"
 #include "vkhelper/helper.h"
 #include <nix/io/archieve.h>
 #include <map>
@@ -9,7 +9,7 @@
 #include <Windows.h>
 #endif
 #ifdef __ANDROID__
-//#include 
+#include <dlfcn.h>
 #endif
 
 #undef REGIST_VULKAN_FUNCTION
@@ -25,7 +25,7 @@
 PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR;
 #elif defined __ANDROID__
 #include <vulkan/vulkan_android.h>
-PFN_vkCreateAndroidSurfaceKHR vkCreateWin32SurfaceKHR;
+PFN_vkCreateAndroidSurfaceKHR vkCreateAndroidSurfaceKHR;
 #endif
 
 namespace Nix {
@@ -98,7 +98,7 @@ namespace Nix {
 			VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR,  // sType
 			nullptr,// pNext
 			0, // flag
-			(ANativeWindow*)_wnd
+			(ANativeWindow*)_hwnd
 		};
 		rst = vkCreateAndroidSurfaceKHR(m_instance, &surface_create_info, nullptr, &surface);
 #endif

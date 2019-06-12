@@ -23,7 +23,7 @@
 
 #include <string>
 #include <vector>
-#include "../vkinc.h"
+#include "../VkInc.h"
 
 namespace vez
 {

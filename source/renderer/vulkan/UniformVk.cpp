@@ -50,7 +50,7 @@ namespace Nix {
 		m_freeList.push_back(_allocation);
 	}
 
-	inline UniformPool::~UniformPool() {
+	UniformPool::~UniformPool() {
 	}
 
 	void UniformAllocator::initialize(ContextVk* _context)
@@ -62,8 +62,15 @@ namespace Nix {
 		while (unitSize <= 2048) {
 			m_vecPool.resize(m_vecPool.size() + 1);
 			uint32_t unitCount = 64;
-			if (unitSize == 128) {
-				unitCount = 2048; // 256KB * MaxFlightCount
+
+			if (unitSize <= 32) {
+				unitCount = 2048; // 256 KB * MaxFlightCount
+			}
+			else if (unitSize == 64) {
+				unitCount = 1024; // 256 KB * MaxFlightCount
+			}
+			else if (unitSize == 128) {
+				unitCount = 1024; // 256KB * MaxFlightCount
 			}
 			else if (unitSize == 256) {
 				unitCount = 1024; // 256 KB * MaxFlightCount

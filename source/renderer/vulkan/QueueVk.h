@@ -1,7 +1,7 @@
 #pragma once
 
 #include <NixRenderer.h>
-#include "vkinc.h"
+#include "VkInc.h"
 #include <vector>
 #include <thread>
 #include <mutex>
@@ -14,6 +14,7 @@ namespace Nix {
 	class SwapchainVk;
 	class BufferVk;
 	class TextureVk;
+    class ContextVk;
 
 	struct BufferImageUpload {
 		const void*						data;

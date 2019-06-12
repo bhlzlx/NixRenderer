@@ -1,5 +1,5 @@
 #pragma once
-#include "../vkinc.h"
+#include "../VkInc.h"
 #ifdef _WIN32
 #include <Windows.h>
 #endif

@@ -1,5 +1,5 @@
 #pragma once
-#include "vkinc.h"
+#include "VkInc.h"
 #include <NixRenderer.h>
 #include <list>
 #include <array>

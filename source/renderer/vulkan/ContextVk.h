@@ -1,7 +1,7 @@
 #pragma once
 #include <NixRenderer.h>
 #include "UniformVk.h"
-#include "vkinc.h"
+#include "VkInc.h"
 #include "SwapchainVk.h"
 #include "DescriptorSetVk.h"
 #include "DebuggerVk.h"
