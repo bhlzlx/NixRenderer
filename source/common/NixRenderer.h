@@ -635,6 +635,10 @@ namespace Nix {
 
     class NIX_API_DECL IContext {
 	public:
+		// for android platform
+		virtual bool resume(void* _wnd) = 0;
+		virtual bool suspend() = 0;
+		//
 		virtual IBuffer* createStaticVertexBuffer( const void* _data, size_t _size) = 0;
 		virtual IBuffer* createCahcedVertexBuffer(size_t _size) = 0;
 		virtual IBuffer* createIndexBuffer(const void* _data, size_t _size) = 0;
