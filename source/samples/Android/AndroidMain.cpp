@@ -35,6 +35,7 @@ namespace Nix {
 
 	class NixApp : public NixApplication {
 	private:
+        //
 		IDriver*					m_driver;
 		IContext*					m_context;
 		IRenderPass*				m_mainRenderPass;
@@ -57,7 +58,6 @@ namespace Nix {
 		IPipeline*					m_pipeline;
 
 		ITexture*					m_texture;
-
 		//
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve ) {
 			printf("%s", "NixApp is initializing!");
@@ -181,6 +181,13 @@ namespace Nix {
 		virtual uint32_t rendererType() {
 			return 0;
 		}
+
+        virtual void pause() {
+            m_context->suspend();
+        }
+        virtual void resume( void* _wnd, uint32_t _width, uint32_t _height ) {
+            m_context->resume( _wnd, _width, _height);
+        }
 	};
 }
 
@@ -208,15 +215,27 @@ Java_com_kusugawa_NixRenderer_VkRenderer_onInitialize(
                                             jobject     _assetManager
                                             )
 {
-	NixApplication* application = GetApplication();
-	ANativeWindow* nativeWindow = ANativeWindow_fromSurface( _env, _surface );
-    int length = (_env)->GetStringUTFLength(_documentPath);
-    const char* jstr = (_env)->GetStringUTFChars(_documentPath, nullptr);
-    std::string documentPath( jstr, jstr+length );
-    int size = 0;
-    Nix::IArchieve* arch = Nix::CreateStdArchieve(documentPath);
-	application->initialize(nativeWindow, arch);
-	//application->resize( _width, _height );
+    static bool initialized = false;
+    static jobject currentSurface = NULL;
+    if( !initialized ) {
+        NixApplication* application = GetApplication();
+        ANativeWindow* nativeWindow = ANativeWindow_fromSurface( _env, _surface );
+        currentSurface = _surface;
+        int length = (_env)->GetStringUTFLength(_documentPath);
+        const char* jstr = (_env)->GetStringUTFChars(_documentPath, nullptr);
+        std::string documentPath( jstr, jstr+length );
+        int size = 0;
+        Nix::IArchieve* arch = Nix::CreateStdArchieve(documentPath);
+        application->initialize(nativeWindow, arch);
+        initialized = true;
+    }
+    else
+    {
+        NixApplication* application = GetApplication();
+        ANativeWindow* nativeWindow = ANativeWindow_fromSurface( _env, _surface );
+        application->resume(nativeWindow, _width, _height);
+        currentSurface = _surface;
+    }
     return;
 }
 
@@ -251,5 +270,33 @@ Java_com_kusugawa_NixRenderer_VkRenderer_onDestroy(
 {
     NixApplication* application = GetApplication();
     application->release();
+    return;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_kusugawa_NixRenderer_VkRenderer_onResume(
+                                            JNIEnv*     _env,
+                                            jobject     _this,
+                                            jobject     _surface,
+                                            jint        _width,
+                                            jint        _height
+                                            )
+{
+    NixApplication* application = GetApplication();
+
+    ANativeWindow* nativeWindow = ANativeWindow_fromSurface( _env, _surface );
+
+    application->resume(nativeWindow, _width, _height);
+    return;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_kusugawa_NixRenderer_VkRenderer_onPause(
+                                            JNIEnv*     _env,
+                                            jobject     _this
+                                            )
+{
+    NixApplication* application = GetApplication();
+    application->pause();
     return;
 }

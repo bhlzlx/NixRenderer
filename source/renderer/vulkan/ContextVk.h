@@ -8,6 +8,7 @@
 #include "vk_mem_alloc.h"
 #include <nix/io/archieve.h>
 #include <vector>
+#include <mutex>
 
 #define PIPELINE_CACHE_FILENAME "pipeline_cache.bin"
 
@@ -24,6 +25,8 @@ namespace Nix {
 		//friend class ViewVk;
 		friend class DriverVk;
 	private:
+
+        std::mutex              m_tickMutex;
 		DriverVk* m_driver;
 		//
 		VkPhysicalDevice		m_physicalDevice;
@@ -112,5 +115,9 @@ namespace Nix {
 		virtual IGraphicsQueue* getGraphicsQueue(uint32_t _index) override;
 		virtual inline IRenderPass* getRenderPass() override { return m_swapchain.renderPass(); }
 		virtual void release() override;
+		// for android platform
+		virtual bool resume(void* _wnd, uint32_t _width, uint32_t _height) override;
+		virtual bool suspend() override;
+
 	};
 }

@@ -37,6 +37,13 @@ public:
 	virtual void tick() = 0;
 	virtual const char * title() = 0;
 	virtual uint32_t rendererType() = 0;
+    virtual void pause() {
+        
+    }
+    virtual void resume( void* _wnd, uint32_t _width, uint32_t _height ) {
+
+    }
+
 	virtual void onKeyEvent(unsigned char _key, eKeyEvent _event) {
 
 	}

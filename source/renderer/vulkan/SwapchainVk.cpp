@@ -94,9 +94,18 @@ namespace Nix {
 			return false;
 		}
 		//VkSwapchainKHR oldSwapchain = m_swapchain;
-		if (vkCreateSwapchainKHR( device, &m_createInfo, nullptr, &m_swapchain) != VK_SUCCESS)
+        VkResult rst = vkCreateSwapchainKHR( device, &m_createInfo, nullptr, &m_swapchain);
+		if ( rst != VK_SUCCESS)
 		{
-			return false;
+            if( VK_ERROR_NATIVE_WINDOW_IN_USE_KHR == rst ){
+                if (m_createInfo.oldSwapchain != VK_NULL_HANDLE){
+                    vkDestroySwapchainKHR(device, m_createInfo.oldSwapchain, nullptr);
+                    m_createInfo.oldSwapchain = VK_NULL_HANDLE;
+                }
+                rst = vkCreateSwapchainKHR( device, &m_createInfo, nullptr, &m_swapchain);
+            }else {
+                return false;
+            }
 		}
 		cleanup();
 		//
@@ -138,7 +147,6 @@ namespace Nix {
 			break;
 		case VK_ERROR_OUT_OF_DATE_KHR:
 		case VK_SUBOPTIMAL_KHR:
-			updateSwapchain();
 			return false;
 		default:
 			return false;

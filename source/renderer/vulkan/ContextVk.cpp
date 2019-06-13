@@ -173,6 +173,32 @@ namespace Nix {
 		delete this;
 	}
 
+	bool ContextVk::resume(void* _wnd, uint32_t _width, uint32_t _height )
+	{
+        m_tickMutex.lock();
+
+        if( m_surface ) {
+            return true;
+        }
+		m_surface = m_driver->createSurface(_wnd);
+		if (!m_surface) {
+			return false;
+		}
+		m_swapchain.resize(_width, _height);
+
+        m_tickMutex.unlock();
+		return true;
+	}
+
+	bool ContextVk::suspend()
+	{
+		vkQueueWaitIdle((const VkQueue &)*m_graphicsQueue);
+		//
+		vkDestroySurfaceKHR(m_driver->getInstance(), m_surface, nullptr);
+		m_surface = VK_NULL_HANDLE;
+		return true;
+	}
+
 	Nix::SwapchainVk* ContextVk::getSwapchain()
 	{
 		return &m_swapchain;
@@ -291,13 +317,25 @@ namespace Nix {
 
 	void ContextVk::resize(uint32_t _width, uint32_t _height)
 	{
-		m_swapchain.resize(_width, _height);
+	    m_tickMutex.lock();
+	    if( m_surface ) {
+		    m_swapchain.resize(_width, _height);
+	    }
+	    m_tickMutex.unlock();
 	}
 
 	bool ContextVk::beginFrame()
 	{
-		if (!m_swapchain.acquireNextImage())
+        m_tickMutex.lock();
+
+		if (!m_surface) {
+            m_tickMutex.unlock();
 			return false;
+		}
+		if (!m_swapchain.acquireNextImage()){
+            m_tickMutex.unlock();
+			return false;
+        }
 		m_graphicsQueue->beginFrame( m_swapchain.getFlightIndex());
 		GetDeferredDeletor().tick( m_swapchain.getFlightIndex());
 		++m_frameCounter;
@@ -308,6 +346,8 @@ namespace Nix {
 	{
 		m_graphicsQueue->endFrame();
 		m_swapchain.present();
+        //
+        m_tickMutex.unlock();
 	}
 
 	IGraphicsQueue* ContextVk::getGraphicsQueue(uint32_t _index) {

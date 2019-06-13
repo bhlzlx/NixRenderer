@@ -9,7 +9,7 @@
 #endif
 
 namespace Nix {
-	class APITest : public NixApplication {
+	class ClearScreen : public NixApplication {
 	private:
 		IDriver* m_driver;
 		IContext* m_context;
@@ -19,7 +19,7 @@ namespace Nix {
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve ) {
 			printf("%s", "APITest is initializing!");
 
-			HMODULE library = ::LoadLibrary("NixVulkan.dll");
+			HMODULE library = ::LoadLibraryA("NixVulkan.dll");
 			assert(library);
 
 			typedef IDriver*(* PFN_CREATE_DRIVER )();
@@ -71,7 +71,7 @@ namespace Nix {
 	};
 }
 
-Nix::APITest theapp;
+Nix::ClearScreen theapp;
 
 NixApplication* GetApplication() {
     return &theapp;
