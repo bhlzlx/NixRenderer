@@ -545,15 +545,31 @@ namespace Nix {
 				copy.imageOffset = {
 					(int32_t)baseOffsetX >> miplevel, (int32_t)baseOffsetY >> miplevel, (int32_t)_upload.baseMipRegion.offset.z
 				};
-				copy.imageExtent = {
-					baseWidth >> miplevel, baseHeight >> miplevel, _upload.baseMipRegion.size.depth
-				};
-				copy.imageSubresource = {
-					VK_IMAGE_ASPECT_COLOR_BIT, // only color texture supported
-					miplevel,
-					_upload.baseMipRegion.baseLayer,
-					_upload.baseMipRegion.size.depth
-				};
+				if (_texture->getDesc().type == Texture3D) {
+					copy.imageExtent = {
+						baseWidth >> miplevel, baseHeight >> miplevel, _upload.baseMipRegion.size.depth
+					};
+					copy.imageSubresource = {
+						VK_IMAGE_ASPECT_COLOR_BIT, // only color texture supported
+						miplevel,
+						_upload.baseMipRegion.baseLayer,
+						1
+						//_upload.baseMipRegion.size.depth
+					};
+				}
+				else
+				{
+					copy.imageExtent = {
+						baseWidth >> miplevel, baseHeight >> miplevel, 1
+					};
+					copy.imageSubresource = {
+						VK_IMAGE_ASPECT_COLOR_BIT, // only color texture supported
+						miplevel,
+						_upload.baseMipRegion.baseLayer,
+						_upload.baseMipRegion.size.depth
+					};
+				}
+				
 				copy.bufferOffset = _upload.mipDataOffsets[miplevel];
 				copy.bufferImageHeight = 0;
 				copy.bufferRowLength = 0;

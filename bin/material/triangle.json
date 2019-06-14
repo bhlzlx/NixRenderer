@@ -30,7 +30,7 @@
 			"binding" : 0,
 			"name" : "GlobalArgument",
 			"shaderStage" : "VertexShader",
-			"dataSize" : 128
+			"dataSize" : 132
 		},{
 			"type" : "SDT_Sampler",
 			"binding" : 1,
@@ -69,7 +69,7 @@
 			"cmpFunc" : "Greater"
 		},
 		"blendState" : {
-			"enable" : 0,
+			"enable" : 1,
 			"dscFactor" : "SourceAlpha",
 			"dstFactor" : "InvertSourceAlpha",
 			"op" : "BlendOpAdd"

@@ -122,14 +122,23 @@ namespace Nix {
 		{
 			ownershipFlags |= TextureVk::TexResOwnershipFlagBits::OwnImage;
 			VkImageCreateFlags imageFlags = 0;
-			if (_desc.type == TextureCube) {
+			VkImageType imageType = VK_IMAGE_TYPE_1D;
+			if (_desc.type == TextureCube || _desc.type == TextureCubeArray) {
 				imageFlags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+				imageType = VK_IMAGE_TYPE_2D;
 			}
+			else if (_desc.type == Texture2DArray) {
+				imageType = VK_IMAGE_TYPE_2D;
+			}
+			else if (_desc.type == Texture2D) {
+				imageType = VK_IMAGE_TYPE_2D;
+			}
+			
 			VkImageCreateInfo info; {
 				info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 				info.pNext = nullptr;
 				info.flags = imageFlags;
-				info.imageType = VK_IMAGE_TYPE_2D;
+				info.imageType = imageType;
 				info.format = NixFormatToVk(_desc.format);
 				info.extent = {
 					_desc.width, _desc.height, 1

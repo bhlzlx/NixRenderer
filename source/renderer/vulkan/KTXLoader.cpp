@@ -85,8 +85,12 @@ namespace Nix {
 				desc.type = Texture2DArray;
 				desc.depth = header->arraySize;
 			}
-			desc.type = Texture2D;
-			desc.depth = 1;
+			else
+			{
+				desc.type = Texture2D;
+				desc.depth = 1;
+			}
+			
 		}
 		desc.width = header->pixelWidth;
 		desc.height = header->pixelHeight;
@@ -107,9 +111,9 @@ namespace Nix {
 		for (uint32_t mipLevel = 0; mipLevel < header->mipLevelCount; ++mipLevel) {
 			offsets.push_back(pixelContentSize);
 			uint32_t mipBytes = *(uint32_t*)(ptr);
-			pixelContentSize += mipBytes * desc.depth;
+			pixelContentSize += mipBytes;// *desc.depth;
 			ptr += sizeof(mipBytes);
-			ptr += mipBytes * desc.depth;
+			ptr += mipBytes;// *desc.depth;
 		}
 		char * content = new char[pixelContentSize];
 		ptr = contentStart;
@@ -117,11 +121,15 @@ namespace Nix {
 		for (uint32_t mipLevel = 0; mipLevel < header->mipLevelCount; ++mipLevel) {
 			uint32_t mipBytes = *(uint32_t*)(ptr);
 			ptr += sizeof(mipBytes);
-			for (uint32_t arrayIndex = 0; arrayIndex < desc.depth; ++arrayIndex) {
-				memcpy(contentR, ptr, mipBytes);
-				ptr += mipBytes;
-				contentR += mipBytes;
-			}
+
+
+			memcpy(contentR, ptr, mipBytes);
+			ptr += mipBytes;
+			contentR += mipBytes;
+
+			/*for (uint32_t arrayIndex = 0; arrayIndex < desc.depth; ++arrayIndex) {
+				
+			}*/
 		}
 		TextureRegion region;
 		region.baseLayer = 0;

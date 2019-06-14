@@ -98,11 +98,11 @@ namespace Nix {
 			texDesc.type = Nix::TextureType::Texture2D;
 
 			//Nix::IFile * texFile = _archieve->open("texture/texture_bc3.ktx");
-			Nix::IFile * texFile = _archieve->open("texture/texture_bc3.dds");
+			Nix::IFile * texFile = _archieve->open("texture/texture_array_bc3.ktx");
 			Nix::IFile* texMem = CreateMemoryBuffer(texFile->size());
 			texFile->read(texFile->size(), texMem);
 			//m_texture = m_context->createTexture(texDesc);
-			m_texture = m_context->createTextureDDS(texMem->constData(), texMem->size());
+			m_texture = m_context->createTextureKTX(texMem->constData(), texMem->size());
 
 			bool rst = false;
 			m_material = m_context->createMaterial(mtlDesc); {
@@ -149,11 +149,19 @@ namespace Nix {
 		}
 
 		virtual void tick() {
+
+			static uint64_t tickCounter = 0;
+
+			tickCounter++;
+
+			float imageIndex = (tickCounter / 1024) % 4;
+
 			if (m_context->beginFrame()) {
 				m_mainRenderPass->begin(m_primQueue); {
 					glm::mat4x4 identity;
 					m_argCommon->setUniform(m_matGlobal, 0, &identity, 64);
 					m_argCommon->setUniform(m_matGlobal, 64, &identity, 64);
+					m_argCommon->setUniform(m_matGlobal, 128, &imageIndex, 4);
 					m_argInstance->setUniform(m_matLocal, 0, &identity, 64);
 					//
 					m_mainRenderPass->bindPipeline(m_pipeline);
@@ -169,7 +177,7 @@ namespace Nix {
 		}
 
 		virtual const char * title() {
-			return "Triangle";
+			return "Triangle (with Texture2D Array)";
 		}
 
 		virtual uint32_t rendererType() {
