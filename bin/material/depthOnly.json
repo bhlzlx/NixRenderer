@@ -1,0 +1,57 @@
+{
+	"vertexShader" : "early-z/early-z.vert.spv",
+	"fragmentShader" : "early-z/early-z.frag.spv",
+	"topologyMode" : "TMTriangleList",
+	"pologonMode" : "PMFill",
+	"vertexLayout" : {
+		"attributeCount" : 1,
+		"attributes" : [{
+			"name" : "vert_position",
+			"bufferIndex" : 0,
+			"offset" : 0,
+			"type" : "VertexTypeFloat3"
+		}],
+		"bufferCount" : 1,
+		"buffers" : [{
+			"stride": 12,
+			"instanceMode" : 0
+		}]
+	},
+	"argumentLayouts" : [{
+		"index" : 0,
+		"descriptors" : [{
+			"type" : "SDT_UniformBlock",
+			"binding" : 0,
+			"name" : "Argument",
+			"shaderStage" : "VertexShader"
+		}]
+	}],
+	"renderState" : {
+		"writeMask" : 15,
+		"cullMode" : "CullBack",
+		"windingMode" : "CounterClockwise",
+		"scissorEnable" : 1,
+		"depthState" : {
+			"writable": 1,
+			"testable" : 1,
+			"cmpFunc" : "LessEqual"
+		},
+		"stencilState" : {
+			"enable" : 0,
+			"opFail" : "StencilOpKeep",
+			"opZFail" : "StencilOpKeep",
+			"opPass" : "StencilOpKeep",
+			"enableCCW" : 0,
+			"opFailCCW" : "StencilOpKeep",
+			"opZFailCCW" : "StencilOpKeep",
+			"opPassCCW" : "StencilOpKeep",
+			"cmpFunc" : "Greater"
+		},
+		"blendState" : {
+			"enable" : 0,
+			"dscFactor" : "SourceAlpha",
+			"dstFactor" : "InvertSourceAlpha",
+			"op" : "BlendOpAdd"
+		}
+	}
+}

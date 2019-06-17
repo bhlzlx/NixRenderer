@@ -26,6 +26,5 @@ void main()
 {
 	gl_Position = vec4(vert_position, 1.0f);
 	frag_uv = vec3(vert_uv, imageArrayIndex);
-	//gl_Position = projection * view * model * vec4(vert_position, 1.0);
 	gl_Position.y *= -1;
 }

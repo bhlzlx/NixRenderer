@@ -1,0 +1,25 @@
+{
+	"colorCount" : 1,
+	"colors" : [{
+		"format" : "NixRGBA",
+		"multisample" : "MsaaNone",
+		"loadAction" : "DontCare",
+		"usage" : "AOU_ShaderRead"
+	},{
+		"format" : "NixBGRA8888_UNORM",
+		"multisample" : "MsaaNone",
+		"loadAction" : "DontCare",
+		"usage" : "AOU_ShaderRead"
+	},{
+		"format" : "NixBGRA8888_UNORM",
+		"multisample" : "MsaaNone",
+		"loadAction" : "DontCare",
+		"usage" : "AOU_ShaderRead"
+	}],
+	"depthStencil" : {
+		"format" : "NixDepth24FStencil8",
+		"multisample" : "MsaaNone",
+		"loadAction" : "Clear",
+		"usage" : "AOU_ShaderRead"
+	}
+}

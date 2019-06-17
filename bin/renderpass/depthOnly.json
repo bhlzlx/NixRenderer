@@ -1,0 +1,9 @@
+{
+	"colorCount" : 0,
+	"depthStencil" : {
+		"format" : "NixDepth24FStencil8",
+		"multisample" : "MsaaNone",
+		"loadAction" : "Clear",
+		"usage" : "AOU_DepthStencilAttachment"
+	}
+}
