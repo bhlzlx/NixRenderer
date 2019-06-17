@@ -11,7 +11,5 @@ add_executable( HelloWorld WIN32
 
 target_link_libraries(
     HelloWorld
-    SDL2
-    SDL2Main
     nix
 )

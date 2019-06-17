@@ -11,7 +11,5 @@ add_executable( ClearScreen WIN32
 
 target_link_libraries(
     ClearScreen
-    SDL2
-    SDL2Main
     nix
 )

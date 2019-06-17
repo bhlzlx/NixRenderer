@@ -89,6 +89,7 @@ else()
         #glslang
         #OSDependent
         spirv-cross-core
+		#spirv-cross-c-shared
         nix
         ${vulkan-1}
     )

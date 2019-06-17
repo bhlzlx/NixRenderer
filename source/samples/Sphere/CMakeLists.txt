@@ -13,7 +13,5 @@ add_executable( Sphere WIN32
 
 target_link_libraries(
     Sphere
-    SDL2
-    SDL2Main
     nix
 )

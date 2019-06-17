@@ -76,6 +76,8 @@ namespace Nix {
 			TextureUsageFlagBits::TextureUsageSampled;
 		if (vkhelper::isDepthFormat(format) || vkhelper::isStencilFormat(format)) {
 			usage |= TextureUsageFlagBits::TextureUsageDepthStencilAttachment;
+//			usage = TextureUsageDepthStencilAttachment;
+			
 		}
 		else {
 			usage |= TextureUsageFlagBits::TextureUsageColorAttachment;
@@ -149,6 +151,7 @@ namespace Nix {
 				return nullptr;
 			}
 		}
+		renderPass->m_context = this;
 		//
 		return renderPass;
 	}
@@ -181,7 +184,8 @@ namespace Nix {
 	{
 		GraphicsQueueVk* queue = (GraphicsQueueVk*)_queue;
 		auto cmdbuff = queue->commandBuffer();
-		m_commandBuffer = (const VkCommandBuffer&)cmdbuff;
+		//m_commandBuffer = (const VkCommandBuffer&)cmdbuff;
+		m_commandBuffer = (const VkCommandBuffer&)*cmdbuff;
 		// transform attachment image layout
 		for (auto& attachment : m_colorAttachments) {
 			if (!attachment)
@@ -190,7 +194,9 @@ namespace Nix {
 			texture->transformImageLayout( m_commandBuffer, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		}
 		TextureVk* texture = (TextureVk*)m_depthStencil->getTexture();
-		texture->transformImageLayout(m_commandBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+		if (texture) {
+			texture->transformImageLayout( m_commandBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+		}
 		// create begin info
 		VkRenderPassBeginInfo beginInfo = {
 			VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,// VkStructureType sType;

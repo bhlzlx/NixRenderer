@@ -7,7 +7,7 @@
 
 namespace Nix {
 
-	bool MaterialVk::ValidationShaderDescriptor( const ShaderDescriptor& _descriptor, const uint32_t _setIndex, const spirv_cross::Compiler& _compiler, const spirv_cross::ShaderResources& _resources, ContextVk* _context, spirv_cross::Resource& res ) {
+	bool MaterialVk::ValidationShaderDescriptor( ShaderDescriptor& _descriptor, const uint32_t _setIndex, const spirv_cross::Compiler& _compiler, const spirv_cross::ShaderResources& _resources, ContextVk* _context, spirv_cross::Resource& res ) {
 		if (_descriptor.type == SDT_UniformBlock) 
 		{
 			for (auto& shaderRes : _resources.uniform_buffers) 
@@ -21,14 +21,8 @@ namespace Nix {
 					{
 						auto uniformType = _compiler.get_type_from_variable(shaderRes.id);
 						auto uniformChunkSize = _compiler.get_declared_struct_size(uniformType);
-						if ( uniformChunkSize == _descriptor.dataSize)
-						{
-							return true;
-						}
-						else 
-						{
-							return false;
-						}
+						_descriptor.dataSize = uniformChunkSize;
+						return true;
 					}
 				}
 			}
@@ -119,15 +113,17 @@ namespace Nix {
 
 	MaterialVk* MaterialVk::CreateMaterial(ContextVk* _context, const MaterialDescription& _desc)
 	{
+		MaterialDescription materialDesc = _desc;
+		//
 		VkDevice device = _context->getDevice();
 		// load SPV from disk!
 		auto arch = _context->getDriver()->getArchieve();
-		Nix::IFile * vertexSPV = arch->open(VULKAN_SHADER_PATH(_desc.vertexShader));
+		Nix::IFile * vertexSPV = arch->open(VULKAN_SHADER_PATH(materialDesc.vertexShader));
 		Nix::IFile* vertexSPVMem = CreateMemoryBuffer(vertexSPV->size());
 		if (!vertexSPV) { assert(false); return nullptr; }
 		vertexSPV->read(vertexSPV->size(), vertexSPVMem);
 
-		Nix::IFile * fragmentSPV = arch->open(VULKAN_SHADER_PATH(_desc.fragmentShader));
+		Nix::IFile * fragmentSPV = arch->open(VULKAN_SHADER_PATH(materialDesc.fragmentShader));
 		if (!vertexSPV) { assert(false); return nullptr; }
 		Nix::IFile* fragSPVMem = CreateMemoryBuffer(fragmentSPV->size());
 		fragmentSPV->read(fragmentSPV->size(), fragSPVMem);
@@ -150,13 +146,13 @@ namespace Nix {
 		// 3. get the push constants information
 
 		//\ 1 - vertex layout validation
-		if (_desc.vertexLayout.attributeCount != vertexResource.stage_inputs.size()) {
+		if (materialDesc.vertexLayout.attributeCount != vertexResource.stage_inputs.size()) {
 			_context->getDriver()->getLogger()->error("vertex attribute count mismatch! ");
 			return nullptr;
 		}
 		for (auto& vertexInput : vertexResource.stage_inputs) {
 			auto location = vertCompiler.get_decoration(vertexInput.id, spv::Decoration::DecorationLocation);
-			if (_desc.vertexLayout.attributes[location].name != vertexInput.name) {
+			if (materialDesc.vertexLayout.attributes[location].name != vertexInput.name) {
 				assert("name does not match!" && false);
 				return nullptr;
 			}
@@ -168,8 +164,8 @@ namespace Nix {
 
 		std::array<ArgumentLayout, MaxArgumentCount> argumentLayouts;
 
-		for (size_t argumentIndex = 0; argumentIndex < _desc.argumentLayouts.size(); ++argumentIndex) {
-			auto& argument = _desc.argumentLayouts[argumentIndex];
+		for (size_t argumentIndex = 0; argumentIndex < materialDesc.argumentLayouts.size(); ++argumentIndex) {
+			auto& argument = materialDesc.argumentLayouts[argumentIndex];
 			for (size_t descriptorIndex = 0; descriptorIndex < argument.descriptors.size(); ++descriptorIndex) {
 				auto& descinfo = argument.descriptors[descriptorIndex];
 
@@ -243,9 +239,9 @@ namespace Nix {
 		}
 		//
 		VkDescriptorSetLayout layouts[MaxArgumentCount];
-		for (uint32_t layoutIndex = 0; layoutIndex < _desc.argumentLayouts.size(); ++layoutIndex) {
+		for (uint32_t layoutIndex = 0; layoutIndex < materialDesc.argumentLayouts.size(); ++layoutIndex) {
 			std::vector<VkDescriptorSetLayoutBinding> bindings;
-			auto& argument = _desc.argumentLayouts[layoutIndex];
+			auto& argument = materialDesc.argumentLayouts[layoutIndex];
 			//for (auto& arguments : _desc.argumentLayouts) 
 			//{
 				for ( auto& descriptor : argument.descriptors )
@@ -302,7 +298,7 @@ namespace Nix {
 			info.pNext = nullptr;
 			info.flags = 0;
 			info.pSetLayouts = layouts;
-			info.setLayoutCount = static_cast<uint32_t>(_desc.argumentLayouts.size());
+			info.setLayoutCount = static_cast<uint32_t>(materialDesc.argumentLayouts.size());
 			info.pushConstantRangeCount = (uint32_t)constantRanges.size();
 			info.pPushConstantRanges = constantRanges.size() ? &constantRanges[0] : nullptr;
 		}
@@ -311,15 +307,15 @@ namespace Nix {
 		assert(rst == VK_SUCCESS);
 		//
 		MaterialVk* material = new MaterialVk();
-		material->m_description = _desc;
+		material->m_description = materialDesc;
 		material->m_context = _context;
 		material->m_vertexShader = vertSM;
 		material->m_fragmentShader = fragSM;
-		material->m_descriptorSetLayoutCount = (uint32_t)_desc.argumentLayouts.size();
+		material->m_descriptorSetLayoutCount = (uint32_t)materialDesc.argumentLayouts.size();
 		material->m_pipelineLayout = pipelineLayout;
 		material->m_argumentLayouts = argumentLayouts;
-		material->m_topology = NixTopologyToVk( _desc.topologyMode );
-		material->m_pologonMode = NixPolygonModeToVk(_desc.pologonMode);
+		material->m_topology = NixTopologyToVk( materialDesc.topologyMode );
+		material->m_pologonMode = NixPolygonModeToVk(materialDesc.pologonMode);
 		//
 		return material;
 	}

@@ -13,7 +13,5 @@ add_executable( WavefrontModel WIN32
 
 target_link_libraries(
     WavefrontModel
-    SDL2
-    SDL2Main
     nix
 )

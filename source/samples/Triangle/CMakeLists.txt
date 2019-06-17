@@ -12,7 +12,5 @@ add_executable( Triangle WIN32
 
 target_link_libraries(
     Triangle
-    SDL2
-    SDL2Main
     nix
 )
