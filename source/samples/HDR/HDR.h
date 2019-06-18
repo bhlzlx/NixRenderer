@@ -35,6 +35,8 @@ namespace Nix {
 		IRenderPass*				m_mainRenderPass;
 		IGraphicsQueue*				m_primQueue;
 
+		Config						m_config;
+
 		// ============== vertex buffer & index buffer ==============
 		//IBuffer*					m_indexBuffer;
 		//uint32_t					m_indexCount;
@@ -67,6 +69,16 @@ namespace Nix {
 		IArgument*					m_argEarlyZ;
 		IRenderable*				m_renderableEarlyZ;
 		IPipeline*					m_pipelineEarlyZ;
+		RenderPassDescription		m_renderPassEarlyZDesc;
+		IAttachment*				m_colorEarlyZ;
+		IRenderPass*				m_renderPassEarlyZ;
+
+		// ============== tone mapping pass ==============
+		// can use main render pass
+		IMaterial*					m_mtlToneMapping;
+		IArgument*					m_argToneMapping;
+		IRenderable*				m_renderableToneMapping;
+		IPipeline*					m_pipelineToneMapping;
 
 		//
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve);

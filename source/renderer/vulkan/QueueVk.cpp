@@ -114,6 +114,7 @@ namespace Nix {
 
 	void GraphicsQueueVk::beginFrame(uint32_t _flightIndex)
 	{
+		VkResult rst = VK_SUCCESS;
 		m_flightIndex = _flightIndex;
 		// commit updating buffer before rendering
 		if (m_updatingBuffersActived[m_flightIndex]) {
@@ -145,8 +146,8 @@ namespace Nix {
 		auto device = m_context->getDevice();
 		if (m_renderFencesActived[m_flightIndex])
 		{
-			vkWaitForFences(device, 1, &m_renderFences[_flightIndex], VK_TRUE, uint64_t(-1));
-			vkResetFences(device, 1, &m_renderFences[_flightIndex]);
+			rst = vkWaitForFences(device, 1, &m_renderFences[_flightIndex], VK_TRUE, uint64_t(-1));
+			rst = vkResetFences(device, 1, &m_renderFences[_flightIndex]);
 		}
 
 		if (m_screenCapture.capture && m_screenCapture.invokeFrameCount == m_context->getFrameCounter() ) {

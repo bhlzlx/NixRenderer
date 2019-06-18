@@ -1,7 +1,7 @@
 {
 	"colorCount" : 1,
 	"colors" : [{
-		"format" : "NixBGRA8888_UNORM",
+		"format" : "NixRGBA_F16",
 		"multisample" : "MsaaNone",
 		"loadAction" : "Clear",
 		"usage" : "AOU_ShaderRead"

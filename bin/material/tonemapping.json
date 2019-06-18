@@ -1,6 +1,6 @@
 {
-	"vertexShader" : "early-z-rendering/lowpoly.vert.spv",
-	"fragmentShader" : "early-z-rendering/lowpoly.frag.spv",
+	"vertexShader" : "tone-mapping/tone.vert.spv",
+	"fragmentShader" : "tone-mapping/tone.frag.spv",
 	"topologyMode" : "TMTriangleList",
 	"pologonMode" : "PMFill",
 	"vertexLayout" : {
@@ -11,31 +11,28 @@
 			"offset" : 0,
 			"type" : "VertexTypeFloat3"
 		},{
-			"name" : "vert_normal",
+			"name" : "vert_uv",
 			"bufferIndex" : 1,
-			"offset" : 0,
-			"type" : "VertexTypeFloat3"
+			"offset" : 12,
+			"type" : "VertexTypeFloat2"
 		}],
-		"bufferCount" : 2,
+		"bufferCount" : 1,
 		"buffers" : [{
-			"stride": 12,
-			"instanceMode" : 0
-		},{
-			"stride": 12,
+			"stride": 20,
 			"instanceMode" : 0
 		}]
 	},
 	"argumentLayouts" : [{
 		"index" : 0,
 		"descriptors" : [{
-			"type" : "SDT_UniformBlock",
+			"type" : "SDT_Sampler",
 			"binding" : 0,
-			"name" : "VertexArgument",
-			"shaderStage" : "VertexShader"
+			"name" : "hdrImage",
+			"shaderStage" : "FragmentShader"
 		},{
 			"type" : "SDT_UniformBlock",
 			"binding" : 1,
-			"name" : "PointLight",
+			"name" : "ToneMappingArgument",
 			"shaderStage" : "FragmentShader"
 		}]
 	}],

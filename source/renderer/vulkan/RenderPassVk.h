@@ -50,7 +50,8 @@ namespace Nix {
 		//
 		VkCommandBuffer				m_commandBuffer;
 		//
-		static std::map< uint64_t, VkRenderPass > m_renderPassMapTable;
+		static std::map< uint64_t, VkRenderPass > m_standardMapTable;
+		static std::map< uint64_t, VkRenderPass > m_compatMapTable;		
 	public:
 		RenderPassVk() {
 			memset(m_colorAttachments, 0, sizeof(m_colorAttachments));
@@ -85,7 +86,8 @@ namespace Nix {
 		//
 	public:
 		//
-		static VkRenderPass RequestRenderPassObject( ContextVk* _context, const RenderPassDescription& _desc );
+		static VkRenderPass RequestStandardRenderPassObject( ContextVk* _context, const RenderPassDescription& _desc );
+		static VkRenderPass RequestCompatibleRenderPassObject(ContextVk* _context, const RenderPassDescription& _desc);
 	};
 
 	class RenderPassSwapchainVk : public IRenderPass {
