@@ -228,7 +228,7 @@ namespace Nix {
 		}
 
 		VkSurfaceTransformFlagBitsKHR desiredTransform;
-		VkPresentModeKHR presentMode;
+		VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
 
 		if (surfaceCapabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
 			desiredTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
