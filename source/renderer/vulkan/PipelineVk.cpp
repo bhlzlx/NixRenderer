@@ -18,7 +18,7 @@ namespace Nix {
 
 	IPipeline* MaterialVk::createPipeline(const RenderPassDescription& _renderPass)
 	{
-		VkRenderPass renderPass = RenderPassVk::RequestRenderPassObject(m_context, _renderPass);
+		VkRenderPass renderPass = RenderPassVk::RequestCompatibleRenderPassObject(m_context, _renderPass);
 		//
 		VkGraphicsPipelineCreateInfo pipelineCreateInfo = {};
 		pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;

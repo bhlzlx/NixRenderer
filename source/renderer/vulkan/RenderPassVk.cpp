@@ -13,15 +13,16 @@
 
 namespace Nix {
 	//
-	std::map< uint64_t, VkRenderPass > RenderPassVk::m_renderPassMapTable;
+	std::map< uint64_t, VkRenderPass > RenderPassVk::m_standardMapTable;
+	std::map< uint64_t, VkRenderPass > RenderPassVk::m_compatMapTable;
 	//
 	VkImageLayout AttachmentUsageToImageLayout(AttachmentUsageBits _usage);
 	//
 
-	uint64_t HashRenderPassDescription(const RenderPassDescription& _desc) {
+	uint64_t RenderPassCompatibleHash(const RenderPassDescription& _desc) {
 		APHasher hasher;
 		if (_desc.colorCount) {
-			for (uint32_t i = 0; i < _desc.colorCount; ++i ) {
+			for (uint32_t i = 0; i < _desc.colorCount; ++i) {
 				hasher.hash(&_desc.colors[i].format, sizeof(_desc.colors[i].format));
 				hasher.hash(&_desc.colors[i].multisample, sizeof(_desc.colors[i].multisample));
 			}
@@ -38,6 +39,39 @@ namespace Nix {
 		}
 		if (_desc.resolve.format != NixInvalidFormat) {
 			hasher.hash(&_desc.resolve.format, sizeof(_desc.resolve.format));
+			hasher.hash(&_desc.resolve.multisample, sizeof(_desc.resolve.multisample));
+		}
+		return hasher;
+	}
+
+	uint64_t RenderPassStandardHash(const RenderPassDescription& _desc) {
+		APHasher hasher;
+		if (_desc.colorCount) {
+			for (uint32_t i = 0; i < _desc.colorCount; ++i ) {
+				hasher.hash(&_desc.colors[i].format, sizeof(_desc.colors[i].format));
+				hasher.hash(&_desc.colors[i].loadAction, sizeof(_desc.colors[i].loadAction));
+				hasher.hash(&_desc.colors[i].usage, sizeof(_desc.colors[i].usage));
+				hasher.hash(&_desc.colors[i].multisample, sizeof(_desc.colors[i].multisample));
+			}
+		}
+		if (_desc.depthStencil.format != NixInvalidFormat) {
+			hasher.hash(&_desc.depthStencil.format, sizeof(_desc.depthStencil.format));
+			hasher.hash(&_desc.depthStencil.loadAction, sizeof(_desc.depthStencil.loadAction));
+			hasher.hash(&_desc.depthStencil.usage, sizeof(_desc.depthStencil.usage));
+			hasher.hash(&_desc.depthStencil.multisample, sizeof(_desc.depthStencil.multisample));
+		}
+		if (_desc.inputCount) {
+			for (uint32_t i = 0; i < _desc.inputCount; ++i) {
+				hasher.hash(&_desc.inputs[i].format, sizeof(_desc.inputs[i].format));
+				hasher.hash(&_desc.inputs[i].loadAction, sizeof(_desc.inputs[i].loadAction));
+				hasher.hash(&_desc.inputs[i].usage, sizeof(_desc.inputs[i].usage));
+				hasher.hash(&_desc.inputs[i].multisample, sizeof(_desc.inputs[i].multisample));
+			}
+		}
+		if (_desc.resolve.format != NixInvalidFormat) {
+			hasher.hash(&_desc.resolve.format, sizeof(_desc.resolve.format));
+			hasher.hash(&_desc.resolve.loadAction, sizeof(_desc.resolve.loadAction));
+			hasher.hash(&_desc.resolve.usage, sizeof(_desc.resolve.usage));
 			hasher.hash(&_desc.resolve.multisample, sizeof(_desc.resolve.multisample));
 		}
 		return hasher;
@@ -108,7 +142,7 @@ namespace Nix {
 			assert(_depthStencil && "must not be nullptr!!!");
 			renderPass->m_depthStencil = dynamic_cast<AttachmentVk*>(_depthStencil);
 		}
-		renderPass->m_renderPass = RenderPassVk::RequestRenderPassObject( this,_desc );
+		renderPass->m_renderPass = RenderPassVk::RequestStandardRenderPassObject( this,_desc );
 		renderPass->m_clearCount = clearCount;
 		for (uint32_t i = 0; i < _desc.colorCount; ++i) {
 			renderPass->m_colorImageLayout[i] = AttachmentUsageToImageLayout(_desc.colors[i].usage);
@@ -325,12 +359,13 @@ namespace Nix {
 		return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	}
 
-	VkRenderPass RenderPassVk::RequestRenderPassObject(ContextVk* _context, const RenderPassDescription& _desc)
+	VkRenderPass RenderPassVk::RequestStandardRenderPassObject(ContextVk* _context, const RenderPassDescription& _desc)
 	{
-		uint64_t hashCode = HashRenderPassDescription(_desc);
+		uint64_t stdHash = RenderPassStandardHash(_desc);
+		uint64_t compatHash = RenderPassCompatibleHash(_desc);
 		//
-		auto it = m_renderPassMapTable.find(hashCode);
-		if (it != m_renderPassMapTable.end()) {
+		auto it = m_standardMapTable.find(stdHash);
+		if (it != m_standardMapTable.end()) {
 			return it->second;
 		}
 		//
@@ -442,8 +477,19 @@ namespace Nix {
 		if (rst != VK_SUCCESS) {
 			return VK_NULL_HANDLE;
 		}
-		m_renderPassMapTable[hashCode] = renderpass;
+		m_standardMapTable[stdHash] = renderpass;
+		//
+		if (m_compatMapTable.find(compatHash) == m_compatMapTable.end()) {
+			m_compatMapTable[compatHash] = renderpass;
+		}
 		return renderpass;
+	}
+
+	VkRenderPass RenderPassVk::RequestCompatibleRenderPassObject(ContextVk* _context, const RenderPassDescription& _desc) {
+		uint64_t compatHash = RenderPassStandardHash(_desc);
+		if ( m_compatMapTable.find(compatHash) == m_compatMapTable.end() ) {
+			return RequestStandardRenderPassObject(_context, _desc);
+		}
 	}
 
 	void RenderPassSwapchainVk::activeSubpass(uint32_t _imageIndex)
@@ -502,8 +548,8 @@ namespace Nix {
 			rpdesc.depthStencil.loadAction = Clear;
 			rpdesc.depthStencil.usage = AOU_DepthStencilAttachment;
 		}
-		m_renderPass = RenderPassVk::RequestRenderPassObject( m_context, rpdesc);
-
+		m_renderPass = RenderPassVk::RequestStandardRenderPassObject( m_context, rpdesc);
+		//
 		for (uint32_t i = 0; i < m_vecColors.size(); ++i) {
 			VkImageView ivs[2] = {
 				m_vecColors[i]->getImageView(),

@@ -98,16 +98,35 @@ namespace Nix {
 			m_renderableDp->setVertexBuffer(m_vertPosition, 0, 0);
 		}
 
-		Config config;
+		// =============== create color pass resources ===============
+		{
+			MaterialDescription materialDesc;
+			Nix::TextReader mtlReader;
+			mtlReader.openFile(_archieve, "material/early-z.json");
+			materialDesc.parse(mtlReader.getText());
+			m_mtlEarlyZ = m_context->createMaterial(materialDesc);
+
+			m_argEarlyZ = m_mtlEarlyZ->createArgument(0);
+			m_renderableEarlyZ = m_mtlEarlyZ->createRenderable();
+			m_renderableEarlyZ->setVertexBuffer(m_vertPosition, 0, 0);
+			m_renderableEarlyZ->setVertexBuffer(m_vertNormal, 0, 1);
+			//
+			Nix::TextReader rpReader;
+			rpReader.openFile(_archieve, "renderpass/HDR.json");
+			m_renderPassEarlyZDesc.parse(rpReader.getText());
+			m_pipelineEarlyZ = m_mtlEarlyZ->createPipeline(m_renderPassEarlyZDesc);
+		}
+
 		{
 			Nix::TextReader cfgReader;
 			cfgReader.openFile(_archieve, "config/lowpoly.json");
-			config.parse(cfgReader.getText());
+			m_config.parse(cfgReader.getText());
 		}
+
 		m_view = glm::lookAt(
-			glm::vec3(config.eye[0], config.eye[1], config.eye[2]),
-			glm::vec3(config.lookat[0], config.lookat[1], config.lookat[2]),
-			glm::vec3(config.up[0], config.up[1], config.up[2])
+			glm::vec3(m_config.eye[0], m_config.eye[1], m_config.eye[2]),
+			glm::vec3(m_config.lookat[0], m_config.lookat[1], m_config.lookat[2]),
+			glm::vec3(m_config.up[0], m_config.up[1], m_config.up[2])
 		);
 		//m_lights = { glm::vec3(config.light[0], config.light[1], config.light[2]) };
 
@@ -134,12 +153,24 @@ namespace Nix {
 		}
 		m_depthDp = m_context->createAttachment(m_renderPassDpDesc.depthStencil.format, _width, _height);
 		m_renderPassDp = m_context->createRenderPass(m_renderPassDpDesc, nullptr, m_depthDp);
+
+		if (m_colorEarlyZ) {
+			m_colorEarlyZ->release();
+			m_colorEarlyZ = nullptr;
+		}
+		m_colorEarlyZ = m_context->createAttachment(m_renderPassEarlyZDesc.colors[0].format, _width, _height);
+		m_renderPassEarlyZ = m_context->createRenderPass(m_renderPassEarlyZDesc, &m_colorEarlyZ, m_depthDp);
+
 		Nix::RpClear dpClear;
+		dpClear.colors[0] = { 0.7f,0.7f ,0.7f ,1.0f };
 		dpClear.depth = 1.0f;
 		m_renderPassDp->setClear(dpClear);
+		m_renderPassEarlyZ->setClear(dpClear);
 		//
 		m_pipelineDp->setViewport(vp);
 		m_pipelineDp->setScissor(ss);
+		m_pipelineEarlyZ->setViewport(vp);
+		m_pipelineEarlyZ->setScissor(ss);
 	}
 
 	void HDR::release() {
@@ -173,6 +204,7 @@ namespace Nix {
 
 			m_mainRenderPass->end();
 
+			// === depth pass ===
 			if (m_renderPassDp) {
 				m_renderPassDp->begin(m_primQueue); {
 					m_argDp->setUniform(0, 0, &mvp, sizeof(mvp));
@@ -181,6 +213,39 @@ namespace Nix {
 					m_renderPassDp->draw(m_renderableDp, 0, m_vertCount);
 					m_renderPassDp->end();
 				}
+			}
+			// === color pass ===
+			if (m_renderPassEarlyZ) {
+				m_renderPassEarlyZ->begin(m_primQueue);
+
+				float constant = 1.0f;
+				float linear = 0.06f;
+				float quadratic = 0.01f;
+				uint32_t lightCount = 3;
+				glm::vec4 lights[] = { 
+					glm::vec4(-20.0f, 18.0f, -20.0f, 0.0f), glm::vec4(1.0f, 2.0f, 0.5f,0.0f),
+					glm::vec4(-10.0f, 18.0f, -16.0f, 0.0f), glm::vec4(2.0f, 0.5f, 1.0f,0.0f),
+					glm::vec4(-10.0f, 18.0f, -0.0f, 0.0f), glm::vec4(0.5f, 1.0f, 2.5f,0.0f),
+				};
+
+				m_argEarlyZ->setUniform(0, 0, &m_projection, sizeof(m_projection));
+				m_argEarlyZ->setUniform(0, 64, &m_view, sizeof(m_view));
+				m_argEarlyZ->setUniform(0, 128, &m_model, sizeof(m_model));
+
+				m_argEarlyZ->setUniform(1, 0, &constant, 4);
+				m_argEarlyZ->setUniform(1, 4, &linear, 4);
+				m_argEarlyZ->setUniform(1, 8, &quadratic, 4);
+				
+
+				m_argEarlyZ->setUniform(1, 12, &lightCount, 4);
+				m_argEarlyZ->setUniform(1, 16, &lights, sizeof(lights));
+
+
+				m_renderPassEarlyZ->bindArgument(m_argEarlyZ);
+				m_renderPassEarlyZ->bindPipeline(m_pipelineEarlyZ);
+				m_renderPassEarlyZ->draw(m_renderableEarlyZ, 0, m_vertCount);
+
+				m_renderPassEarlyZ->end();
 			}
 
 			m_context->endFrame();
