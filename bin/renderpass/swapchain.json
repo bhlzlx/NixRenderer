@@ -7,7 +7,7 @@
 		"usage" : "AOU_Present"
 	}],
 	"depthStencil" : {
-		"format" : "NixDepth24FStencil8",
+		"format" : "NixDepth32F",
 		"multisample" : "MsaaNone",
 		"loadAction" : "Clear",
 		"usage" : "AOU_DepthStencilAttachment"

@@ -7,7 +7,7 @@
 		"usage" : "AOU_ShaderRead"
 	}],
 	"depthStencil" : {
-		"format" : "NixDepth24FStencil8",
+		"format" : "NixDepth32F",
 		"multisample" : "MsaaNone",
 		"loadAction" : "Load",
 		"usage" : "AOU_DepthStencilAttachment"

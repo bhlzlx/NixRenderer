@@ -527,7 +527,7 @@ namespace Nix {
 			dsdesc.width = _width;
 			dsdesc.height = _height;
 			dsdesc.depth = 1;
-			dsdesc.format = NixDepth24FStencil8;
+			dsdesc.format = NixDepth32F;
 			dsdesc.mipmapLevel = 1;
 			dsdesc.type = Texture2D;
 		}
@@ -544,7 +544,7 @@ namespace Nix {
 			rpdesc.colors[0].loadAction = Clear;
 			rpdesc.colors[0].usage = AOU_Present;
 			rpdesc.colorCount = 1;
-			rpdesc.depthStencil.format = NixDepth24FStencil8;
+			rpdesc.depthStencil.format = NixDepth32F;
 			rpdesc.depthStencil.loadAction = Clear;
 			rpdesc.depthStencil.usage = AOU_DepthStencilAttachment;
 		}

@@ -79,6 +79,8 @@ namespace Nix {
 		IArgument*					m_argToneMapping;
 		IRenderable*				m_renderableToneMapping;
 		IPipeline*					m_pipelineToneMapping;
+		IBuffer*					m_vboTM;
+		IBuffer*					m_iboTM;
 
 		//
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve);

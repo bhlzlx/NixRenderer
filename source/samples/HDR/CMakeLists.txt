@@ -3,6 +3,7 @@ project( HDR )
 set( PROJECT_SOURCE
     ${PLATFORM_SOURCE}
     ${CMAKE_CURRENT_SOURCE_DIR}/HDR.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/HDR.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../../common/NixJpImp.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../thirdpart/tiny_obj_loader.cc
 )

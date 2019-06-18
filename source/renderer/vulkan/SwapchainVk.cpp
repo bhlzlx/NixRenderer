@@ -215,17 +215,17 @@ namespace Nix {
 		{
 			desiredFormat = { VK_FORMAT_R8G8B8A8_UNORM, VK_COLORSPACE_SRGB_NONLINEAR_KHR };
 		}
-		else
-		{
-			for (VkSurfaceFormatKHR &surfaceFormat : surfaceFormats)
-			{
-				if (surfaceFormat.format == VK_FORMAT_R8G8B8A8_UNORM)
-				{
-					desiredFormat = surfaceFormat;
-					break;
-				}
-			}
-		}
+//		else
+//		{
+//			for (VkSurfaceFormatKHR &surfaceFormat : surfaceFormats)
+//			{
+//				if (surfaceFormat.format == VK_FORMAT_R8G8B8A8_UNORM)
+//				{
+//					desiredFormat = surfaceFormat;
+//					break;
+//				}
+//			}
+//		}
 
 		VkSurfaceTransformFlagBitsKHR desiredTransform;
 		VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;

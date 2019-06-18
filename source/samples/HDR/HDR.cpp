@@ -1,10 +1,22 @@
 #include "HDR.h"
+#include <math.h>
 
 #ifdef _WIN32
     #include <Windows.h>
 #endif
 
 namespace Nix {
+
+	float vertRect[] = {
+		-1.0f, -1.0f, 0.0f, 0.0f, 1.0f,
+		1.0f, -1.0f, 0.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+		-1.0f, 1.0f, 0.0f, 0.0f, 0.0f
+	};
+
+	uint16_t indcRect[] = {
+		0, 1, 2, 2, 3, 0
+	};
 
 	bool HDR::initialize(void* _wnd, Nix::IArchieve* _archieve ) {
 		printf("%s", "HDR is initializing!");
@@ -117,6 +129,33 @@ namespace Nix {
 			m_pipelineEarlyZ = m_mtlEarlyZ->createPipeline(m_renderPassEarlyZDesc);
 		}
 
+		// =============== tone mapping resources ===============
+		{
+			MaterialDescription materialDesc;
+			Nix::TextReader mtlReader;
+			mtlReader.openFile(_archieve, "material/tonemapping.json");
+			materialDesc.parse(mtlReader.getText());
+			m_mtlToneMapping = m_context->createMaterial(materialDesc);
+
+			m_argToneMapping = m_mtlToneMapping->createArgument(0);
+			m_renderableToneMapping = m_mtlToneMapping->createRenderable();
+
+			m_vboTM = m_context->createStaticVertexBuffer(vertRect, sizeof(vertRect));
+			m_iboTM = m_context->createIndexBuffer(indcRect, sizeof(indcRect));
+
+			m_renderableToneMapping->setVertexBuffer(m_vboTM, 0, 0);
+			m_renderableToneMapping->setIndexBuffer(m_iboTM, 0);
+
+			Nix::TextReader rpReader;
+			rpReader.openFile(_archieve, "renderpass/swapchain.json");
+			RenderPassDescription rpDesc;
+			rpDesc.parse(rpReader.getText());
+			m_pipelineToneMapping = m_mtlToneMapping->createPipeline(rpDesc);
+
+		}
+
+
+
 		{
 			Nix::TextReader cfgReader;
 			cfgReader.openFile(_archieve, "config/lowpoly.json");
@@ -171,6 +210,14 @@ namespace Nix {
 		m_pipelineDp->setScissor(ss);
 		m_pipelineEarlyZ->setViewport(vp);
 		m_pipelineEarlyZ->setScissor(ss);
+		m_pipelineToneMapping->setViewport(vp);
+		m_pipelineToneMapping->setScissor(ss);
+
+		uint32_t id;
+		bool rst = m_argToneMapping->getSampler("hdrImage", &id);
+		assert(rst);
+		Nix::SamplerState samplerState;
+		m_argToneMapping->setSampler(id, samplerState, m_colorEarlyZ->getTexture());
 	}
 
 	void HDR::release() {
@@ -180,30 +227,12 @@ namespace Nix {
 
 	void HDR::tick() {
 		static float angle = 0.0f;
-		angle += 0.01;
+		angle += 0.1;
 		m_model = glm::rotate<float>(glm::mat4(), angle / 180.0f * 3.1415926, glm::vec3(0,1,0));
 		glm::mat4 mvp = m_projection * m_view * m_model;
 
 		if (m_context->beginFrame()) 
 		{
-			m_mainRenderPass->begin(m_primQueue); {
-				// 				glm::mat4x4 identity;
-				// 				m_argCommon->setUniform(m_matGlobal, 0, &m_projection, 64);
-				// 				m_argCommon->setUniform(m_matGlobal, 64, &m_view, 64);
-				// 				m_argCommon->setUniform(m_matGlobal, 128, &m_light, sizeof(m_light));
-				// 				m_argInstance->setUniform(m_matLocal, 0, &m_model, 64);
-				// 				//
-				// 				m_mainRenderPass->bindPipeline(m_pipeline);
-				// 				m_mainRenderPass->bindArgument(m_argCommon);
-				// 				m_mainRenderPass->bindArgument(m_argInstance);
-				// 				//					
-				// 				m_mainRenderPass->draw(m_renderable, 0, m_vertCount);
-				// 				//m_mainRenderPass->drawElements( m_renderable, 0, m_indexCount);
-				// 			}
-			}
-
-			m_mainRenderPass->end();
-
 			// === depth pass ===
 			if (m_renderPassDp) {
 				m_renderPassDp->begin(m_primQueue); {
@@ -247,6 +276,18 @@ namespace Nix {
 
 				m_renderPassEarlyZ->end();
 			}
+
+			m_mainRenderPass->begin(m_primQueue); {
+				static uint64_t frameCounter = 0;
+				++frameCounter;
+				float adapt_lum = (float) abs(int(frameCounter % 100) - 50) / 100.0f + 0.1f;
+				m_argToneMapping->setUniform(0, 0, &adapt_lum, 4);
+				m_mainRenderPass->bindPipeline(m_pipelineToneMapping);
+				m_mainRenderPass->bindArgument(m_argToneMapping);
+				m_mainRenderPass->drawElements(m_renderableToneMapping, 0, 6);
+			}
+
+			m_mainRenderPass->end();
 
 			m_context->endFrame();
 		}			

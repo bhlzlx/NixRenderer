@@ -12,7 +12,7 @@
 			"type" : "VertexTypeFloat3"
 		},{
 			"name" : "vert_uv",
-			"bufferIndex" : 1,
+			"bufferIndex" : 0,
 			"offset" : 12,
 			"type" : "VertexTypeFloat2"
 		}],
