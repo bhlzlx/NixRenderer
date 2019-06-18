@@ -28,7 +28,7 @@
 	}],
 	"renderState" : {
 		"writeMask" : 15,
-		"cullMode" : "CullBack",
+		"cullMode" : "CullFront",
 		"windingMode" : "CounterClockwise",
 		"scissorEnable" : 1,
 		"depthState" : {
