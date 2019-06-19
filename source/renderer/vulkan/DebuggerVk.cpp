@@ -93,7 +93,9 @@ namespace Nix {
 		return 0;
 	}
 #endif
+#ifdef __linux__
     {
         return 0;
     }
+#endif
 }

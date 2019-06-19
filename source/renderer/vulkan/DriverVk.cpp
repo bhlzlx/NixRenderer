@@ -188,6 +188,10 @@ namespace Nix {
 		VkPhysicalDeviceFeatures features;
 		vkGetPhysicalDeviceFeatures( m_PhDevice, &features);
 
+		const char * deviceExts[] = {
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME
+		};
+
 		const char* mgdLayer = "VK_LAYER_ARM_MGD";
 		VkDeviceCreateInfo deviceCreateInfo = {
 			VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO, // VkStructureType sType
@@ -197,8 +201,8 @@ namespace Nix {
 			& _queue[0], // const VkDeviceQueueCreateInfo     *pQueueCreateInfos
 			0,//1,// deviceLayers.size(),//0,
 			nullptr,//&mgdLayer,//deviceLayers.data(),// nullptr,
-			static_cast<uint32_t>(exts.size()), // uint32_t enabledExtensionCount
-			& exts[0], // const char * const *ppEnabledExtensionNames
+			1, // uint32_t enabledExtensionCount
+			&deviceExts[0], // const char * const *ppEnabledExtensionNames
 			&features
 		};
 		//
