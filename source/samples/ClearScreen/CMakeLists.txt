@@ -5,11 +5,13 @@ set( PROJECT_SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/ClearScreen.cpp
 )
 
-add_executable( ClearScreen WIN32
+add_executable( ClearScreen ${EXECUTABLE_TYPE}
     ${PROJECT_SOURCE}
 )
 
 target_link_libraries(
     ClearScreen
+    dl
+    X11
     nix
 )

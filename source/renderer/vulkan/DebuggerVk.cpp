@@ -93,4 +93,7 @@ namespace Nix {
 		return 0;
 	}
 #endif
+    {
+        return 0;
+    }
 }

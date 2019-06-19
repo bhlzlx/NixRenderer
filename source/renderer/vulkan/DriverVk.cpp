@@ -1,9 +1,10 @@
 #include "DriverVk.h"
-#include <NixRenderer.h>
 #include "VkInc.h"
 #include "vkhelper/helper.h"
+#include <NixRenderer.h>
 #include <nix/io/archieve.h>
 #include "TypemappingVk.h"
+#include <string.h>
 #include <map>
 
 #ifdef _WIN32
@@ -13,10 +14,17 @@
 #include <dlfcn.h>
 #endif
 
+#ifdef  __linux__
+#include <dlfcn.h>
+#include <X11/Xlib.h>
+#endif
+
 #undef REGIST_VULKAN_FUNCTION
 #ifdef _WIN32
 #define REGIST_VULKAN_FUNCTION( FUNCTION ) FUNCTION = reinterpret_cast<PFN_##FUNCTION>(GetProcAddress( library, #FUNCTION ));
 #elif defined __ANDROID__
+#define REGIST_VULKAN_FUNCTION( FUNCTION ) FUNCTION = reinterpret_cast<PFN_##FUNCTION>(dlsym( library, #FUNCTION ));
+#elif __linux__ 
 #define REGIST_VULKAN_FUNCTION( FUNCTION ) FUNCTION = reinterpret_cast<PFN_##FUNCTION>(dlsym( library, #FUNCTION ));
 #endif
 
@@ -27,6 +35,9 @@ PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR;
 #elif defined __ANDROID__
 #include <vulkan/vulkan_android.h>
 PFN_vkCreateAndroidSurfaceKHR vkCreateAndroidSurfaceKHR;
+#elif __linux__
+#include <vulkan/vulkan_xlib.h>
+PFN_vkCreateXlibSurfaceKHR vkCreateXlibSurfaceKHR;
 #endif
 
 namespace Nix {
@@ -42,11 +53,17 @@ namespace Nix {
 		void* library = dlopen("libvulkan.so", RTLD_NOW | RTLD_LOCAL);
 		if (!library) return false;
 #endif
+#ifdef __linux__
+        void* library = dlopen("libvulkan.so", RTLD_NOW | RTLD_LOCAL);
+		if (!library) return false;
+#endif
 #include "vulkan_api.h"
 #ifdef _WIN32
 		REGIST_VULKAN_FUNCTION(vkCreateWin32SurfaceKHR)
 #elif defined __ANDROID__
 		REGIST_VULKAN_FUNCTION(vkCreateAndroidSurfaceKHR)
+#elif defined __linux__
+        REGIST_VULKAN_FUNCTION(vkCreateXlibSurfaceKHR)
 #endif
 		
 		if (!vkGetInstanceProcAddr || !vkCreateInstance || !vkAcquireNextImageKHR) {
@@ -57,10 +74,14 @@ namespace Nix {
 			const char* name;
 			const void* const address;
 		};
+        
 #undef REGIST_VULKAN_FUNCTION
 #define REGIST_VULKAN_FUNCTION(FUNCTION) { #FUNCTION, (const void* const)FUNCTION },
+        
 		ApiItem apiList[] = {
+            
 			#include "vulkan_api.h"
+            
 		};
 #endif
 		this->m_instance = createInstance();
@@ -125,6 +146,14 @@ namespace Nix {
 			(ANativeWindow*)_hwnd
 		};
 		rst = vkCreateAndroidSurfaceKHR(m_instance, &surface_create_info, nullptr, &surface);
+#elif defined __linux__
+		VkXlibSurfaceCreateInfoKHR surface_create_info = {
+			VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR,  // sType
+			nullptr,// pNext
+			0, // flag
+			(Display*)_hwnd
+		};
+		rst = vkCreateXlibSurfaceKHR(m_instance, &surface_create_info, nullptr, &surface);
 #endif
 		if (rst != VK_SUCCESS){
 			return VK_NULL_HANDLE;

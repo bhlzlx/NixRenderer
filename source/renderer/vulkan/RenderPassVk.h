@@ -4,6 +4,7 @@
 #include "VkInc.h"
 #include <vector>
 #include <cassert>
+#include <memory.h>
 
 namespace Nix {
 

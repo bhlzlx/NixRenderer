@@ -6,6 +6,7 @@
 #include <thread>
 #include <mutex>
 #include <cassert>
+#include <memory.h>
 #include "TypemappingVk.h"
 
 namespace Nix {

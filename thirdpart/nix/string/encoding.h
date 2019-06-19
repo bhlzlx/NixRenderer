@@ -1,6 +1,8 @@
 ﻿#ifndef __APPUI_STRING_H__
 #define __APPUI_STRING_H__
+#include <stdlib.h>
 
+#include <uchar.h>
 #ifdef _WIN32
 #include <yvals.h>
 #endif

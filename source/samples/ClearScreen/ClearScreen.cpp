@@ -5,7 +5,18 @@
 #include <cassert>
 
 #ifdef _WIN32
-    #include <Windows.h>
+#include <Windows.h>
+#endif
+#ifdef __linux__
+#include <dlfcn.h>
+#endif
+
+#ifdef _WIN32
+#define LoadLibrary( name ) ::LoadLibraryA( name )
+#define GetLibraryAddress( libray, function ) ::GetProcAddress( libray, function )
+#else
+#define LoadLibrary( name ) dlopen(name , RTLD_NOW | RTLD_LOCAL)
+#define GetLibraryAddress( libray, function ) dlsym( libray, function )
 #endif
 
 namespace Nix {
@@ -18,13 +29,17 @@ namespace Nix {
 
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve ) {
 			printf("%s", "APITest is initializing!");
-
-			HMODULE library = ::LoadLibraryA("NixVulkan.dll");
+#ifdef _WIN32
+            auto library = LoadLibrary("NixVulkan.dll");
+#else
+            auto library = LoadLibrary("libNixVulkan.so");
+#endif
+            
 			assert(library);
 
 			typedef IDriver*(* PFN_CREATE_DRIVER )();
 
-			PFN_CREATE_DRIVER createDriver = reinterpret_cast<PFN_CREATE_DRIVER>(::GetProcAddress(library, "createDriver"));
+			PFN_CREATE_DRIVER createDriver = reinterpret_cast<PFN_CREATE_DRIVER>(GetLibraryAddress(library, "createDriver"));
 
 			// \ 1. create driver
 			m_driver = createDriver();

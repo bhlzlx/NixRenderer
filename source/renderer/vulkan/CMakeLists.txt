@@ -9,6 +9,8 @@ add_definitions( "-DNIX_DYNAMIC_LINK" )
 
 project( NixVulkan )
 
+message(${CMAKE_CXX_FLAGS})
+
 set( RendererSource
 	${CMAKE_CURRENT_SOURCE_DIR}/DriverVk.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/DriverVk.h
@@ -26,8 +28,6 @@ set( RendererSource
     ${CMAKE_CURRENT_SOURCE_DIR}/BufferVk.h
     ${CMAKE_CURRENT_SOURCE_DIR}/TextureVk.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TextureVk.h
-    #${CMAKE_CURRENT_SOURCE_DIR}/ViewVk.cpp
-    #${CMAKE_CURRENT_SOURCE_DIR}/ViewVk.h
     ${CMAKE_CURRENT_SOURCE_DIR}/PipelineVk.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/PipelineVk.h
     ${CMAKE_CURRENT_SOURCE_DIR}/QueueVk.cpp
@@ -62,7 +62,7 @@ set( RendererSource
     ${CMAKE_CURRENT_SOURCE_DIR}/KTXLoader.h
     #
     ${CMAKE_CURRENT_SOURCE_DIR}/vulkan_api.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/vkinc.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/VkInc.cpp
 )
 
 add_library( NixVulkan SHARED
@@ -89,8 +89,8 @@ else()
         #glslang
         #OSDependent
         spirv-cross-core
-		#spirv-cross-c-shared
+		#spirv-cross-c-sharedc
         nix
-        ${vulkan-1}
+        #${vulkan-1}
     )
 endif()

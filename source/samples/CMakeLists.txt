@@ -1,6 +1,9 @@
 project( Samples )
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
+
+set( EXECUTABLE_TYPE )
+
 if( WIN32 )
     if( ${WINDOW_SYSTEM} STREQUAL SDL2 )
         set( PLATFORM_SOURCE
@@ -12,6 +15,11 @@ if( WIN32 )
             ${SOLUTION_DIR}/source/platform/Windows/WinMain/WinMain.rc
         )
     endif()
+    set( EXECUTABLE_TYPE WIN32 )
+endif()
+
+if( CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" )
+    set( PLATFORM_SOURCE ${SOLUTION_DIR}/source/platform/Linux/LinuxMain.cpp )
 endif()
 
 if( ANDROID )
@@ -38,4 +46,8 @@ else()
         SET_PROPERTY(TARGET Sphere PROPERTY FOLDER "Samples")
         SET_PROPERTY(TARGET HDR PROPERTY FOLDER "Samples")
     endif()
+endif()
+
+if(  CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" )
+    add_subdirectory( ClearScreen )
 endif()

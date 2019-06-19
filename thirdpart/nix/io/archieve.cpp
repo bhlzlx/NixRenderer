@@ -1,5 +1,6 @@
 #include "archieve.h"
-#include "../string/path.h"
+#include <memory.h>
+#include"../string/path.h"
 
 namespace Nix
 {
