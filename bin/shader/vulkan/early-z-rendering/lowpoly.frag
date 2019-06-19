@@ -28,8 +28,7 @@ layout( set = 0, binding = 1 ) uniform PointLight {
 
 void main() 
 {
-    //outFragColor = vec4( brightness, brightness, brightness, 1.0f );
-    vec3 fragColor = vec3( 0.0f, 0.0f, 0.0f );
+    vec3 fragColor = vec3( 0.4f, 0.4f, 0.4f );
     for( uint i = 0; i < light_count ; ++i ) {
         float distance = length(lights[i].position - frag_position);
         float attenuation = 1.0f / ( constant + linear * distance + quadratic * (distance * distance));

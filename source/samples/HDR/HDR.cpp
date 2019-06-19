@@ -280,7 +280,7 @@ namespace Nix {
 			m_mainRenderPass->begin(m_primQueue); {
 				static uint64_t frameCounter = 0;
 				++frameCounter;
-				float adapt_lum = (float) abs(int(frameCounter % 100) - 50) / 100.0f + 0.1f;
+				float adapt_lum = (float) abs(int(frameCounter % 200) - 100) / 100.0f * 0.4f + 0.2f;
 				m_argToneMapping->setUniform(0, 0, &adapt_lum, 4);
 				m_mainRenderPass->bindPipeline(m_pipelineToneMapping);
 				m_mainRenderPass->bindArgument(m_argToneMapping);
