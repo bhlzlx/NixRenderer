@@ -88,6 +88,8 @@ namespace Nix {
 			Nix::TextReader rpReader;
 			rpReader.openFile(_archieve, "renderpass/swapchain.json");
 			rpDesc.parse(rpReader.getText());
+			rpDesc.colors[0].format = m_context->swapchainColorFormat();
+			rpDesc.depthStencil.format = m_driver->selectDepthFormat(true);
 
 			TextureDescription texDesc;
 			texDesc.depth = 1;
