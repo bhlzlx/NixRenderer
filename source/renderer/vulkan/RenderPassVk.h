@@ -94,10 +94,10 @@ namespace Nix {
 	private:
 		ContextVk*						m_context;
 		VkRenderPass					m_renderPass;
-		std::vector< VkImage >			m_vecImages;
-		std::vector< TextureVk* >		m_vecColors;
+		std::vector<VkImage>			m_vecImages;
+		std::vector<TextureVk*>			m_vecColors;
 		TextureVk*						m_depthStencil;
-		std::vector< VkFramebuffer>		m_vecFramebuffers;
+		std::vector<VkFramebuffer>		m_vecFramebuffers;
 		Size<uint32_t>					m_size;
 		uint32_t						m_imageIndex;
 		VkCommandBuffer					m_commandBuffer;
@@ -140,6 +140,9 @@ namespace Nix {
 
 		TextureVk* colorAttachment(uint32_t _index) {
 			return m_vecColors[_index];
+		}
+		TextureVk* depthStencil() {
+			return m_depthStencil;
 		}
 
 		virtual void bindPipeline(IPipeline* _pipeline) override;

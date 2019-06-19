@@ -103,7 +103,7 @@ namespace Nix {
 				VkDescriptorImageInfo* imageInfo = const_cast<VkDescriptorImageInfo*>(write.pImageInfo);
 				imageInfo->imageView = ((TextureVk*)_texture)->getImageView();
 				imageInfo->sampler = m_context->getSampler(_sampler);
-				imageInfo->imageLayout = ((TextureVk*)_texture)->getImageLayout();
+				imageInfo->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 				m_needUpdate = true;
 				break;
 			}

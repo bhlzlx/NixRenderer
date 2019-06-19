@@ -3,6 +3,7 @@
 #include "VkInc.h"
 #include "vkhelper/helper.h"
 #include <nix/io/archieve.h>
+#include "TypemappingVk.h"
 #include <map>
 
 #ifdef _WIN32
@@ -75,8 +76,31 @@ namespace Nix {
 		return true;
 	}
 
+	bool DriverVk::checkFormatSupport(NixFormat _format, FormatFeatureFlags _flags)
+	{
+		VkFormat format = NixFormatToVk(_format);
+		VkFormatProperties props;
+		vkGetPhysicalDeviceFormatProperties(m_PhDevice, format, &props);
+		uint32_t supportFlags = 0;
+		if (_flags & FormatFeatureFlagBits::FeatureColorAttachment) supportFlags |= VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT;
+		if (_flags & FormatFeatureFlagBits::FeatureDepthStencilAttachment) supportFlags |= VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		if (_flags & FormatFeatureFlagBits::FeatureSampling) supportFlags |= VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
+		if (_flags & FormatFeatureFlagBits::FeatureTransferSource) supportFlags |= VK_FORMAT_FEATURE_TRANSFER_SRC_BIT;
+		if (_flags & FormatFeatureFlagBits::FeatureTransferDestination) supportFlags |= VK_FORMAT_FEATURE_TRANSFER_DST_BIT;
+		if (_flags & FormatFeatureFlagBits::FeatureBlitSource) supportFlags |= VK_FORMAT_FEATURE_BLIT_SRC_BIT;
+		if (_flags & FormatFeatureFlagBits::FeatureBlitDestination) supportFlags |= VK_FORMAT_FEATURE_BLIT_DST_BIT;
 
-
+		if (_flags & FormatFeatureFlagBits::FeatureOptimalTiling) {
+			if ( (supportFlags & props.optimalTilingFeatures) == supportFlags ) {
+				return true;
+			}
+		}else {
+			if ((supportFlags & props.linearTilingFeatures) == supportFlags) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	VkSurfaceKHR DriverVk::createSurface(void* _hwnd)
 	{
@@ -328,6 +352,35 @@ namespace Nix {
 			}
 		}
 		return -1;
+	}
+
+	Nix::NixFormat DriverVk::selectDepthFormat(bool _highp)
+	{
+		NixFormat HighP[] = {
+			NixDepth32FStencil8, NixDepth32F, NixDepth24FStencil8, NixDepth24FX8, NixDepth16F
+		};
+		if (_highp) {
+			for (int i = 0; i < sizeof(HighP) / sizeof(HighP[0]); ++i)
+				if (checkFormatSupport(
+					HighP[i],
+					FormatFeatureFlagBits::FeatureOptimalTiling |
+					FormatFeatureFlagBits::FeatureDepthStencilAttachment |
+					FormatFeatureFlagBits::FeatureSampling)) {
+					return HighP[i];
+				}
+		}
+		else
+		{
+			for (int i = sizeof(HighP) / sizeof(HighP[0]) - 1; i >= 0 ; --i)
+				if (checkFormatSupport(
+					HighP[i],
+					FormatFeatureFlagBits::FeatureOptimalTiling |
+					FormatFeatureFlagBits::FeatureDepthStencilAttachment |
+					FormatFeatureFlagBits::FeatureSampling)) {
+					return HighP[i];
+				}
+		}
+		return NixInvalidFormat;
 	}
 
 	bool DriverVk::validatePipelineCache(const void * _data, size_t _length)

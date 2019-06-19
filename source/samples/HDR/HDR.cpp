@@ -150,8 +150,9 @@ namespace Nix {
 			rpReader.openFile(_archieve, "renderpass/swapchain.json");
 			RenderPassDescription rpDesc;
 			rpDesc.parse(rpReader.getText());
+			rpDesc.colors[0].format = m_context->swapchainColorFormat();
+			rpDesc.depthStencil.format = m_driver->selectDepthFormat(true);
 			m_pipelineToneMapping = m_mtlToneMapping->createPipeline(rpDesc);
-
 		}
 
 

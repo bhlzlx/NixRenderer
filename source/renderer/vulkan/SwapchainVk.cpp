@@ -27,6 +27,12 @@ namespace Nix {
 		return VkFormatToNix(m_createInfo.imageFormat);
 	}
 
+	Nix::NixFormat SwapchainVk::depthFormat() const
+	{
+		RenderPassSwapchainVk* renderPass = (RenderPassSwapchainVk*)m_renderPass;
+		return renderPass->depthStencil()->getDesc().format;
+	}
+
 	bool SwapchainVk::acquireNextImage()
 	{
 		if (!m_swapchain) {

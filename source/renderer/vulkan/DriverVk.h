@@ -70,6 +70,8 @@ namespace Nix {
 		virtual inline ILogger* getLogger() override {
 			return &m_logger;
 		}
+		virtual bool checkFormatSupport(NixFormat _format, FormatFeatureFlags _flags) override;
+		virtual NixFormat selectDepthFormat(bool _highp) override;
 
 	private:
 		VkInstance createInstance();

@@ -57,6 +57,7 @@ namespace Nix {
 
 		VkFormat nativeFormat() const;
 		NixFormat format() const;
+		NixFormat depthFormat() const;
 		VkBool32 avail() const;
 		//
 		bool updateSwapchain();

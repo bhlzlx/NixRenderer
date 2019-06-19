@@ -22,17 +22,18 @@ namespace Nix {
 			OwnImageView = 0x2
 		};
 		typedef uint32_t TexResOwnershipFlags;
-		ContextVk* m_context;
-		TextureDescription m_descriptor;
-		VkImage m_image;
-		VkImageView m_imageView;
-		VmaAllocation m_allocation;
-		TexResOwnershipFlags m_ownership;
+
+		ContextVk*				m_context;
+		TextureDescription		m_descriptor;
+		VkImage					m_image;
+		VkImageView				m_imageView;
+		VmaAllocation			m_allocation;
+		TexResOwnershipFlags	m_ownership;
 		// Vulkan state flags
-		VkImageAspectFlags m_aspectFlags;
-		VkAccessFlags	m_accessFlags;
-		VkPipelineStageFlags m_pipelineStages;
-		VkImageLayout m_imageLayout;
+		VkImageAspectFlags		m_aspectFlags;
+		VkAccessFlags			m_accessFlags;
+		VkPipelineStageFlags	m_pipelineStages;
+		VkImageLayout			m_imageLayout;
 	private:
 		void setImageLayout(VkImageLayout _imageLayout) {
 			m_imageLayout = _imageLayout;

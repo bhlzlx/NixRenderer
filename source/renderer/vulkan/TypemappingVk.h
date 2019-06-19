@@ -48,6 +48,8 @@ namespace Nix {
 		case NixRGBA5551_PACKED: return VK_FORMAT_R5G5B5A1_UNORM_PACK16;
 		case NixRGBA_F16: return VK_FORMAT_R16G16B16A16_SFLOAT;
 		case NixRGBA_F32: return VK_FORMAT_R32G32B32A32_SFLOAT;
+		case NixDepth16F: return VK_FORMAT_D16_UNORM;
+		case NixDepth24FX8: return VK_FORMAT_X8_D24_UNORM_PACK32;
 		case NixDepth24FStencil8: return VK_FORMAT_D24_UNORM_S8_UINT;
 		case NixDepth32F: return VK_FORMAT_D32_SFLOAT;
 		case NixDepth32FStencil8: return VK_FORMAT_D32_SFLOAT_S8_UINT;
@@ -83,6 +85,8 @@ namespace Nix {
 		case VK_FORMAT_R5G5B5A1_UNORM_PACK16: return NixRGBA5551_PACKED;
 		case VK_FORMAT_R16G16B16A16_SFLOAT: return NixRGBA_F16;
 		case VK_FORMAT_R32G32B32A32_SFLOAT: return NixRGBA_F32;
+		case VK_FORMAT_D16_UNORM: return NixDepth16F;
+		case VK_FORMAT_X8_D24_UNORM_PACK32: return NixDepth24FX8;
 		case VK_FORMAT_D24_UNORM_S8_UINT: return NixDepth24FStencil8;
 		case VK_FORMAT_D32_SFLOAT: return NixDepth32F;
 		case VK_FORMAT_D32_SFLOAT_S8_UINT: return NixDepth32FStencil8;

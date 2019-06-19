@@ -126,9 +126,14 @@ namespace Nix {
 		return context;
 	}
 
-	Nix::NixFormat ContextVk::swapchainFormat() const
+	Nix::NixFormat ContextVk::swapchainColorFormat() const
 	{
 		return m_swapchain.format();
+	}
+
+	Nix::NixFormat ContextVk::swapchainDepthFormat() const
+	{
+		return m_swapchain.depthFormat();
 	}
 	/////////////////////////////////
 

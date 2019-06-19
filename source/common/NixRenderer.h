@@ -127,6 +127,9 @@ namespace Nix {
 		// Float type
 		NixRGBA_F16,
 		NixRGBA_F32,
+		//
+		NixDepth16F,
+		NixDepth24FX8,
 		// Depth stencil type
 		NixDepth24FStencil8,
 		NixDepth32F,
@@ -624,6 +627,18 @@ namespace Nix {
 	};
 
 	class IContext;
+
+	enum FormatFeatureFlagBits {
+		FeatureOptimalTiling = 0x1,
+		FeatureColorAttachment = 0x2,
+		FeatureDepthStencilAttachment = 0x4,
+		FeatureSampling = 0x8,
+		FeatureBlitSource = 0x10,
+		FeatureBlitDestination = 0x20,
+		FeatureTransferSource = 0x40,
+		FeatureTransferDestination = 0x80
+	};
+	typedef uint32_t FormatFeatureFlags;
 	//
 	class NIX_API_DECL IDriver {
 	public:
@@ -631,6 +646,8 @@ namespace Nix {
 		virtual IContext* createContext(void* _hwnd) = 0;
 		virtual IArchieve* getArchieve() = 0;
 		virtual ILogger* getLogger() = 0;
+		virtual NixFormat selectDepthFormat(bool _highP = true) = 0;
+		virtual bool checkFormatSupport( NixFormat _format, FormatFeatureFlags _flags ) = 0;
 	};
 
     class NIX_API_DECL IContext {
@@ -650,7 +667,8 @@ namespace Nix {
         virtual IRenderPass* createRenderPass( const RenderPassDescription& _desc, IAttachment** _colorAttachments, IAttachment* _depthStencil ) = 0;
 		virtual IMaterial* createMaterial( const MaterialDescription& _desc ) = 0;
         //virtual IPipeline* createPipeline( const MaterialDescription& _desc ) = 0;
-		virtual NixFormat swapchainFormat() const = 0;
+		virtual NixFormat swapchainColorFormat() const = 0;
+		virtual NixFormat swapchainDepthFormat() const = 0;
 		virtual void captureFrame(IFrameCapture * _capture, FrameCaptureCallback _callback ) = 0;
 		//
 		virtual void resize(uint32_t _width, uint32_t _height) = 0;

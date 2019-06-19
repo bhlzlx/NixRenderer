@@ -22,10 +22,8 @@ namespace Nix {
 	// a context owns a phy/logic device graphics queue,present queue
 	// contexts shares a upload queue
 	class NIX_API_DECL ContextVk : public IContext {
-		//friend class ViewVk;
 		friend class DriverVk;
 	private:
-
         std::mutex              m_tickMutex;
 		DriverVk* m_driver;
 		//
@@ -41,17 +39,13 @@ namespace Nix {
 		VkSurfaceKHR			m_surface;
 		SwapchainVk				m_swapchain;
 		IRenderPass*			m_renderPass;
-		// buffer object manager
-		UniformAllocator		m_uniformAllocator;
-		// descriptor set manager
-		ArgumentAllocator		m_argumentAllocator;
 		//
 		VmaAllocator			m_vmaAllocator;
-		//
+		UniformAllocator		m_uniformAllocator;
+		ArgumentAllocator		m_argumentAllocator;
 		IArchieve*				m_archieve;
 		//
 		uint64_t				m_frameCounter;
-		//
 		VkCommandBuffer			m_renderCommandBuffer;
 	private:
 		VkPipelineCache			m_pipelineCache;
@@ -79,7 +73,8 @@ namespace Nix {
 		virtual IAttachment* createAttachment( NixFormat _format, uint32_t _width, uint32_t _height ) override;
 		virtual IRenderPass* createRenderPass(const RenderPassDescription& _desc, IAttachment** _colorAttachments, IAttachment* _depthStencil) override;
 		virtual IMaterial* createMaterial( const MaterialDescription& _desc );
-		virtual NixFormat swapchainFormat() const override;
+		virtual NixFormat swapchainColorFormat() const override;
+		virtual NixFormat swapchainDepthFormat() const override;
 		virtual void captureFrame(IFrameCapture * _capture, FrameCaptureCallback _callback) override;
 		//
 		VkSurfaceKHR getSurface() const;
@@ -106,7 +101,7 @@ namespace Nix {
 		VkFence createFence() const;
 		GraphicsQueueVk* createGraphicsQueue(VkQueue _id, uint32_t _family, uint32_t _index ) const;
 		UploadQueueVk* createUploadQueue(VkQueue _id, uint32_t _family, uint32_t _index ) const;
-		ShaderModuleVk* createShaderModule(const char * _text, const char * _entryPoint, VkShaderStageFlagBits _stage) const;		
+		ShaderModuleVk* createShaderModule(const char * _text, const char * _entryPoint, VkShaderStageFlagBits _stage) const;
 		//BufferVk&& createBuffer( size_t _size, VkBufferUsageFlags _usage ) const;
 		virtual void resize(uint32_t _width, uint32_t _height) override;
 		virtual bool beginFrame() override;

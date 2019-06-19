@@ -8,6 +8,7 @@
 #include "vkhelper/helper.h"
 #include "TypemappingVk.h"
 #include "RenderableVk.h"
+#include "DriverVk.h"
 #include "nix/string/encoding.h"
 #include <cassert>
 
@@ -527,7 +528,8 @@ namespace Nix {
 			dsdesc.width = _width;
 			dsdesc.height = _height;
 			dsdesc.depth = 1;
-			dsdesc.format = NixDepth32F;
+			DriverVk* driver = (DriverVk*)m_context->getDriver();
+			dsdesc.format = driver->selectDepthFormat(true);
 			dsdesc.mipmapLevel = 1;
 			dsdesc.type = Texture2D;
 		}
@@ -544,7 +546,8 @@ namespace Nix {
 			rpdesc.colors[0].loadAction = Clear;
 			rpdesc.colors[0].usage = AOU_Present;
 			rpdesc.colorCount = 1;
-			rpdesc.depthStencil.format = NixDepth32F;
+			DriverVk* driver = (DriverVk*)m_context->getDriver();
+			rpdesc.depthStencil.format = driver->selectDepthFormat(true);
 			rpdesc.depthStencil.loadAction = Clear;
 			rpdesc.depthStencil.usage = AOU_DepthStencilAttachment;
 		}
