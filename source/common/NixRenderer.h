@@ -643,6 +643,7 @@ namespace Nix {
 	class NIX_API_DECL IDriver {
 	public:
 		virtual bool initialize( Nix::IArchieve* _arch, DeviceType _type) = 0;
+		virtual void release() = 0;
 		virtual IContext* createContext(void* _hwnd) = 0;
 		virtual IArchieve* getArchieve() = 0;
 		virtual ILogger* getLogger() = 0;

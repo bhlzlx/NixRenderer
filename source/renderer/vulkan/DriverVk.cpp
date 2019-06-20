@@ -19,6 +19,24 @@
 #include <X11/Xlib.h>
 #endif
 
+#ifdef _WIN32
+#define VULKAN_LIBRARY_NAME "vulkan-1.dll"
+#define SHADER_COMPILER_LIBRARY_NAME "VkShaderCompiler.dll"
+#else
+#define VULKAN_LIBRARY_NAME "libvulkan.so"
+#define SHADER_COMPILER_LIBRARY_NAME "libVkShaderCompiler.so"
+#endif
+
+#ifdef _WIN32
+#define OpenLibrary( name ) ::LoadLibraryA( name )
+#define CloseLibrary( library ) ::FreeLibrary( (HMODULE) library)
+#define GetLibraryAddress( libray, function ) ::GetProcAddress( (HMODULE)libray, function )
+#else
+#define OpenLibrary( name ) dlopen(name , RTLD_NOW | RTLD_LOCAL)
+#define CloseLibrary( library ) dlclose((void*)library)
+#define GetLibraryAddress( libray, function ) dlsym( (void*)libray, function )
+#endif
+
 #undef REGIST_VULKAN_FUNCTION
 #ifdef _WIN32
 #define REGIST_VULKAN_FUNCTION( FUNCTION ) FUNCTION = reinterpret_cast<PFN_##FUNCTION>(GetProcAddress( library, #FUNCTION ));
@@ -43,20 +61,8 @@ PFN_vkCreateXlibSurfaceKHR vkCreateXlibSurfaceKHR;
 namespace Nix {
 
 	bool DriverVk::initialize( IArchieve* _arch, DeviceType _type) {
-#ifdef _WIN32
-		HMODULE library = ::LoadLibraryA("vulkan-1.dll");
-		if (library == NULL) {
-			return false;
-		}
-#endif
-#ifdef __ANDROID__
-		void* library = dlopen("libvulkan.so", RTLD_NOW | RTLD_LOCAL);
-		if (!library) return false;
-#endif
-#ifdef __linux__
-        void* library = dlopen("libvulkan.so", RTLD_NOW | RTLD_LOCAL);
-		if (!library) return false;
-#endif
+		auto library = OpenLibrary(VULKAN_LIBRARY_NAME);
+		if (library == NULL) return false;
 #include "vulkan_api.h"
 #ifdef _WIN32
 		REGIST_VULKAN_FUNCTION(vkCreateWin32SurfaceKHR)
@@ -64,8 +70,7 @@ namespace Nix {
 		REGIST_VULKAN_FUNCTION(vkCreateAndroidSurfaceKHR)
 #elif defined __linux__
         REGIST_VULKAN_FUNCTION(vkCreateXlibSurfaceKHR)
-#endif
-		
+#endif		
 		if (!vkGetInstanceProcAddr || !vkCreateInstance || !vkAcquireNextImageKHR) {
 			return false;
 		}
@@ -93,8 +98,27 @@ namespace Nix {
 			return false;
 		}
 		vkGetPhysicalDeviceProperties(m_PhDevice, &m_deviceProps);
-		//
+//////////////////////////////////////////////////////////////////////////
+		m_compilerLibrary = (void*)OpenLibrary(SHADER_COMPILER_LIBRARY_NAME);
+		if (m_compilerLibrary == NULL) return false;
+		m_initializeShaderCompiler = (PFN_INITIALIZE_SHADER_COMPILER)GetLibraryAddress(m_compilerLibrary, "InitializeShaderCompiler");
+		m_compileGLSL2SPV = (PFN_COMPILE_GLSL_2_SPV)GetLibraryAddress(m_compilerLibrary, "CompileGLSL2SPV");
+		m_finalizeShaderCompiler = (PFN_FINALIZE_SHADER_COMPILER)GetLibraryAddress(m_compilerLibrary, "FinalizeShaderCompiler");
+
+		if (m_initializeShaderCompiler && m_compileGLSL2SPV && m_finalizeShaderCompiler) {
+			m_initializeShaderCompiler();
+		}
+
 		return true;
+	}
+
+	void DriverVk::release() {
+		if( m_finalizeShaderCompiler )
+			m_finalizeShaderCompiler();
+		if (m_compilerLibrary) {
+			CloseLibrary(m_compilerLibrary);
+			m_compilerLibrary = nullptr;
+		}
 	}
 
 	bool DriverVk::checkFormatSupport(NixFormat _format, FormatFeatureFlags _flags)
@@ -446,6 +470,16 @@ namespace Nix {
 		}
 		return true;
 	}
+
+	bool DriverVk::compileGLSL2SPV(ShaderModuleType _type, const char * _text, std::vector<uint32_t>& _spvBytes, std::string& _compileLog)
+	{
+		if (m_compileGLSL2SPV) {
+			return m_compileGLSL2SPV(_type, _text, _spvBytes, _compileLog);
+		}
+		_compileLog = "GLSL compiler component not found!";
+		return false;
+	}
+
 }
 
 extern "C" {

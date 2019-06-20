@@ -4,6 +4,7 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdpart )
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdpart/SPIRV-Cross )
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdpart/GLSLang )
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/../../common )
+include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/../../utility )
 
 add_definitions( "-DNIX_DYNAMIC_LINK" )
 

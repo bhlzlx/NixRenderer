@@ -4,6 +4,7 @@
 #include "DescriptorSetVk.h"
 #include "TypemappingVk.h"
 #include "ContextVk.h"
+#include "DriverVk.h"
 
 namespace Nix {
 
@@ -117,29 +118,20 @@ namespace Nix {
 		//
 		VkDevice device = _context->getDevice();
 		// load SPV from disk!
-		auto arch = _context->getDriver()->getArchieve();
-		Nix::IFile * vertexSPV = arch->open(VULKAN_SHADER_PATH(materialDesc.vertexShader));
-		Nix::IFile* vertexSPVMem = CreateMemoryBuffer(vertexSPV->size());
-		if (!vertexSPV) { assert(false); return nullptr; }
-		vertexSPV->read(vertexSPV->size(), vertexSPVMem);
-
-		Nix::IFile * fragmentSPV = arch->open(VULKAN_SHADER_PATH(materialDesc.fragmentShader));
-		if (!vertexSPV) { assert(false); return nullptr; }
-		Nix::IFile* fragSPVMem = CreateMemoryBuffer(fragmentSPV->size());
-		fragmentSPV->read(fragmentSPV->size(), fragSPVMem);
-		// create shader module
-		VkShaderModule vertSM = NixCreateShaderModule(device, vertexSPVMem->constData(), vertexSPVMem->size());
+		std::vector<uint32_t> vertexSpvBytes;
+		std::vector<uint32_t> fragmentSpvBytes;
+		VkShaderModule vertSM = CreateShaderModule(_context, _desc.vertexShader, VertexShader, vertexSpvBytes);
 		if (VK_NULL_HANDLE == vertSM) {
 			assert(false); return nullptr;
 		}
-		VkShaderModule fragSM = NixCreateShaderModule(device, fragSPVMem->constData(), fragSPVMem->size());
+		VkShaderModule fragSM = CreateShaderModule(_context, _desc.fragmentShader, FragmentShader, fragmentSpvBytes);
 		if (VK_NULL_HANDLE == fragSM) {
 			assert(false); return nullptr;
 		}
 		// reflect the resource information
-		spirv_cross::Compiler vertCompiler((const uint32_t*)vertexSPVMem->constData(), vertexSPVMem->size() / sizeof(uint32_t));
+		spirv_cross::Compiler vertCompiler(vertexSpvBytes.data(), vertexSpvBytes.size());
 		spirv_cross::ShaderResources vertexResource = vertCompiler.get_shader_resources();
-		spirv_cross::Compiler fragCompiler( (const uint32_t*)fragSPVMem->constData(), fragSPVMem->size() / sizeof(uint32_t) );
+		spirv_cross::Compiler fragCompiler(fragmentSpvBytes.data(), fragmentSpvBytes.size());
 		spirv_cross::ShaderResources fragmentResource = fragCompiler.get_shader_resources();
 		// 1. verify the vertex input layout
 		// 2. verify the descriptor set description
@@ -377,6 +369,57 @@ namespace Nix {
 		}
 		//
 		std::sort(m_dynamicalBindings.begin(), m_dynamicalBindings.end());
+	}
+
+	VkShaderModule MaterialVk::CreateShaderModule(ContextVk* _context, const char * _shader, ShaderModuleType _type, std::vector<uint32_t>& _spvBytes)
+	{
+		auto length = strlen(_shader);
+		// 
+		if (length < 96 && length > 4) { // if @_shader is a file path
+			VkDevice device = _context->getDevice();
+			// load SPV from disk!
+			auto arch = _context->getDriver()->getArchieve();
+			Nix::IFile * file = arch->open(VULKAN_SHADER_PATH(_shader));
+			if (!file) { assert(false); return nullptr; }
+			Nix::IFile* mem = CreateMemoryBuffer(file->size() + 1);
+			mem->seek(SeekEnd, -1);
+			char endle = 0;
+			mem->write(1, &endle);
+			mem->seek(SeekSet, 0);
+			file->read(file->size(), mem);
+			file->release();
+			if (*(const char*)mem->constData() == '#') {
+				DriverVk* driver = (DriverVk*)_context->getDriver();
+				std::string compileInfo;
+				bool rst = driver->compileGLSL2SPV(_type, (const char*)mem->constData(), _spvBytes, compileInfo);
+				if (!rst) {
+					mem->release();
+					return VK_NULL_HANDLE;
+				}
+				VkShaderModule module = NixCreateShaderModule(device, _spvBytes.data(), _spvBytes.size() * sizeof(uint32_t));
+				return module;
+			} else {
+				auto module = NixCreateShaderModule(device, mem->constData(), mem->size() - 1 );
+				_spvBytes = std::vector<uint32_t>((uint32_t*)mem->constData(), (uint32_t*)mem->constData() + mem->size() / sizeof(uint32_t));
+				mem->release();
+				return module;
+			}
+		}
+		else
+		{
+			if (*_shader == '#') { // @_shader is shader text content
+				DriverVk* driver = (DriverVk*)_context->getDriver();
+				std::vector<uint32_t> spvBytes;
+				std::string compileInfo;
+				bool rst = driver->compileGLSL2SPV(_type, _shader, spvBytes, compileInfo);
+				if (!rst) {
+					return VK_NULL_HANDLE;
+				}
+				_spvBytes = std::move(spvBytes);
+				return NixCreateShaderModule( _context->getDevice(), spvBytes.data(), spvBytes.size() * sizeof(uint32_t));
+			}
+		}
+		return VK_NULL_HANDLE;
 	}
 
 }

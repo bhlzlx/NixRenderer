@@ -5,6 +5,7 @@ set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 
 add_subdirectory( nix )
 add_subdirectory( SPIRV-Cross )
+add_subdirectory( GLSLang )
 SET_PROPERTY(TARGET nix PROPERTY FOLDER "Thirdpart")
 SET_PROPERTY(TARGET spirv-cross-core PROPERTY FOLDER "Thirdpart")
 # SET_PROPERTY(TARGET spirv-cross-cpp PROPERTY FOLDER "Thirdpart")

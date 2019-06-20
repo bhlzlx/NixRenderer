@@ -50,6 +50,7 @@ namespace Nix {
 		virtual void setUniform(uint32_t _index, uint32_t _offset, const void * _data, uint32_t _size) override;
 		virtual void setShaderCache(uint32_t _offset, const void* _data, uint32_t _size) override;
 		virtual void release() override;
+		//
 	public:
 		void assignUniformChunks();
 	};

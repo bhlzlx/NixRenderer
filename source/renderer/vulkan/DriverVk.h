@@ -6,6 +6,7 @@
 #include "DebuggerVk.h"
 #include <NixRenderer.h>
 #include <iostream>
+#include <VkShaderCompiler/VkShaderCompiler.h>
 
 namespace Nix {
 
@@ -54,6 +55,10 @@ namespace Nix {
 		// Dynamic Buffer Allocator
 		SimplerLogger						m_logger;
 		//
+		void*								m_compilerLibrary;
+		PFN_INITIALIZE_SHADER_COMPILER		m_initializeShaderCompiler;
+		PFN_FINALIZE_SHADER_COMPILER		m_finalizeShaderCompiler;
+		PFN_COMPILE_GLSL_2_SPV				m_compileGLSL2SPV;
 	public:
 		DriverVk() :
 			m_instance(VK_NULL_HANDLE)
@@ -63,6 +68,7 @@ namespace Nix {
 		}
 
 		virtual bool initialize( Nix::IArchieve* _arch, DeviceType _type ) override;
+		virtual void release() override;
 		virtual IContext* createContext( void* _hwnd ) override;
 		virtual inline IArchieve* getArchieve() override {
 			return m_archieve;
@@ -85,5 +91,6 @@ namespace Nix {
 		bool validatePipelineCache(const void * _data, size_t _length);
 		inline VkInstance getInstance() { return m_instance; }
 		inline const VkPhysicalDeviceProperties& getPhysicalDeviceProperties() { return m_deviceProps; }
+		bool compileGLSL2SPV(ShaderModuleType _type, const char * _text, std::vector<uint32_t>& _spvBytes, std::string& _compileLog);
 	};
 }

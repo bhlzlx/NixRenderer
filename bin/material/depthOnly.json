@@ -1,6 +1,6 @@
 {
-	"vertexShader" : "early-z/early-z.vert.spv",
-	"fragmentShader" : "early-z/early-z.frag.spv",
+	"vertexShader" : "early-z/early-z.vert",
+	"fragmentShader" : "early-z/early-z.frag",
 	"topologyMode" : "TMTriangleList",
 	"pologonMode" : "PMFill",
 	"vertexLayout" : {
