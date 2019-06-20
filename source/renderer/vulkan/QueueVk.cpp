@@ -318,7 +318,7 @@ namespace Nix {
 		copy.size = _size;
 		VkBufferMemoryBarrier barrierBefore; {
 			barrierBefore.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-			barrierBefore.srcAccessMask = VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
+			barrierBefore.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 			barrierBefore.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 			barrierBefore.pNext = nullptr;
 			barrierBefore.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -330,7 +330,7 @@ namespace Nix {
 		VkBufferMemoryBarrier barrierAfter; {
 			barrierAfter.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
 			barrierAfter.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-			barrierAfter.dstAccessMask = VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
+			barrierAfter.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 			barrierAfter.pNext = nullptr;
 			barrierAfter.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barrierAfter.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -338,12 +338,12 @@ namespace Nix {
 			barrierAfter.size = _size;
 			barrierAfter.buffer = *_buffer;
 		}
-		vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
+		vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 			0, nullptr,
 			1, &barrierBefore,
 			0, nullptr);
 		vkCmdCopyBuffer(m_commandBuffer, (const VkBuffer&)stageBuffer, *_buffer, 1, &copy);
-		vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, 0,
+		vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 			0, nullptr,
 			1, &barrierAfter,
 			0, nullptr);
