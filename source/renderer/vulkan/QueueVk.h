@@ -114,12 +114,10 @@ namespace Nix {
 		VkBool32					m_updatingBuffersActived[MaxFlightCount];
 		//
 		uint32_t					m_flightIndex;
-		// semaphores reference to the swapchain
-		VkSemaphore					m_imageAvailSemaphore;
-		VkSemaphore					m_renderCompleteSemaphore;
 		// indicate the graphics queue is ready for rendering
 		VkBool32					m_readyForRendering;
-
+		// 
+		std::vector<SwapchainVk*>	m_swapchains;
 		ScreenCapture				m_screenCapture;
 	private:
 		GraphicsQueueVk(const GraphicsQueueVk&) {
@@ -131,8 +129,6 @@ namespace Nix {
 			m_queue(VK_NULL_HANDLE)
 			, m_commandPool(VK_NULL_HANDLE)
 			, m_flightIndex(0)
-			, m_imageAvailSemaphore( VK_NULL_HANDLE)
-			, m_renderCompleteSemaphore( VK_NULL_HANDLE)
 			, m_readyForRendering( VK_FALSE)
 		{
 			memset(m_renderFences, 0, sizeof(m_renderFences));
@@ -143,7 +139,7 @@ namespace Nix {
 		operator const VkQueue& () const {
 			return m_queue;
 		}
-		bool intialize(SwapchainVk* _swapchain);
+		bool attachSwapchains( std::vector<SwapchainVk*> _swapchains );
 		void beginFrame(uint32_t _flightIndex);
 		void updateBuffer( BufferVk* _buffer, size_t _offset, const void * _data, size_t _length );
 		//void updateTexture(TextureVk* _texture, const ImageRegion& _region, const void * _data, size_t _length);

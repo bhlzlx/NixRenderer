@@ -9,8 +9,6 @@ add_definitions( "-DNIX_DYNAMIC_LINK" )
 
 project( NixVulkan )
 
-message(${CMAKE_CXX_FLAGS})
-
 set( RendererSource
 	${CMAKE_CURRENT_SOURCE_DIR}/DriverVk.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/DriverVk.h

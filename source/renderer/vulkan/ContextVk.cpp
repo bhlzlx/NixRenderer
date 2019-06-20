@@ -87,6 +87,7 @@ namespace Nix {
 		context->m_renderPass = context->m_swapchain.renderPass();
 
 		context->m_graphicsQueue = context->createGraphicsQueue(graphicsQueue, graphicQueueReq.family, graphicQueueReq.index);
+		context->m_graphicsQueue->attachSwapchains({ &context->m_swapchain });
 		context->m_uploadQueue = context->createUploadQueue(uploadQueue, uploadQueueReq.family, uploadQueueReq.index);
 
 		context->m_swapchain.setGraphicsQueue((const VkQueue&)* context->m_graphicsQueue);

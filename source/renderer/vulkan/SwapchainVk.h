@@ -15,8 +15,8 @@ namespace Nix {
 		VkSwapchainCreateInfoKHR		m_createInfo;
 		VkSwapchainKHR					m_swapchain;
 		// resource objects
-		VkSemaphore						m_nextImageAvailable;
-		VkSemaphore						m_readyToPresent;
+		VkSemaphore						m_imageAvailSemaphores[MaxFlightCount];
+		VkSemaphore						m_renderCompleteSemaphores[MaxFlightCount];
 		//
 		IRenderPass*					m_renderPass;
 		//
@@ -31,9 +31,7 @@ namespace Nix {
 		ContextVk*						m_context;
 	public:
 		SwapchainVk() :
-			m_nextImageAvailable( VK_NULL_HANDLE)
-			, m_readyToPresent(VK_NULL_HANDLE)
-			, m_renderPass(nullptr)
+			m_renderPass(nullptr)
 			, m_commandBuffer(VK_NULL_HANDLE)
 			, m_graphicsQueue(VK_NULL_HANDLE)
 			, m_imageIndex(0)
@@ -46,10 +44,10 @@ namespace Nix {
 		void cleanup();
 
 		const VkSemaphore& getImageAvailSemaphore() const {
-			return m_nextImageAvailable;
+			return m_imageAvailSemaphores[m_flightIndex];
 		}
 		const VkSemaphore& getReadyToPresentSemaphore() const {
-			return m_readyToPresent;
+			return m_renderCompleteSemaphores[m_flightIndex];
 		}
 		uint32_t getFlightIndex() const {
 			return m_flightIndex;

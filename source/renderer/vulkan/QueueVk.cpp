@@ -62,9 +62,6 @@ namespace Nix {
 		}
 		// default flight index
 		queue->m_flightIndex = 0;
-		// get semaphores from swapchain (synchronization objects)
-		queue->m_imageAvailSemaphore = m_swapchain.getImageAvailSemaphore();
-		queue->m_renderCompleteSemaphore = m_swapchain.getReadyToPresentSemaphore();
 		// store the host device object
 		queue->m_device = m_logicalDevice;
 		//
@@ -104,11 +101,9 @@ namespace Nix {
 		return queue;
 	}
 
-	bool GraphicsQueueVk::intialize(SwapchainVk* _swapchain)
+	bool GraphicsQueueVk::attachSwapchains(std::vector<SwapchainVk*> _swapchain)
 	{
-		m_imageAvailSemaphore = _swapchain->getImageAvailSemaphore();
-		m_renderCompleteSemaphore = _swapchain->getReadyToPresentSemaphore();
-		//
+		m_swapchains = _swapchain;
 		return true;
 	}
 
@@ -142,7 +137,6 @@ namespace Nix {
 			}
 		}
 
-
 		auto device = m_context->getDevice();
 		if (m_renderFencesActived[m_flightIndex])
 		{
@@ -169,6 +163,14 @@ namespace Nix {
 
 	void GraphicsQueueVk::endFrame()
 	{
+		std::vector< VkSemaphore > semaphoresToWait;
+		std::vector< VkSemaphore > semaphoresToSignal;
+		for ( auto& swapchain : m_swapchains ) {
+			semaphoresToWait.push_back(swapchain->getImageAvailSemaphore());
+		}
+		for (auto& swapchain : m_swapchains) {
+			semaphoresToSignal.push_back(swapchain->getReadyToPresentSemaphore());
+		}
 		// if has capture action
 		auto command = m_renderBuffers[m_flightIndex];
 		const VkCommandBuffer& cmd = command;
@@ -183,21 +185,18 @@ namespace Nix {
 		submit.pCommandBuffers = &cmd;
 		submit.commandBufferCount = 1;
 		submit.pWaitDstStageMask = &pipelineStageFlag;
-		submit.pWaitSemaphores = &m_imageAvailSemaphore;
+		submit.pWaitSemaphores = semaphoresToWait.data();
 		submit.waitSemaphoreCount = 1;// static_cast<uint32_t>(m_semaphoresToWait.size());
 		if (m_screenCapture.capture && !m_screenCapture.submitted ) {
-			VkSemaphore sigSems[2] = {
-				m_renderCompleteSemaphore,
-				m_screenCapture.waitSemaphore
-			};
-			submit.pSignalSemaphores = sigSems;
-			submit.signalSemaphoreCount = 2;
+			semaphoresToSignal.push_back(m_screenCapture.waitSemaphore);
+			submit.pSignalSemaphores = semaphoresToSignal.data();
+			submit.signalSemaphoreCount = semaphoresToSignal.size();
 			vkQueueSubmit(m_queue, 1, &submit, m_renderFences[m_flightIndex]);
 			m_screenCapture.submitCommand(m_queue);
 		}
 		else {
-			submit.pSignalSemaphores = &m_renderCompleteSemaphore;
-			submit.signalSemaphoreCount = 1;
+			submit.pSignalSemaphores = semaphoresToSignal.data();
+			submit.signalSemaphoreCount = semaphoresToSignal.size();
 			vkQueueSubmit(m_queue, 1, &submit, m_renderFences[m_flightIndex]);
 		}
 
@@ -306,9 +305,6 @@ namespace Nix {
 			vkDestroyFence(m_device, m_updatingFences[i], nullptr);
 			vkDestroyFence(m_device, m_renderFences[i], nullptr);
 		}
-		vkDestroySemaphore(m_device, m_renderCompleteSemaphore, nullptr);
-		vkDestroySemaphore(m_device, m_imageAvailSemaphore, nullptr);
-		//
 		delete this;
 	}
 

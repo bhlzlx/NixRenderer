@@ -39,7 +39,7 @@ namespace Nix {
 			return false;
 		}
 		auto device = m_context->getDevice();
-		VkResult rst = vkAcquireNextImageKHR(device, m_swapchain, uint64_t(-1), m_nextImageAvailable, VK_NULL_HANDLE, &m_imageIndex);
+		VkResult rst = vkAcquireNextImageKHR(device, m_swapchain, uint64_t(-1), m_imageAvailSemaphores[m_flightIndex], VK_NULL_HANDLE, &m_imageIndex);
 		//
 		switch (rst) {
 		case VK_SUCCESS:
@@ -139,7 +139,7 @@ namespace Nix {
 			VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,			// VkStructureType              sType
 			nullptr,									// const void                  *pNext
 			1,											// uint32_t                     waitSemaphoreCount
-			&m_readyToPresent,								// const VkSemaphore           *pWaitSemaphores
+			&m_renderCompleteSemaphores[m_flightIndex],								// const VkSemaphore           *pWaitSemaphores
 			1,											// uint32_t                     swapchainCount
 			&m_swapchain,								// const VkSwapchainKHR        *pSwapchains
 			&m_imageIndex,								// const uint32_t              *pImageIndices
@@ -157,7 +157,6 @@ namespace Nix {
 		default:
 			return false;
 		}
-
 		++m_flightIndex;
 		m_flightIndex = m_flightIndex % MaxFlightCount;
 
@@ -206,15 +205,11 @@ namespace Nix {
 			return swapchain;
 		}
 		// 1.
-		if (surfaceCapabilities.maxImageCount == 0)
-		{
+		if (surfaceCapabilities.maxImageCount == 0) {
 			createInfo.minImageCount = surfaceCapabilities.minImageCount < MaxFlightCount ? MaxFlightCount : surfaceCapabilities.minImageCount;
-		}
-		else
-		{
+		} else {
 			createInfo.minImageCount = surfaceCapabilities.maxImageCount < MaxFlightCount ? surfaceCapabilities.maxImageCount : MaxFlightCount;
 		}
-		//desiredImagesCount = max(surfaceCapabilities.minImageCount, surfaceCapabilities.maxImageCount);
 		// 2.
 		VkSurfaceFormatKHR desiredFormat = surfaceFormats[0];
 		if ((surfaceFormats.size() == 1) && (surfaceFormats[0].format == VK_FORMAT_UNDEFINED))
@@ -236,31 +231,32 @@ namespace Nix {
 		VkSurfaceTransformFlagBitsKHR desiredTransform;
 		VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
 
-		if (surfaceCapabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
+		if (surfaceCapabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) {
 			desiredTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-		else
+		} else {
 			desiredTransform = surfaceCapabilities.currentTransform;
+		}			
 		// 6.
 		// FIFO present mode is always available
 		// MAILBOX is the lowest latency V-Sync enabled mode (something like triple-buffering) so use it if available
-		for (VkPresentModeKHR &pmode : presentModes)
-		{
-			if (pmode == VK_PRESENT_MODE_MAILBOX_KHR)
-			{
-				presentMode = pmode; break;
-			}
-		}
-
-		if (presentMode != VK_PRESENT_MODE_MAILBOX_KHR)
-		{
-			for (VkPresentModeKHR &pmode : presentModes)
-			{
-				if (pmode == VK_PRESENT_MODE_FIFO_KHR)
-				{
-					presentMode = pmode; break;
-				}
-			}
-		}
+// 		for (VkPresentModeKHR &pmode : presentModes)
+// 		{
+// 			if (pmode == VK_PRESENT_MODE_MAILBOX_KHR)
+// 			{
+// 				presentMode = pmode; break;
+// 			}
+// 		}
+// 
+// 		if (presentMode != VK_PRESENT_MODE_MAILBOX_KHR)
+// 		{
+// 			for (VkPresentModeKHR &pmode : presentModes)
+// 			{
+// 				if (pmode == VK_PRESENT_MODE_FIFO_KHR)
+// 				{
+// 					presentMode = pmode; break;
+// 				}
+// 			}
+// 		}
 		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 		//_swapchainCI.minImageCount = _swapchainCI.minImageCount;
 		createInfo.imageFormat = desiredFormat.format;
@@ -281,7 +277,7 @@ namespace Nix {
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &capabilities);
 		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 		for (uint32_t flag = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR; flag <= VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR; flag <<= 1)
-		{//VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR,VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR
+		{   //VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR,VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR
 			if (flag & capabilities.supportedCompositeAlpha)
 			{
 				createInfo.compositeAlpha = (VkCompositeAlphaFlagBitsKHR)flag;
@@ -293,10 +289,10 @@ namespace Nix {
 		swapchain.m_flightIndex = 0;
 		swapchain.m_imageIndex = 0;
 		swapchain.m_swapchain = VK_NULL_HANDLE;
-		//swapchain.m_graphicsQueue = (const VkQueue&)(*_context->getGraphicsQueue());
-		//swapchain.m_renderPass = renderPass;
-		swapchain.m_nextImageAvailable = _context->createSemaphore();
-		swapchain.m_readyToPresent = _context->createSemaphore();
+		for (uint32_t flightIndex = 0; flightIndex < MaxFlightCount; ++flightIndex) {
+			swapchain.m_imageAvailSemaphores[flightIndex] = _context->createSemaphore();
+			swapchain.m_renderCompleteSemaphores[flightIndex] = _context->createSemaphore();
+		}		
 		swapchain.m_renderPass = new RenderPassSwapchainVk( _context );
 		swapchain.m_context = _context;
 		//

@@ -9,9 +9,17 @@ add_executable( ClearScreen ${EXECUTABLE_TYPE}
     ${PROJECT_SOURCE}
 )
 
+if( CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" )
 target_link_libraries(
     ClearScreen
     dl
     X11
     nix
 )
+else()
+target_link_libraries(
+    ClearScreen
+    nix
+)
+endif()
+
