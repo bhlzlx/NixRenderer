@@ -25,19 +25,33 @@ namespace Nix {
 		uint64_t m_color;
 
 		inline uint8_t calulateAlphaLevel(uint8_t _min, uint8_t _max, uint8_t _alpha) {
-			return ((_alpha - _min) * 0xff / (_max - _min)) >> 4;
+			if (_min != _max) {
+				uint8_t level = ((_max - _alpha) * 0xff / (_max - _min)) >> 5;
+				// 0 1 2 3 4 5 6 7
+				// 0 2 3 4 5 6 7 1
+				static const uint8_t map[] = { 0,2,3,4,5,6,7,1};
+				return map[level];
+			} else {
+				if (_min) return 0x7;
+				else return 0x6;
+			}
 		}
 		inline uint32_t calculateRelativeWeight(uint32_t _color1, uint32_t _color2) {
-			uint32_t weight =
-				_color1 ^= _color2;
+			uint32_t weight = 0;
 			for (int i = 0; i < 3; ++i) {
-				weight += (_color2 >> i * 8) & 0xff;
+				uint8_t channel1 = (_color1 >> i * 8) & 0xff;
+				uint8_t channel2 = (_color2 >> i * 8) & 0xff;
+				if (channel1 > channel2){
+					weight += channel1 - channel2;
+				} else {
+					weight += channel2 - channel1;
+				}				
 			}
 			return weight;
 		}
 		inline uint8_t calulateColorLevel(uint32_t(&_colorTable)[4], uint32_t _color) {
 			uint8_t level = 0;
-			uint32_t weight = -1;
+			uint32_t weight = 0xffffffff;
 			for (uint32_t i = 0; i < 4; ++i) {
 				uint32_t currentWeight = calculateRelativeWeight(_colorTable[i], _color);
 				if (weight > currentWeight) {
@@ -72,30 +86,31 @@ namespace Nix {
 			blueMin >>= 16; blueMax >>= 16;
 			greenMin >>= 8; greenMax >>= 8;
 			//redMin >>= 3; redMax >>= 3;
-			uint16_t colorMax = redMax >> 3 | greenMax >> 2 | blueMax >> 3; // RGB565
-			uint16_t colorMin = redMin >> 3 | greenMin >> 2 | blueMin >> 3; // RGB565
-																			// =====
-			m_color |= colorMax;
-			m_color |= colorMin << 16;
+			//uint64_t colorMax = redMax >> 3 | ((greenMax >> 2) << 5) | ((blueMax >> 3) << 11); // RGB565
+			//uint64_t colorMin = redMin >> 3 | ((greenMin >> 2) << 5) | ((blueMin >> 3) << 11); // RGB565
+			uint64_t colorMax = blueMax >> 3 | ((greenMax >> 2) << 5) | ((redMax >> 3) << 11); // RGB565
+			uint64_t colorMin = blueMin >> 3 | ((greenMin >> 2) << 5) | ((redMin >> 3) << 11); // RGB565
+
+			m_color |= (colorMax | colorMin << 16);
 
 			uint32_t colorTable[4] = {
 				redMax | greenMax << 8 | blueMax << 16,
+				redMin | greenMin << 8 | blueMin << 16,
 				(redMax - (redMax - redMin) / 3) | (greenMax - (greenMax - greenMin) / 3) << 8 | (blueMax - (blueMax - blueMin) / 3) << 16,
 				(redMin + (redMax - redMin) / 3) | (greenMin + (greenMax - greenMin) / 3) << 8 | (blueMin + (blueMax - blueMin) / 3) << 16,
-				redMin | greenMin << 8 | blueMin << 16,
 			};
 
-			if (alphaMax == alphaMin) {
-				alphaMax = 0xffffffff;
-				alphaMin = 0x0;
-			}
+			//if (alphaMax == alphaMin) {
+//			alphaMax = 0xff;
+			//alphaMin = 0x0;
+			//}
 			m_alpha |= alphaMax;
-			m_alpha |= alphaMin << 8;
+			m_alpha |= (alphaMin << 8);
 			// == ´¦Àí alpha / color ==
 			// 16 ¸öÏñËØ
 			for (uint32_t pixelIndex = 0; pixelIndex < 16; ++pixelIndex) {
-				m_alpha |= calulateAlphaLevel(alphaMin, alphaMax, _bitmapData[pixelIndex] >> 24) << (16 + pixelIndex * 3);
-				m_color |= calulateColorLevel(colorTable, _bitmapData[pixelIndex]) << (32 + pixelIndex * 2);
+				m_alpha |= (uint64_t)calulateAlphaLevel(alphaMin, alphaMax, _bitmapData[pixelIndex] >> 24) << (16 + pixelIndex * 3);
+				m_color |= (uint64_t)calulateColorLevel(colorTable, _bitmapData[pixelIndex]) << (32 + pixelIndex * 2);
 			}
 		}
 	};
@@ -141,8 +156,11 @@ namespace Nix {
 		//
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve ) {
 			printf("%s", "TexEncoder is initializing!");
-
+#ifdef NDEBUG
 			HMODULE library = ::LoadLibraryA("NixVulkan.dll");
+#else
+			HMODULE library = ::LoadLibraryA("NixVulkand.dll");
+#endif
 			assert(library);
 
 			typedef IDriver*(* PFN_CREATE_DRIVER )();
@@ -177,7 +195,7 @@ namespace Nix {
 
 			/*FILE* file = fopen("d:/fish.png", "r");*/
 			int width, height, channel;
-			stbi_uc * bytes = stbi_load("d:/fish.png", &width, &height, &channel, 4);
+			stbi_uc * bytes = stbi_load("E:/Github/NixRenderer/bin/texture/fish.png", &width, &height, &channel, 4);
 			uint32_t * pixels = (uint32_t*)bytes;
 
 			
@@ -187,7 +205,9 @@ namespace Nix {
 					std::vector<uint32_t> blockData;
 					for (uint32_t C = 0; C < 4; ++C ) {
 						for (uint32_t R = 0; R < 4; ++R) {
-							blockData.push_back(*(pixels + (col*4 + C) * 64 + row * 4 + R));
+							uint32_t realR = row * 4 + R;
+							uint32_t realC = col * 4 + C;
+							blockData.push_back(*(pixels + realC * 64 + realR));
 						}
 					}
 					DXT5Block block;
