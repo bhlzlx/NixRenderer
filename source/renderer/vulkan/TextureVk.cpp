@@ -99,6 +99,8 @@ namespace Nix {
 		m_imageLayout = _newLayout;
 	}
 
+	VkBool32 isCompressedFormat(VkFormat _format);
+
 	Nix::TextureVk* TextureVk::createTexture(ContextVk* _context, VkImage _image, VkImageView _imageView, TextureDescription _desc, TextureUsageFlags _usage)
 	{
 		VkFormat format = NixFormatToVk(_desc.format);
@@ -113,7 +115,13 @@ namespace Nix {
 			}
 			else
 			{
-				_usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+				if (vkhelper::isCompressedFormat(format)) {
+					_usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+				}
+				else {
+					_usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+				}
+				
 			}
 		}
 		TextureVk::TexResOwnershipFlags ownershipFlags = 0;

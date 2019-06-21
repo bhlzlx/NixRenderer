@@ -27,6 +27,7 @@ namespace vkhelper
 	uint32_t getMemoryType(VkPhysicalDevice _device, uint32_t _memTypeBits, VkMemoryPropertyFlags properties);
 
 	VkBool32 isDepthFormat( VkFormat _format );
+	VkBool32 isCompressedFormat(VkFormat _format);
 	VkBool32 isStencilFormat( VkFormat _format );
 	void getImageAcessFlagAndPipelineStage(VkImageLayout _layout, VkAccessFlags& _flags, VkPipelineStageFlags& _stages);
 	//

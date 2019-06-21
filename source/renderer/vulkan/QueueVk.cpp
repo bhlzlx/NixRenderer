@@ -49,6 +49,7 @@ namespace Nix {
 		vkAllocateCommandBuffers(m_logicalDevice, &bufferInfo, &commands[0]);
 		for (uint32_t i = 0; i < MaxFlightCount; ++i) {
 			queue->m_updatingBuffers[i].m_commandBuffer = commands[i];
+			queue->m_updatingBuffers[i].m_contextVk = const_cast<ContextVk*>(this);
 		}
 		// alloc rendering fences
 		for (uint32_t i = 0; i < MaxFlightCount; ++i) {

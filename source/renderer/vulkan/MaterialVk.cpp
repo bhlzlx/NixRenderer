@@ -234,43 +234,40 @@ namespace Nix {
 		for (uint32_t layoutIndex = 0; layoutIndex < materialDesc.argumentLayouts.size(); ++layoutIndex) {
 			std::vector<VkDescriptorSetLayoutBinding> bindings;
 			auto& argument = materialDesc.argumentLayouts[layoutIndex];
-			//for (auto& arguments : _desc.argumentLayouts) 
-			//{
-				for ( auto& descriptor : argument.descriptors )
+
+			for (auto& descriptor : argument.descriptors)
+			{
+				if (descriptor.type == SDT_UniformBlock)
 				{
-					if (descriptor.type == SDT_UniformBlock)
-					{
-						VkDescriptorSetLayoutBinding binding;
-						binding.binding = descriptor.binding;
-						binding.descriptorCount = 1;
-						binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-						binding.stageFlags = NixShaderStageToVk(descriptor.shaderStage);
-						binding.pImmutableSamplers = nullptr;
-						bindings.push_back(binding);
-					}
-					else if (descriptor.type == SDT_Sampler)
-					{
-						VkDescriptorSetLayoutBinding binding;
-						binding.binding = descriptor.binding;
-						binding.descriptorCount = 1;
-						binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-						binding.stageFlags = NixShaderStageToVk(descriptor.shaderStage);
-						binding.pImmutableSamplers = nullptr;
-						bindings.push_back(binding);
-					}
-					else if (descriptor.type == SDT_SSBO)
-					{
-						VkDescriptorSetLayoutBinding binding;
-						binding.binding = descriptor.binding;
-						binding.descriptorCount = 1;
-						binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-						binding.stageFlags = NixShaderStageToVk(descriptor.shaderStage);
-						binding.pImmutableSamplers = nullptr;
-						bindings.push_back(binding);
-					}
-					
+					VkDescriptorSetLayoutBinding binding;
+					binding.binding = descriptor.binding;
+					binding.descriptorCount = 1;
+					binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+					binding.stageFlags = NixShaderStageToVk(descriptor.shaderStage);
+					binding.pImmutableSamplers = nullptr;
+					bindings.push_back(binding);
 				}
-			//}
+				else if (descriptor.type == SDT_Sampler)
+				{
+					VkDescriptorSetLayoutBinding binding;
+					binding.binding = descriptor.binding;
+					binding.descriptorCount = 1;
+					binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+					binding.stageFlags = NixShaderStageToVk(descriptor.shaderStage);
+					binding.pImmutableSamplers = nullptr;
+					bindings.push_back(binding);
+				}
+				else if (descriptor.type == SDT_SSBO)
+				{
+					VkDescriptorSetLayoutBinding binding;
+					binding.binding = descriptor.binding;
+					binding.descriptorCount = 1;
+					binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+					binding.stageFlags = NixShaderStageToVk(descriptor.shaderStage);
+					binding.pImmutableSamplers = nullptr;
+					bindings.push_back(binding);
+				}
+			}
 
 			VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {}; {
 				layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
