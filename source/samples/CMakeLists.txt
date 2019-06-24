@@ -1,6 +1,10 @@
 project( Samples )
+
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
+include_directories(
+	${SOLUTION_DIR}/source/Utility
+)
 
 set( EXECUTABLE_TYPE )
 
@@ -39,6 +43,8 @@ else()
         add_subdirectory( SaveTexArrayRawData )
         add_subdirectory( HDR )
 		add_subdirectory( TexEncoder )
+		add_subdirectory( PBR )
+		add_subdirectory( BasicShading )
 
         SET_PROPERTY(TARGET HelloWorld PROPERTY FOLDER "Samples")
         SET_PROPERTY(TARGET ClearScreen PROPERTY FOLDER "Samples")
@@ -47,6 +53,8 @@ else()
         SET_PROPERTY(TARGET Sphere PROPERTY FOLDER "Samples")
 		SET_PROPERTY(TARGET HDR PROPERTY FOLDER "Samples")
         SET_PROPERTY(TARGET TexEncoder PROPERTY FOLDER "Samples")
+		SET_PROPERTY(TARGET PBR PROPERTY FOLDER "Samples")
+		SET_PROPERTY(TARGET BasicShading PROPERTY FOLDER "Samples")
     endif()
 endif()
 
