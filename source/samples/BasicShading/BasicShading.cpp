@@ -24,37 +24,27 @@ namespace Nix {
 		glm::vec3 norm;
 		glm::vec2 coord;
 		glm::vec3 tangent;
+		glm::vec3 bitangent;
 	};
 
-	glm::vec3 calTangent(const glm::vec3& _pdir1, glm::vec3& _pdir2, const glm::vec3& _uvdir1, glm::vec3& _uvdir2) {
-		// assume T,B,N
-		// pdir.xyz =		uv.x	[Tx, Bx, Nx]
-		//				    uv.y *	[Ty, By, Ny]
-		//				    uv.z	[Tz, Bz, Nz]
+	std::vector< CVertex > modelVertices;
 
-		// or
-
-		// pdir.xyz =		[Tx, Ty, Tz]   uv.x,y,z
-		//				    [Bx, By, Bz] *  
-		//				    [Nx, Ny, Nz]   	
-
-		// 
-		// pdir.x = Tx * uv.x + Bx * uv.y;
-		// pdir.y = Ty * uv.y + By * uv.y;
-		// pdir.z = Tz * uv.x + Bz * uv.y;
-		// 
-		// pdir1 = uv1.x * T + uv1.y * B;
-		// pdir2 = uv2.x * T + uv2.y * B;
-
-		// pdir1 * uv2.y = uv1.x * uv2.y * T + uv1.y * uv2.y * B;
-		// pdir2 * uv1.y = uv2.x * uv1.y * T + uv1.y * uv2.y * B;
-
-		// pdir1*uv2.y - pdir2 * uv1.y = (uv1.x * uv2.y - uv2.x * uv1.y) * T
-
-		// T = ( pdir1 * uv2.y - pdir2 * uv1.y ) / (uv1.x * uv2.y - uv2.x * uv1.y )
-
-		glm::vec3 tangent = (_pdir1 * _uvdir2.y - _pdir2 * _uvdir1.y) / (_uvdir1.x * _uvdir2.y - _uvdir2.x * _uvdir1.y);
-		return tangent;
+	glm::mat3x2 calcTB(const glm::vec3& dp1, const glm::vec3 & dp2, const glm::vec2& duv1, const glm::vec2 & duv2) {
+		glm::mat3x2 dp = {
+			dp1.x, dp2.x, 
+			dp1.y, dp2.y, 
+			dp1.z, dp2.z
+		};
+		glm::mat2x2 uv = {
+			duv1.x, duv2.x,
+			duv1.y, duv2.y
+		};
+		glm::mat3x2 TB;
+		//
+		TB = glm::inverse(uv) * dp;
+// 		glm::vec3 tangent = glm::vec3(tb[0].x, tb[1].x, tb[2].x);
+// 		glm::vec3 btangent = glm::vec3(tb[0].y, tb[1].y, tb[2].y);
+		return TB;
 	}
 
 	struct Config {
@@ -63,151 +53,7 @@ namespace Nix {
 		float up[3];
 		float light[3];
 		NIX_JSON( eye, lookat, up, light )
-	};
-
-	void CreateSphere(int _nstack, int _nslice, std::vector<CVertex>& _vertices, std::vector<uint16_t>& _indices) {
-		assert(_nstack >= 3);
-		assert(_nslice >= 3);
-		//
-		float dy = 2.0f / _nstack;
-		int mid = (_nstack - 1) / 2;
-		int midSliceCount = mid + _nslice;
-
-		std::vector< CVertex > vertices;
-
-		for (int stk = 0; stk < _nstack; ++stk) {
-			int sliceCount = 0;
-			if (_nstack & 0x1) { // ÆæÊý
-				sliceCount = midSliceCount - abs(mid - stk);
-			}
-			else {
-				if (stk > mid) {
-					sliceCount = midSliceCount - abs(mid - stk + 1);
-				}
-				else {
-					sliceCount = midSliceCount - abs(mid - stk);
-				}
-			}
-			float yarc = 3.141592654f / (_nstack - 1) * stk;
-			float y = cos(yarc);
-			float xzref = sin(yarc);
-			float x = 0;
-			float z = 0;
-			float dxarc = 3.141592654f * 2.0f / (sliceCount - 1);
-			for (int slc = 0; slc < sliceCount; ++slc) {
-				float xarc = dxarc * slc;
-				x = cos(xarc) * xzref;
-				z = sin(xarc) * xzref;
-				//
-				glm::vec3 pos(x, y, z);
-				glm::vec3 normal(x, y, z);
-				glm::vec2 coord(1.0f - 1.0f / (sliceCount - 1) * slc, 1.0f - (y + 1.0f) / 2.0f);
-				//
-				CVertex vertex;
-				vertex.xyz = pos;
-				vertex.norm = normal;
-				vertex.coord = coord;
-				//
-				_vertices.push_back(vertex);
-			}
-			//printf("stack : %d , slice : %d", stk, sliceCount);
-		}
-		// create indices
-		size_t count = _vertices.size();
-		size_t counter = 0;
-		if (_nstack & 0x1) { // ÆæÊý
-			for (int stk = 0; stk < mid; ++stk) {
-				int sliceCount = midSliceCount - abs(mid - stk);
-				for (size_t ct = 1; ct <= sliceCount; ++ct)
-				{
-					uint16_t sixple[6];
-					sixple[0] = counter;
-					sixple[1] = counter + sliceCount;
-					sixple[2] = sixple[1] + 1;
-					//
-					sixple[3] = (count - sixple[0]) - 1;
-					sixple[4] = (count - sixple[1]) - 1;
-					sixple[5] = (count - sixple[2]) - 1;
-					//
-					for (auto index : sixple)
-						_indices.push_back(index);
-					if (stk != 0 && ct != sliceCount) {
-						sixple[0] = counter;
-						sixple[1] = counter + sliceCount + 1;
-						sixple[2] = counter + 1;
-
-						sixple[3] = (count - sixple[0]) - 1;
-						sixple[4] = (count - sixple[1]) - 1;
-						sixple[5] = (count - sixple[2]) - 1;
-
-
-						//sixple[3] = count - sixple[0] - 1; sixple[4] = count - sixple[1] - 1; sixple[5] = sixple[4] - 1;
-						for (auto index : sixple)
-							_indices.push_back(index);
-					}
-					//
-					++counter;
-				}
-			}
-		}
-		else { // Å¼Êý
-			for (int stk = 0; stk < mid; ++stk) {
-				int sliceCount = 0;
-				if (stk > mid) {
-					sliceCount = midSliceCount - abs(mid - stk + 1);
-				}
-				else {
-					sliceCount = midSliceCount - abs(mid - stk);
-				}
-				//
-				for (size_t ct = 1; ct <= sliceCount; ++ct)
-				{
-					uint16_t sixple[6];
-					sixple[0] = counter;
-					sixple[1] = counter + sliceCount;
-					sixple[2] = sixple[1] + 1;
-					//
-					sixple[3] = (count - sixple[0]) - 1;
-					sixple[4] = (count - sixple[1]) - 1;
-					sixple[5] = (count - sixple[2]) - 1;
-					//
-					for (auto index : sixple)
-						_indices.push_back(index);
-					if (stk != 0 && ct != sliceCount) {
-						sixple[0] = counter;
-						sixple[1] = counter + sliceCount + 1;
-						sixple[2] = counter + 1;
-
-						sixple[3] = (count - sixple[0]) - 1;
-						sixple[4] = (count - sixple[1]) - 1;
-						sixple[5] = (count - sixple[2]) - 1;
-
-
-						//sixple[3] = count - sixple[0] - 1; sixple[4] = count - sixple[1] - 1; sixple[5] = sixple[4] - 1;
-						for (auto index : sixple)
-							_indices.push_back(index);
-					}
-					//
-					++counter;
-				}
-			}
-			//
-			for (int ct = 0; ct < midSliceCount - 1; ++ct) {
-				uint16_t sixple[6];
-				sixple[0] = counter;
-				sixple[1] = sixple[0] + midSliceCount;
-				sixple[2] = sixple[0] + 1;
-				//
-				sixple[3] = (count - sixple[0]) - 1;
-				sixple[4] = (count - sixple[1]) - 1;
-				sixple[5] = (count - sixple[2]) - 1;
-				for (auto index : sixple)
-					_indices.push_back(index);
-				++counter;
-			}
-		}
-	}
-	
+	};	
 
 	class Sphere : public NixApplication {
 	private:
@@ -234,10 +80,13 @@ namespace Nix {
 		//
 		IPipeline*					m_pipeline;
 
+		ITexture*					m_normalMap;
+
 		glm::mat4					m_model;
 		glm::mat4					m_view;
 		glm::mat4					m_projection;
 		glm::vec3					m_light;
+		glm::vec3					m_eye;
 
 		//
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve ) {
@@ -268,7 +117,7 @@ namespace Nix {
 			//
 			MaterialDescription mtlDesc;
 			Nix::TextReader mtlReader;
-			mtlReader.openFile(_archieve, "material/sphere.json");
+			mtlReader.openFile(_archieve, "material/basicRendering.json");
 			mtlDesc.parse(mtlReader.getText());
 			RenderPassDescription rpDesc;
 			Nix::TextReader rpReader;
@@ -276,6 +125,51 @@ namespace Nix {
 			rpDesc.parse(rpReader.getText());
 			rpDesc.colors[0].format = m_context->swapchainColorFormat();
 			rpDesc.depthStencil.format = m_driver->selectDepthFormat(true);
+
+			Nix::IFile * texFile = _archieve->open("texture/normalMap.ktx");
+			Nix::IFile* texMem = CreateMemoryBuffer(texFile->size());
+			texFile->read(texFile->size(), texMem);
+			m_normalMap = m_context->createTextureKTX(texMem->constData(), texMem->size());
+
+
+			Nix::TextReader objTextReader;
+			bool readRst = objTextReader.openFile(m_arch, "model/Boxset/box_stack.obj");
+			assert(readRst);
+			Nix::TextReader mtlTextReader;
+			readRst = mtlTextReader.openFile(m_arch, "model/Boxset/box_stack.mtl");
+			assert(readRst);
+			tinyobj::ObjReader objReader;
+			tinyobj::ObjReaderConfig objReaderConfig;
+			objReader.ParseFromString(objTextReader.getText(), mtlTextReader.getText(), objReaderConfig);
+
+			for (size_t shapeIndex = 0; shapeIndex < objReader.GetShapes().size(); ++shapeIndex) {
+				auto& indices = objReader.GetShapes().at(shapeIndex).mesh.indices;
+				for (auto index : indices) {
+					CVertex vertex;
+					vertex.xyz.x = objReader.GetAttrib().vertices[index.vertex_index * 3];
+					vertex.xyz.y = objReader.GetAttrib().vertices[index.vertex_index * 3 + 1];
+					vertex.xyz.z = objReader.GetAttrib().vertices[index.vertex_index * 3 + 2];
+					vertex.coord.x = objReader.GetAttrib().texcoords[index.texcoord_index * 2];
+					vertex.coord.y = objReader.GetAttrib().texcoords[index.texcoord_index * 2 + 1];
+					vertex.norm.x = objReader.GetAttrib().normals[index.normal_index * 3];
+					vertex.norm.y = objReader.GetAttrib().normals[index.normal_index * 3 + 1];
+					vertex.norm.z = objReader.GetAttrib().normals[index.normal_index * 3 + 2];
+					modelVertices.push_back(vertex);
+				}
+			}
+
+			for (size_t vertexIndex = 0; vertexIndex < modelVertices.size() / 3; ++vertexIndex) {
+				glm::mat3x2 TB = calcTB(
+					modelVertices[vertexIndex * 3 + 1].xyz - modelVertices[vertexIndex * 3].xyz,
+					modelVertices[vertexIndex * 3 + 2].xyz - modelVertices[vertexIndex * 3].xyz,
+					modelVertices[vertexIndex * 3 + 1].coord - modelVertices[vertexIndex * 3].coord,
+					modelVertices[vertexIndex * 3 + 2].coord - modelVertices[vertexIndex * 3].coord
+					);
+				glm::vec3 tangent = glm::vec3(TB[0].x, TB[1].x, TB[2].x);
+				glm::vec3 bitangent = glm::vec3(TB[0].y, TB[1].y, TB[2].y);
+				modelVertices[vertexIndex*3 + 1].tangent = modelVertices[vertexIndex * 3 + 2].tangent = modelVertices[vertexIndex * 3].tangent = tangent;
+				modelVertices[vertexIndex * 3 + 1].bitangent = modelVertices[vertexIndex * 3 + 2].bitangent = modelVertices[vertexIndex * 3].bitangent = bitangent;
+			}
 
 			TextureDescription texDesc;
 			texDesc.depth = 1;
@@ -293,19 +187,18 @@ namespace Nix {
 				{ // arguments
 					m_argCommon = m_material->createArgument(0);
 					rst = m_argCommon->getUniformBlock("GlobalArgument", &m_matGlobal);
+					uint32_t normalMapSlot;
+					rst = m_argCommon->getSampler("normalMap", &normalMapSlot);
+					SamplerState ss;
+					m_argCommon->setSampler(normalMapSlot, ss, m_normalMap);
 					m_argInstance = m_material->createArgument(1);
 					rst = m_argInstance->getUniformBlock("LocalArgument", &m_matLocal);
 				}
 				{ // renderable
-					std::vector<Nix::CVertex> vertices;
-					std::vector<uint16_t> indices;
+					//std::vector<Nix::CVertex> vertices;
+					//std::vector<uint16_t> indices;
 					m_renderable = m_material->createRenderable();
-					CreateSphere(9, 16, vertices, indices);
-
-					m_vertexBuffer = m_context->createStaticVertexBuffer(vertices.data(), vertices.size() * sizeof(CVertex));
-					m_indexBuffer = m_context->createIndexBuffer(indices.data(), sizeof(uint16_t) * indices.size());
-					m_indexCount = indices.size();
-					m_renderable->setIndexBuffer( m_indexBuffer, 0);
+					m_vertexBuffer = m_context->createStaticVertexBuffer(modelVertices.data(), modelVertices.size() * sizeof(CVertex));
 					m_renderable->setVertexBuffer(m_vertexBuffer, 0, 0);
 				}
 			}
@@ -321,7 +214,7 @@ namespace Nix {
 				glm::vec3( config.up[0], config.up[1], config.up[2])
 				);
 			m_light = glm::vec3( config.light[0], config.light[1], config.light[2] );
-
+			m_eye = glm::vec3(config.eye[0], config.eye[1], config.eye[2]);
 			return true;
 		}
 
@@ -348,7 +241,7 @@ namespace Nix {
 
 		virtual void tick() {
 			static float angle = 0.0f;
-			angle += 0.01;
+			angle += .5f;
 			m_model = glm::rotate<float>(glm::mat4(), angle / 180.0f * 3.1415926, glm::vec3(0,1,0));
 			if (m_context->beginFrame()) {
 				m_mainRenderPass->begin(m_primQueue); {
@@ -356,13 +249,16 @@ namespace Nix {
 					m_argCommon->setUniform(m_matGlobal, 0, &m_projection, 64);
 					m_argCommon->setUniform(m_matGlobal, 64, &m_view, 64);
 					m_argCommon->setUniform(m_matGlobal, 128, &m_light, sizeof(m_light));
+					m_argCommon->setUniform(m_matGlobal, 144, &m_eye, sizeof(m_eye));
+					//
 					m_argInstance->setUniform(m_matLocal, 0, &m_model, 64);
 					//
 					m_mainRenderPass->bindPipeline(m_pipeline);
 					m_mainRenderPass->bindArgument(m_argCommon);
 					m_mainRenderPass->bindArgument(m_argInstance);
 					//					
-					m_mainRenderPass->drawElements( m_renderable, 0, m_indexCount);
+					//m_mainRenderPass->drawElements( m_renderable, 0, m_indexCount);
+					m_mainRenderPass->draw(m_renderable, 0, modelVertices.size());
 				}
 				m_mainRenderPass->end();
 

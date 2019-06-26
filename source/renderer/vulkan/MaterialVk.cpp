@@ -23,6 +23,7 @@ namespace Nix {
 						auto uniformType = _compiler.get_type_from_variable(shaderRes.id);
 						auto uniformChunkSize = _compiler.get_declared_struct_size(uniformType);
 						_descriptor.dataSize = uniformChunkSize;
+						res = shaderRes;
 						return true;
 					}
 				}
@@ -40,6 +41,7 @@ namespace Nix {
 					auto binding = _compiler.get_decoration(shaderRes.id, spv::Decoration::DecorationBinding);
 					if (set == _setIndex && binding == _descriptor.binding)
 					{
+						res = shaderRes;
 						return true;
 					}
 				}
@@ -176,6 +178,22 @@ namespace Nix {
 					_context->getDriver()->getLogger()->error("\n");
 					return nullptr;
 				}
+				// collect uniform block member information
+				if (descinfo.type == SDT_UniformBlock) {
+					uint32_t memberIndex = 0;
+					while (true) {
+						std::string name = compiler->get_member_name(resItem.base_type_id, memberIndex);
+						if (!name.length()) {
+							break;
+						}
+						ArgumentLayout::UniformMember member;
+						member.name = name;
+						member.offset = compiler->get_member_decoration(resItem.base_type_id, memberIndex, spv::Decoration::DecorationOffset);
+						member.binding = descinfo.binding;
+						argumentLayouts[argumentIndex].m_uniformMembers.push_back(member);
+						++memberIndex;
+					}
+				}
 
 				switch (descinfo.type) {
 				case SDT_Sampler:
@@ -191,7 +209,7 @@ namespace Nix {
 				if (descinfo.type == SDT_UniformBlock) {
 					uint32_t i = 0;
 					while (true) {
-						const auto & name = compiler->get_member_qualified_name(resItem.type_id, i);
+						const auto & name = compiler->get_member_name(resItem.type_id, i);
 						if (name.empty()) {
 							break;
 						}

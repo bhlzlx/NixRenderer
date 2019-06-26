@@ -1,0 +1,92 @@
+{
+	"vertexShader" : "basicShading/basicShading.vert",
+	"fragmentShader" : "basicShading/basicShading.frag",
+	"topologyMode" : "TMTriangleList",
+	"pologonMode" : "PMFill",
+	"vertexLayout" : {
+		"attributeCount" : 5,
+		"attributes" : [{
+			"name" : "vert_position",
+			"bufferIndex" : 0,
+			"offset" : 0,
+			"type" : "VertexTypeFloat3"
+		},{
+			"name" : "vert_normal",
+			"bufferIndex" : 0,
+			"offset" : 12,
+			"type" : "VertexTypeFloat3"
+		},{
+			"name" : "vert_uv",
+			"bufferIndex" : 0,
+			"offset" : 24,
+			"type" : "VertexTypeFloat2"
+		},{
+			"name" : "vert_tangent",
+			"bufferIndex" : 0,
+			"offset" : 32,
+			"type" : "VertexTypeFloat3"
+		},{
+			"name" : "vert_bitangent",
+			"bufferIndex" : 0,
+			"offset" : 44,
+			"type" : "VertexTypeFloat3"
+		}
+		],
+		"bufferCount" : 1,
+		"buffers" : [{
+			"stride": 56,
+			"instanceMode" : 0,
+			"rate" : 1
+		}]
+	},
+	"argumentLayouts" : [{
+		"index" : 0,
+		"descriptors" : [{
+			"type" : "SDT_UniformBlock",
+			"binding" : 0,
+			"name" : "GlobalArgument",
+			"shaderStage" : "VertexShader"
+		},{
+			"type" : "SDT_Sampler",
+			"binding" : 1,
+			"name" : "normalMap",
+			"shaderStage" : "FragmentShader"
+		}]
+	},{
+		"index" : 1,
+		"descriptors" : [{
+			"type" : "SDT_UniformBlock",
+			"binding" : 0,
+			"name" : "LocalArgument",
+			"shaderStage" : "VertexShader"
+		}]
+	}],
+	"renderState" : {
+		"writeMask" : 15,
+		"cullMode" : "CullBack",
+		"windingMode" : "CounterClockwise",
+		"scissorEnable" : 1,
+		"depthState" : {
+			"writable": 1,
+			"testable" : 1,
+			"cmpFunc" : "LessEqual"
+		},
+		"stencilState" : {
+			"enable" : 0,
+			"opFail" : "StencilOpKeep",
+			"opZFail" : "StencilOpKeep",
+			"opPass" : "StencilOpKeep",
+			"enableCCW" : 0,
+			"opFailCCW" : "StencilOpKeep",
+			"opZFailCCW" : "StencilOpKeep",
+			"opPassCCW" : "StencilOpKeep",
+			"cmpFunc" : "Greater"
+		},
+		"blendState" : {
+			"enable" : 0,
+			"dscFactor" : "SourceAlpha",
+			"dstFactor" : "InvertSourceAlpha",
+			"op" : "BlendOpAdd"
+		}
+	}
+}
