@@ -142,6 +142,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case IDM_EXIT:
 			DestroyWindow(hWnd);
 			break;
+		case WM_KEYDOWN:
+		{
+			object->onKeyEvent(wParam, NixApplication::eKeyDown);
+			break;
+		}
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
 		}
@@ -163,6 +168,58 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		UINT cx = LOWORD(lParam);
 		UINT cy = HIWORD(lParam);
 		object->resize(cx, cy);
+		break;
+	}
+	case WM_KEYDOWN:
+	{
+		object->onKeyEvent(wParam, NixApplication::eKeyDown);
+		break;
+	}
+	case WM_KEYUP:
+	{
+		switch (wParam)
+		{
+		case VK_ESCAPE:
+		{
+			//PostQuitMessage(0);
+			break;
+		}
+		default:
+			object->onKeyEvent(wParam, NixApplication::eKeyUp);
+			break;
+		}
+		break;
+	}
+	case WM_MOUSEMOVE:
+	{
+		short x = LOWORD(lParam);
+		short y = HIWORD(lParam);
+		switch (wParam)
+		{
+		case MK_LBUTTON:
+			object->onMouseEvent(NixApplication::LButtonMouse, NixApplication::MouseMove, x, y);
+			break;
+		case MK_RBUTTON:
+			object->onMouseEvent(NixApplication::RButtonMouse, NixApplication::MouseMove, x, y);
+			break;
+		case MK_MBUTTON:
+			object->onMouseEvent(NixApplication::MButtonMouse, NixApplication::MouseMove, x, y);
+			break;
+		}
+		break;
+	}
+	case WM_RBUTTONDOWN:
+	{
+		short x = LOWORD(lParam);
+		short y = HIWORD(lParam);
+		object->onMouseEvent(NixApplication::RButtonMouse, NixApplication::MouseDown, x, y);
+		break;
+	}
+	case WM_RBUTTONUP:
+	{
+		short x = LOWORD(lParam);
+		short y = HIWORD(lParam);
+		object->onMouseEvent(NixApplication::RButtonMouse, NixApplication::MouseUp, x, y);
 		break;
 	}
 	default:

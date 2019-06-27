@@ -13,6 +13,8 @@
 #include <cstdio>
 #include <cassert>
 
+#include "../FreeCamera.h"
+
 #ifdef _WIN32
     #include <Windows.h>
 #endif
@@ -65,6 +67,8 @@ namespace Nix {
 		//
 		IMaterial*					m_material;
 
+		FreeCamera					m_camera;
+
 		IArgument*					m_argCommon;
 		uint32_t					m_samBase;
 		uint32_t					m_matGlobal;
@@ -83,10 +87,8 @@ namespace Nix {
 		ITexture*					m_normalMap;
 
 		glm::mat4					m_model;
-		glm::mat4					m_view;
-		glm::mat4					m_projection;
+
 		glm::vec3					m_light;
-		glm::vec3					m_eye;
 
 		//
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve ) {
@@ -208,13 +210,11 @@ namespace Nix {
 			cfgReader.openFile(_archieve, "config/common.json");
 			config.parse(cfgReader.getText());
 
-			m_view = glm::lookAt(
-				glm::vec3( config.eye[0], config.eye[1], config.eye[2] ), 
-				glm::vec3( config.lookat[0], config.lookat[1], config.lookat[2]),
-				glm::vec3( config.up[0], config.up[1], config.up[2])
-				);
+			m_camera.SetEye(glm::vec3(config.eye[0], config.eye[1], config.eye[2]));
+			m_camera.SetLookAt(glm::vec3(config.lookat[0], config.lookat[1], config.lookat[2]));
+			m_camera.SetTop(glm::vec3(config.up[0], config.up[1], config.up[2]));
+
 			m_light = glm::vec3( config.light[0], config.light[1], config.light[2] );
-			m_eye = glm::vec3(config.eye[0], config.eye[1], config.eye[2]);
 			return true;
 		}
 
@@ -228,7 +228,7 @@ namespace Nix {
 			ss.origin = { 0, 0 };
 			ss.size = { (int)_width, (int)_height };
 			//
-			m_projection = glm::perspective<float>(90, (float)_width / (float)_height, 0.01f, 200.0f);
+			m_camera.Perspective( 45.0f / 180.0f * 3.1415926f, (float)_width / (float)_height, 0.01f, 200.0f);
 			//
 			m_pipeline->setViewport(vp);
 			m_pipeline->setScissor(ss);
@@ -240,16 +240,17 @@ namespace Nix {
 		}
 
 		virtual void tick() {
+			m_camera.Tick();
 			static float angle = 0.0f;
 			angle += .5f;
-			m_model = glm::rotate<float>(glm::mat4(), angle / 180.0f * 3.1415926, glm::vec3(0,1,0));
+			m_model =  glm::rotate<float>(glm::mat4(), angle / 180.0f * 3.1415926, glm::vec3(0, 1, 0));
 			if (m_context->beginFrame()) {
 				m_mainRenderPass->begin(m_primQueue); {
 					glm::mat4x4 identity;
-					m_argCommon->setUniform(m_matGlobal, 0, &m_projection, 64);
-					m_argCommon->setUniform(m_matGlobal, 64, &m_view, 64);
+					m_argCommon->setUniform(m_matGlobal, 0, &m_camera.GetProjMatrix(), 64);
+					m_argCommon->setUniform(m_matGlobal, 64, &m_camera.GetViewMatrix(), 64);
 					m_argCommon->setUniform(m_matGlobal, 128, &m_light, sizeof(m_light));
-					m_argCommon->setUniform(m_matGlobal, 144, &m_eye, sizeof(m_eye));
+					m_argCommon->setUniform(m_matGlobal, 144, &m_camera.GetEye(), sizeof(glm::vec3));
 					//
 					m_argInstance->setUniform(m_matLocal, 0, &m_model, 64);
 					//
@@ -273,6 +274,74 @@ namespace Nix {
 		virtual uint32_t rendererType() {
 			return 0;
 		}
+public:
+#define camStep 0.01
+	virtual void onKeyEvent(unsigned char _key, eKeyEvent _event) override
+	{
+		if (_event == NixApplication::eKeyDown)
+		{
+			switch (_key)
+			{
+			case 'W':
+			case 'w':
+				m_camera.Forward(camStep);
+				break;
+			case 'a':
+			case 'A':
+				m_camera.Leftward(camStep);
+				break;
+			case 's':
+			case 'S':
+				m_camera.Backward(camStep);
+				break;
+			case 'd':
+			case 'D':
+				m_camera.Rightward(camStep);
+				break;
+			}
+		}
+	}
+
+
+	virtual void onMouseEvent(eMouseButton _bt, eMouseEvent _event, int _x, int _y) override
+	{
+		static int lx = 0;
+		static int ly = 0;
+
+		static int dx;
+		static int dy;
+
+		switch (_event)
+		{
+		case MouseDown:
+		{
+			if (_bt == RButtonMouse)
+			{
+				lx = _x;
+				ly = _y;
+			}
+			break;
+		}
+		case MouseUp:
+		{
+			break;
+		}
+		case MouseMove:
+		{
+			if (_bt == RButtonMouse)
+			{
+				dx = _x - lx;
+				dy = _y - ly;
+				ly = _y;
+				lx = _x;
+				m_camera.RotateAxisY((float)dx / 10.0f * 3.1415f);
+				m_camera.RotateAxisX((float)dy / 10.0f * 3.1415f);
+			}
+			break;
+		}
+		}
+	}
+
 	};
 }
 

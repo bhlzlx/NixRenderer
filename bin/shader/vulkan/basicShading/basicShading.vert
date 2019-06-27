@@ -9,8 +9,9 @@ layout (location = 3) in vec3 vert_tangent;
 layout (location = 4) in vec3 vert_bitangent;
 
 layout (location = 0) out vec2 normalMapUV;
-layout (location = 1) out vec3 TBN_lightDir;
-layout (location = 2) out vec3 TBN_cameraDir;
+layout (location = 1) out vec3 lightDir;
+layout (location = 2) out vec3 cameraDir;
+layout (location = 3) out mat3x3 TBN;
 
 out gl_PerVertex {
     vec4 	gl_Position;
@@ -19,8 +20,9 @@ out gl_PerVertex {
 layout( set = 0, binding = 0 ) uniform GlobalArgument {
 	mat4 projection;
 	mat4 view;
-	vec3 light;
-	vec3 camera;
+	//
+	vec3 sun;
+	vec3 eye;
 };
 
 layout( set = 1, binding = 0 ) uniform LocalArgument {
@@ -30,16 +32,27 @@ layout( set = 1, binding = 0 ) uniform LocalArgument {
 void main() 
 {
 	vec4 worldPosition = model * vec4(vert_position, 1.0f);
-	worldPosition = worldPosition / worldPosition.w;
-	vec4 worldNormal = model * vec4( vert_normal, 0.0f);
-	vec4 worldTangent = model * vec4( vert_tangent, 0.0f);
-	vec4 worldBitan = model * vec4( vert_bitangent, 0.0f);
-
-	mat3x3 TBN = transpose( worldTangent.xyz, worldBitan.xyz , worldNormal.xyz);
-	// output for fragment stage
+	vec3 worldNormal = normalize( vec3(model * vec4( vert_normal, 0.0f)));
+	vec3 worldTangent = normalize( vec3(model * vec4( vert_tangent, 0.0f)));
+	vec3 worldBitan = normalize( vec3(model * vec4( vert_bitangent, 0.0f)));
 	
-	TBN_lightDir = TBN * normalize( worldPosition.xyz - light );
-	TBN_cameraDir = TBN * normalize( camera - worldPosition.xyz );
+	worldTangent = normalize(worldTangent - dot(worldTangent, worldNormal) * worldNormal);
+   // vec3 worldBitan = cross(worldTangent.xyz, worldNormal.xyz);
+	
+	worldPosition = worldPosition / worldPosition.w;
+
+	//TBN = mat3x3( worldTangent.xyz, worldBitan.xyz, worldNormal.xyz );
+	//invertTBN = transpose( TBN );
+
+	mat3x3 TBN = mat3x3( worldTangent.xyz, worldBitan.xyz, worldNormal.xyz );
+	TBN = transpose( TBN );
+	
+	// output for fragment stage
+	vec3 lightDir = normalize( worldPosition.xyz - light );
+	vec3 cameraDir = normalize( camera - worldPosition.xyz );
+	
+	TBN_lightDir = TBN * lightDir;
+	TBN_cameraDir = TBN * cameraDir;
 	
 	normalMapUV = vert_uv;
 
