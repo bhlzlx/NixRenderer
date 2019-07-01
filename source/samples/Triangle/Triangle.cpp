@@ -7,6 +7,8 @@
 #include <NixRenderer.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 #include <nix/io/archieve.h>
 #include <cstdio>
@@ -96,15 +98,32 @@ namespace Nix {
 			texDesc.format = NixRGBA8888_UNORM;
 			texDesc.height = 64;
 			texDesc.width = 64;
-			texDesc.mipmapLevel = 1;
+			texDesc.mipmapLevel = 4;
 			texDesc.type = Nix::TextureType::Texture2D;
 
 			//Nix::IFile * texFile = _archieve->open("texture/texture_bc3.ktx");
-			Nix::IFile * texFile = _archieve->open("texture/texture_array_bc3.ktx");
-			Nix::IFile* texMem = CreateMemoryBuffer(texFile->size());
-			texFile->read(texFile->size(), texMem);
-			//m_texture = m_context->createTexture(texDesc);
-			m_texture = m_context->createTextureKTX(texMem->constData(), texMem->size());
+			//Nix::IFile * texFile = _archieve->open("texture/texture_array_bc3.ktx");
+			//Nix::IFile* texMem = CreateMemoryBuffer(texFile->size());
+			//texFile->read(texFile->size(), texMem);
+			//m_texture = m_context->createTextureKTX(texMem->constData(), texMem->size());
+
+			m_texture = m_context->createTexture(texDesc);
+
+			Nix::IFile* fishPNG = _archieve->open("texture/fish.png");
+			Nix::IFile* memPNG = CreateMemoryBuffer(fishPNG->size());
+			fishPNG->read(fishPNG->size(), memPNG);
+			
+			int x, y, channel = 4;
+			auto rawData = stbi_load_from_memory((const stbi_uc*)memPNG->constData(), memPNG->size(), &x, &y, &channel, 4);
+			BufferImageUpload upload;
+			upload.baseMipRegion = {
+				0, 0, { 0 , 0 , 0 }, { (uint32_t)x, (uint32_t)y, 1}
+			};
+			upload.data = rawData;
+			upload.length = x * y * 4;
+			std::vector<uint64_t> offsets = {0};
+			upload.mipDataOffsets = offsets;
+			m_texture->uploadSubData(upload);
 
 			bool rst = false;
 			m_material = m_context->createMaterial(mtlDesc); {

@@ -17,13 +17,6 @@ namespace Nix {
 	class TextureVk;
     class ContextVk;
 
-	struct BufferImageUpload {
-		const void*						data;
-		uint32_t						length;
-		TextureRegion					baseMipRegion;
-		std::vector< VkDeviceSize >		mipDataOffsets;
-	};
-
 	class NIX_API_DECL CommandBufferVk
 	{
 		friend class ContextVk;

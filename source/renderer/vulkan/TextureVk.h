@@ -45,7 +45,8 @@ namespace Nix {
 		}
 		// need graphics queue support
 		// can update whole image,once with a chunk of memory
-		virtual void setSubData(const void * _data, size_t _length, const TextureRegion& _region) override;
+		virtual void updateSubData(const void * _data, size_t _length, const TextureRegion& _region) override;
+		virtual void uploadSubData(const BufferImageUpload& _upload) override;
 		//virtual void setSubData(const void * _data, size_t _length, const TextureRegion& _baseMipRegion, uint32_t _mipCount) override;
 		// deferred deleter
 		virtual void release() override;

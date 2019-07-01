@@ -133,7 +133,7 @@ namespace Nix {
 			region.offset.x = region.offset.y = region.offset.z = 0.0f;
 			region.size.depth = 1; region.size.height = 64; region.size.width = 64;
 
-			m_texture->setSubData(dxt5Bytes.data(), dxt5Bytes.size(), region);
+			m_texture->updateSubData(dxt5Bytes.data(), dxt5Bytes.size(), region);
 			bool rst = false;
 			m_material = m_context->createMaterial(mtlDesc); {
 				{ // graphics pipeline 

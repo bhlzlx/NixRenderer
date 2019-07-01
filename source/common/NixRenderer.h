@@ -476,11 +476,18 @@ namespace Nix {
 	class IContext;
 	class IGraphicsQueue;
 
+	struct BufferImageUpload {
+		const void*						data;
+		uint32_t						length;
+		TextureRegion					baseMipRegion;
+		std::vector< uint64_t >			mipDataOffsets;
+	};
+
     class NIX_API_DECL ITexture {
 	public:
         virtual const TextureDescription& getDesc() const = 0;
-        virtual void setSubData( const void * _data, size_t _length, const TextureRegion& _region ) = 0;
-		//virtual void setSubData(const void * _data, size_t _length, const TextureRegion& _region, uint32_t _mipCount ) = 0;
+        virtual void updateSubData( const void * _data, size_t _length, const TextureRegion& _region ) = 0;
+		virtual void uploadSubData( const BufferImageUpload& _upload ) = 0;
         virtual void release() = 0;
     };
 

@@ -491,6 +491,7 @@ namespace Nix {
 		if ( m_compatMapTable.find(compatHash) == m_compatMapTable.end() ) {
 			return RequestStandardRenderPassObject(_context, _desc);
 		}
+		return VK_NULL_HANDLE;
 	}
 
 	void RenderPassSwapchainVk::activeSubpass(uint32_t _imageIndex)

@@ -21,9 +21,14 @@ namespace Nix {
 		return TextureVk::createTextureKTX(this, _data, _length);
 	}
 
-	void TextureVk::setSubData(const void * _data, size_t _length, const TextureRegion& _region)
+	void TextureVk::updateSubData(const void * _data, size_t _length, const TextureRegion& _region)
 	{
 		m_context->getGraphicsQueue()->updateTexture(this, _region, _data, _length);
+	}
+
+	void TextureVk::uploadSubData(const BufferImageUpload& _upload)
+	{
+		m_context->getUploadQueue()->uploadTexture(this, _upload);
 	}
 
 // 	void TextureVk::setSubData(const void * _data, size_t _length, const TextureRegion& _baseMipRegion, uint32_t _mipCount)
@@ -98,8 +103,6 @@ namespace Nix {
 		m_accessFlags = dstAccessFlag;
 		m_imageLayout = _newLayout;
 	}
-
-	VkBool32 isCompressedFormat(VkFormat _format);
 
 	Nix::TextureVk* TextureVk::createTexture(ContextVk* _context, VkImage _image, VkImageView _imageView, TextureDescription _desc, TextureUsageFlags _usage)
 	{

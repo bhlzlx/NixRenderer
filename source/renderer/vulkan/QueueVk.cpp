@@ -9,6 +9,7 @@
 #include <vk_mem_alloc.h>
 #include <assert.h>
 #include "DriverVk.h"
+#include "vkhelper/helper.h"
 
 namespace Nix {
 
@@ -592,7 +593,7 @@ namespace Nix {
 				_upload.baseMipRegion.size.depth // layerCount
 			}
 		};
-		const VkImageMemoryBarrier barrierAfter = {
+		VkImageMemoryBarrier barrierAfter = {
 			VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER, // sType 
 			nullptr, // pNext
 			VK_ACCESS_TRANSFER_WRITE_BIT, // srcAccessMask
@@ -616,7 +617,58 @@ namespace Nix {
 			0, nullptr, 0, nullptr,
 			1, &barrierBefore);
 		vkCmdCopyBufferToImage(m_commandBuffer, (const VkBuffer&)stageBuffer, _texture->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, static_cast<uint32_t>(copies.size()), copies.data());
-		//
+		// for none compressed format, we only provide raw-data for one mip level
+		// so, we have to generate other mipmap levels when the raw-data not provided
+		auto format = NixFormatToVk(_texture->getDesc().format);
+		if (!vkhelper::isCompressedFormat(format) && _texture->getDesc().mipmapLevel > _upload.mipDataOffsets.size()) {
+			auto brrSrc = barrierBefore;
+			brrSrc.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			brrSrc.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+			brrSrc.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			brrSrc.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+			brrSrc.subresourceRange.baseMipLevel = 0;
+			brrSrc.subresourceRange.levelCount = 1;
+			auto brrDst = barrierAfter;
+			vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
+				0, nullptr, 0, nullptr,
+				1, &brrSrc);
+			for (size_t mipLevel = 0; mipLevel < _texture->getDesc().mipmapLevel-1; ++mipLevel) {
+				VkImageBlit blit = {
+					{
+						VK_IMAGE_ASPECT_COLOR_BIT,	// aspectMask 
+						mipLevel,					// baseMipLevel 
+						0,							// baseArrayLayer
+						copies[0].imageSubresource.layerCount // layerCount
+					},
+					{
+						{ baseOffsetX >> mipLevel, baseOffsetY>>mipLevel, 0 },
+						{ (int32_t)baseWidth >> mipLevel, (int32_t)baseHeight >> mipLevel, 1 }
+					},
+					{
+						VK_IMAGE_ASPECT_COLOR_BIT,	// aspectMask 
+						mipLevel + 1,					// baseMipLevel 
+						0,							// baseArrayLayer
+						copies[0].imageSubresource.layerCount // layerCount
+					},
+					{
+						{ baseOffsetX >> (mipLevel+1), baseOffsetY >> (mipLevel+1), 0 },
+						{ (int32_t)baseWidth >> (mipLevel + 1), (int32_t)baseHeight >> (mipLevel + 1), 1 }
+					}
+				};
+				vkCmdBlitImage(m_commandBuffer, _texture->getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, _texture->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VkFilter::VK_FILTER_LINEAR);
+				auto brrDst = barrierBefore;
+				brrDst.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+				brrDst.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+				brrDst.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+				brrDst.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+				brrDst.subresourceRange.baseMipLevel = mipLevel + 1;
+				brrDst.subresourceRange.levelCount = 1;
+				vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
+					0, nullptr, 0, nullptr,
+					1, &brrDst);
+			}
+			barrierAfter.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		}
 		vkCmdPipelineBarrier(
 			m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
 			0, nullptr, 0, nullptr,
