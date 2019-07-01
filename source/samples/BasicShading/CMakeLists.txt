@@ -4,6 +4,8 @@ set( PROJECT_SOURCE
     ${PLATFORM_SOURCE}
 	${CMAKE_CURRENT_SOURCE_DIR}/../FreeCamera.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/BasicShading.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/BufferAllocator.h
+	${CMAKE_CURRENT_SOURCE_DIR}/BufferAllocator.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../../common/NixJpImp.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../thirdpart/tiny_obj_loader.cc
 )

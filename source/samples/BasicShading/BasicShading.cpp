@@ -15,6 +15,7 @@
 
 #include "../FreeCamera.h"
 #include "BasicShading.h"
+#include "BufferAllocator.h"
 
 #ifdef _WIN32
     #include <Windows.h>
@@ -107,6 +108,29 @@ namespace Nix {
 			glm::vec3 bitangent = glm::vec3(TB[0].y, TB[1].y, TB[2].y);
 			modelVertices[vertexIndex * 3 + 1].tangent = modelVertices[vertexIndex * 3 + 2].tangent = modelVertices[vertexIndex * 3].tangent = tangent;
 			modelVertices[vertexIndex * 3 + 1].bitangent = modelVertices[vertexIndex * 3 + 2].bitangent = modelVertices[vertexIndex * 3].bitangent = bitangent;
+		}
+
+		BufferAllocator bufferAllocator;
+		{
+			IBuffer* buffer = m_context->createStaticVertexBuffer(nullptr, 128);
+			bufferAllocator.initialize(buffer, 8);
+
+			size_t offset;
+			bufferAllocator.allocate(20, offset);
+			bufferAllocator.allocate(15, offset);
+			bufferAllocator.allocate(10, offset);
+			bufferAllocator.allocate(25, offset);
+
+			bufferAllocator.free(0, 32);
+			bufferAllocator.free(32, 16);
+			bufferAllocator.free(48, 16);
+			bufferAllocator.free(64, 32);
+
+			bufferAllocator.allocate(20, offset);
+			bufferAllocator.allocate(15, offset);
+			bufferAllocator.allocate(10, offset);
+			bufferAllocator.allocate(25, offset);
+
 		}
 
 		TextureDescription texDesc;
