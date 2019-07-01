@@ -9,17 +9,18 @@
 
 namespace Nix {
 
-	bool BufferAllocator::initialize(IBuffer* _buffer, size_t _minSize) {
-		auto size = _buffer->getSize();
-		auto count = size / _minSize;
-		uint32_t tableSize = 16;
-		while (tableSize < count) {
-			tableSize = tableSize << 1;
+	bool BufferAllocator::initialize(size_t _wholeSize, size_t _minSize) {
+		size_t layer = 0;
+		size_t miniCount = 1;
+		while (miniCount<_minSize) {
+			++layer;
+			miniCount = (size_t)1 << layer;
 		}
+		size_t fullCount = miniCount * 2;
 		m_minSize = _minSize;
-		m_maxIndex = count - 1;
-		m_capacity = _buffer->getSize();
-		m_nodeTable.resize(tableSize);
+		m_maxIndex = fullCount - 1;
+		m_capacity = _wholeSize;
+		m_nodeTable.resize(fullCount);
 		m_nodeTable[0].hasChild = FALSE;
 		m_nodeTable[0].free = TRUE;
 		m_nodeTable[1] = m_nodeTable[0];
@@ -29,7 +30,7 @@ namespace Nix {
 		return true;
 	}
 
-	bool BufferAllocator::allocate(size_t _size, size_t& _offset) {
+	size_t BufferAllocator::allocate(size_t _size, size_t& _offset) {
 		struct alloc_t {
 			size_t layer;
 			size_t index;
@@ -64,12 +65,12 @@ namespace Nix {
 					// this node is just fit for the allocation size
 					if (!node.hasChild) {
 						if (alloc.index > m_maxIndex) {
-							return false;
+							return 0;
 						}
 						// allocate successfully!
-						_offset = (alloc.index - (1 << alloc.layer) ) * m_capacity / (1 << alloc.layer);
+						_offset = (alloc.index - ((size_t)1 << alloc.layer) ) * m_capacity / ((size_t)1 << alloc.layer);
 						updateTableForAllocate(node, alloc.layer, alloc.index);
-						return true;
+						return m_capacity >> alloc.layer;
 					}
 					else if (node.hasChild) {
 						continue;
@@ -79,19 +80,20 @@ namespace Nix {
 				continue;
 			}
 		}
-		return false;
+		return 0;
 	}
 
 	bool BufferAllocator::free(size_t _offset, size_t _capacity) {
 		// _offset = (alloc.index - (1 >> alloc.layer) ) * m_capacity / (1 >> alloc.layer);
 		assert(_offset % m_minSize == 0);
+		assert(_capacity >= m_minSize);
 
 		size_t layer = 0;
 		while (_capacity < m_capacity) {
 			_capacity = _capacity << 1;
 			++layer;
 		}
-		size_t index = (_offset / (m_capacity / (1 << layer))) + (1 << layer);
+		size_t index = (_offset / (m_capacity / ((size_t)1 << layer))) + ((size_t)1 << layer);
 		node_t& node = m_nodeTable[index];
 		updateTableForFree(node, layer, index);
 		return true;

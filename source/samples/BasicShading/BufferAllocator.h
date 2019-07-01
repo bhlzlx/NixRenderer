@@ -17,8 +17,6 @@ namespace Nix {
 			uint8_t nodeType : 1;
 		};
 	private:
-		IBuffer* m_buffer;
-
 		std::vector<node_t> m_nodeTable; // m_nodeTable[0] is not used
 		//
 		size_t m_capacity;
@@ -26,11 +24,12 @@ namespace Nix {
 		size_t m_maxIndex;
 	public:
 		BufferAllocator() 
-			:m_buffer( nullptr)
-		{
+		: m_capacity(0)
+		, m_minSize(0)
+		, m_maxIndex(0) {
 		}
-		bool initialize(IBuffer* _buffer, size_t _minSize);
-		bool allocate(size_t _size, size_t& _offset );
+		bool initialize(size_t _wholeSize, size_t _minSize );
+		size_t allocate(size_t _size, size_t& _offset );
 		bool free( size_t _offset, size_t _capacity );
 	private:
 		bool updateTableForAllocate( node_t& _node, size_t _layer, size_t _index);

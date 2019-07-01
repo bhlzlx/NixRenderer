@@ -16,6 +16,7 @@
 #include "../FreeCamera.h"
 #include "BasicShading.h"
 #include "BufferAllocator.h"
+#include <stack>
 
 #ifdef _WIN32
     #include <Windows.h>
@@ -111,27 +112,31 @@ namespace Nix {
 		}
 
 		BufferAllocator bufferAllocator;
-		{
-			IBuffer* buffer = m_context->createStaticVertexBuffer(nullptr, 128);
-			bufferAllocator.initialize(buffer, 8);
+	
+		IBuffer* buffer = m_context->createStaticVertexBuffer(nullptr, 1024);
+		bufferAllocator.initialize(1024, 32);
 
-			size_t offset;
-			bufferAllocator.allocate(20, offset);
-			bufferAllocator.allocate(15, offset);
-			bufferAllocator.allocate(10, offset);
-			bufferAllocator.allocate(25, offset);
+		std::stack<size_t> offsets;
+		std::stack<size_t> capacities;
+		size_t offset;
+		size_t capacity;
 
-			bufferAllocator.free(0, 32);
-			bufferAllocator.free(32, 16);
-			bufferAllocator.free(48, 16);
-			bufferAllocator.free(64, 32);
+		capacity = bufferAllocator.allocate(179, offset); offsets.push(offset); capacities.push(capacity);
+		capacity = bufferAllocator.allocate(35, offset); offsets.push(offset); capacities.push(capacity);
+		capacity = bufferAllocator.allocate(18, offset); offsets.push(offset); capacities.push(capacity);
+		capacity = bufferAllocator.allocate(224, offset); offsets.push(offset); capacities.push(capacity);
 
-			bufferAllocator.allocate(20, offset);
-			bufferAllocator.allocate(15, offset);
-			bufferAllocator.allocate(10, offset);
-			bufferAllocator.allocate(25, offset);
+		bufferAllocator.free(offsets.top(), capacities.top()); offsets.pop(); capacities.pop();
+		bufferAllocator.free(offsets.top(), capacities.top()); offsets.pop(); capacities.pop();
+		bufferAllocator.free(offsets.top(), capacities.top()); offsets.pop(); capacities.pop();
+		bufferAllocator.free(offsets.top(), capacities.top()); offsets.pop(); capacities.pop();
 
-		}
+		capacity = bufferAllocator.allocate(35, offset); offsets.push(offset); capacities.push(capacity);
+		capacity = bufferAllocator.allocate(18, offset); offsets.push(offset); capacities.push(capacity);
+		capacity = bufferAllocator.allocate(224, offset); offsets.push(offset); capacities.push(capacity);
+		capacity = bufferAllocator.allocate(179, offset); offsets.push(offset); capacities.push(capacity);
+
+	
 
 		TextureDescription texDesc;
 		texDesc.depth = 1;
