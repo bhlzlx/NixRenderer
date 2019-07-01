@@ -36,26 +36,14 @@ void main()
 	vec3 worldTangent = normalize( vec3(model * vec4( vert_tangent, 0.0f)));
 	vec3 worldBitan = normalize( vec3(model * vec4( vert_bitangent, 0.0f)));
 	
-	worldTangent = normalize(worldTangent - dot(worldTangent, worldNormal) * worldNormal);
-   // vec3 worldBitan = cross(worldTangent.xyz, worldNormal.xyz);
-	
+	worldTangent = normalize(worldTangent - dot(worldTangent, worldNormal) * worldNormal);	
 	worldPosition = worldPosition / worldPosition.w;
-
-	//TBN = mat3x3( worldTangent.xyz, worldBitan.xyz, worldNormal.xyz );
-	//invertTBN = transpose( TBN );
-
-	mat3x3 TBN = mat3x3( worldTangent.xyz, worldBitan.xyz, worldNormal.xyz );
-	TBN = transpose( TBN );
-	
+    TBN = mat3x3( worldTangent.xyz, worldBitan.xyz, worldNormal.xyz );
 	// output for fragment stage
-	vec3 lightDir = normalize( worldPosition.xyz - light );
-	vec3 cameraDir = normalize( camera - worldPosition.xyz );
-	
-	TBN_lightDir = TBN * lightDir;
-	TBN_cameraDir = TBN * cameraDir;
-	
+	lightDir = worldPosition.xyz - sun;
+	cameraDir = eye - worldPosition.xyz;
 	normalMapUV = vert_uv;
-
+    //
 	gl_Position = projection * view * worldPosition;
 	gl_Position.y *= -1;
 }
