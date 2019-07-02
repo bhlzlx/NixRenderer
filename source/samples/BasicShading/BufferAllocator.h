@@ -1,4 +1,3 @@
-#include <NixRenderer.h>
 #include <vector>
 #include <list>
 

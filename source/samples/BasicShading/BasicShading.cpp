@@ -113,8 +113,8 @@ namespace Nix {
 
 		BufferAllocator bufferAllocator;
 	
-		IBuffer* buffer = m_context->createStaticVertexBuffer(nullptr, 1024);
-		bufferAllocator.initialize(1024, 32);
+		IBuffer* buffer = m_context->createStaticVertexBuffer(nullptr, 4096*1024 );// 4MB
+		bufferAllocator.initialize(4096 * 1024, 128 * 1024);
 
 		std::stack<size_t> offsets;
 		std::stack<size_t> capacities;

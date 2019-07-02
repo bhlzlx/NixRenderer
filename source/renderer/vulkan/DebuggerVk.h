@@ -12,8 +12,8 @@ namespace Nix {
 	private:
 		VkDebugReportCallbackEXT m_debugReportCallback;
 	public:
-		DebugReporterVk() {
-
+		DebugReporterVk()
+		: m_debugReportCallback(nullptr){
 		}
 		bool setupDebugReport( VkInstance _inst );
 		bool uninstallDebugReport(VkInstance _inst);

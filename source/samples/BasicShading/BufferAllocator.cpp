@@ -84,7 +84,6 @@ namespace Nix {
 	}
 
 	bool BufferAllocator::free(size_t _offset, size_t _capacity) {
-		// _offset = (alloc.index - (1 >> alloc.layer) ) * m_capacity / (1 >> alloc.layer);
 		assert(_offset % m_minSize == 0);
 		assert(_capacity >= m_minSize);
 
@@ -93,6 +92,7 @@ namespace Nix {
 			_capacity = _capacity << 1;
 			++layer;
 		}
+		// _offset = (alloc.index - (1 << alloc.layer) ) * m_capacity / (1 << alloc.layer);
 		size_t index = (_offset / (m_capacity / ((size_t)1 << layer))) + ((size_t)1 << layer);
 		node_t& node = m_nodeTable[index];
 		updateTableForFree(node, layer, index);
@@ -109,9 +109,7 @@ namespace Nix {
 			node_t& parentNode = m_nodeTable[_index / 2];
 			if (_node.nodeType == LeftNode) {
 				parentNode.leftFree = false;
-			}
-			else
-			{
+			} else {
 				parentNode.rightFree = false;
 			}
 		}
