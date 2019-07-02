@@ -3,7 +3,7 @@
 
 namespace Nix {
 
-	class BufferAllocator {
+	class BuddySystemAllocator {
 		enum node_type_t {
 			LeftNode = 0,
 			RightNode
@@ -22,14 +22,14 @@ namespace Nix {
 		size_t m_minSize;
 		size_t m_maxIndex;
 	public:
-		BufferAllocator() 
+		BuddySystemAllocator() 
 		: m_capacity(0)
 		, m_minSize(0)
 		, m_maxIndex(0) {
 		}
 		bool initialize(size_t _wholeSize, size_t _minSize );
-		size_t allocate(size_t _size, size_t& _offset );
-		bool free( size_t _offset, size_t _capacity );
+		bool allocate(size_t _size, size_t& offset_, uint16_t& _id );
+		bool free( uint16_t _id );
 	private:
 		bool updateTableForAllocate( node_t& _node, size_t _layer, size_t _index);
 		bool updateTableForFree(node_t& _node, size_t _layer, size_t _index);

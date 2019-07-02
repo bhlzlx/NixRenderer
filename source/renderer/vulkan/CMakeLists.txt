@@ -23,8 +23,15 @@ set( RendererSource
     ${CMAKE_CURRENT_SOURCE_DIR}/SwapchainVk.h
     ${CMAKE_CURRENT_SOURCE_DIR}/RenderPassVk.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/RenderPassVk.h
+
     ${CMAKE_CURRENT_SOURCE_DIR}/BufferVk.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/BufferVk.h
+
+	${CMAKE_CURRENT_SOURCE_DIR}/BuddySystemAllocator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/BuddySystemAllocator.h
+	${CMAKE_CURRENT_SOURCE_DIR}/BufferAllocator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/BufferAllocator.h
+
     ${CMAKE_CURRENT_SOURCE_DIR}/TextureVk.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TextureVk.h
     ${CMAKE_CURRENT_SOURCE_DIR}/PipelineVk.cpp

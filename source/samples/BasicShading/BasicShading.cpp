@@ -15,7 +15,7 @@
 
 #include "../FreeCamera.h"
 #include "BasicShading.h"
-#include "BufferAllocator.h"
+#include "BuddySystemAllocator.h"
 #include <stack>
 
 #ifdef _WIN32
@@ -111,30 +111,32 @@ namespace Nix {
 			modelVertices[vertexIndex * 3 + 1].bitangent = modelVertices[vertexIndex * 3 + 2].bitangent = modelVertices[vertexIndex * 3].bitangent = bitangent;
 		}
 
-		BufferAllocator bufferAllocator;
+		BuddySystemAllocator bufferAllocator;
 	
 		IBuffer* buffer = m_context->createStaticVertexBuffer(nullptr, 4096*1024 );// 4MB
 		bufferAllocator.initialize(4096 * 1024, 128 * 1024);
 
 		std::stack<size_t> offsets;
-		std::stack<size_t> capacities;
+		std::stack<uint16_t> ids;
 		size_t offset;
-		size_t capacity;
+		uint16_t id;
 
-		capacity = bufferAllocator.allocate(179, offset); offsets.push(offset); capacities.push(capacity);
-		capacity = bufferAllocator.allocate(35, offset); offsets.push(offset); capacities.push(capacity);
-		capacity = bufferAllocator.allocate(18, offset); offsets.push(offset); capacities.push(capacity);
-		capacity = bufferAllocator.allocate(224, offset); offsets.push(offset); capacities.push(capacity);
+		bool rst = false;
+		rst = bufferAllocator.allocate(179, offset, id); offsets.push(offset); ids.push(id);
+		rst = bufferAllocator.allocate(35, offset, id); offsets.push(offset); ids.push(id);
+		rst = bufferAllocator.allocate(18, offset, id); offsets.push(offset); ids.push(id);
+		rst = bufferAllocator.allocate(224, offset, id); offsets.push(offset); ids.push(id);
 
-		bufferAllocator.free(offsets.top(), capacities.top()); offsets.pop(); capacities.pop();
-		bufferAllocator.free(offsets.top(), capacities.top()); offsets.pop(); capacities.pop();
-		bufferAllocator.free(offsets.top(), capacities.top()); offsets.pop(); capacities.pop();
-		bufferAllocator.free(offsets.top(), capacities.top()); offsets.pop(); capacities.pop();
+		bufferAllocator.free(ids.top()); offsets.pop(); ids.pop();
+		bufferAllocator.free(ids.top()); offsets.pop(); ids.pop();
+		bufferAllocator.free(ids.top()); offsets.pop(); ids.pop();
+		bufferAllocator.free(ids.top()); offsets.pop(); ids.pop();
 
-		capacity = bufferAllocator.allocate(35, offset); offsets.push(offset); capacities.push(capacity);
-		capacity = bufferAllocator.allocate(18, offset); offsets.push(offset); capacities.push(capacity);
-		capacity = bufferAllocator.allocate(224, offset); offsets.push(offset); capacities.push(capacity);
-		capacity = bufferAllocator.allocate(179, offset); offsets.push(offset); capacities.push(capacity);
+
+		rst = bufferAllocator.allocate(18, offset, id); offsets.push(offset); ids.push(id);
+		rst = bufferAllocator.allocate(35, offset, id); offsets.push(offset); ids.push(id);
+		rst = bufferAllocator.allocate(179, offset, id); offsets.push(offset); ids.push(id);
+		rst = bufferAllocator.allocate(224, offset, id); offsets.push(offset); ids.push(id);
 
 	
 
@@ -146,7 +148,7 @@ namespace Nix {
 		texDesc.mipmapLevel = 1;
 		texDesc.type = Nix::TextureType::Texture2D;
 
-		bool rst = false;
+		rst = false;
 		m_material = m_context->createMaterial(mtlDesc); {
 			{ // graphics pipeline 
 				m_pipeline = m_material->createPipeline(rpDesc);

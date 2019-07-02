@@ -18,8 +18,21 @@
 
 namespace Nix {
 	// global vulkan memory allocator
-	//
 	class ContextVk;
+
+	typedef uint64_t AllocationHandle;
+	class BufferAllocator {
+	private:
+		VmaAllocation		m_allocation;
+		VkDeviceSize		m_size;
+		
+	public:
+		void initialize( size_t _size );
+		void initialize( size_t _size, size_t _minSize );
+		// 
+		uint16_t allocate( size_t _size );
+		void free( AllocationHandle );
+	};
 
 	class NIX_API_DECL BufferVk {
 		//friend class VkDeferredDeletor;
@@ -27,9 +40,12 @@ namespace Nix {
 		friend struct ScreenCapture;
 		friend class CachedVertexBuffer;
 		friend class IndexBuffer;
+
+		typedef uint64_t NixAllocation;
 	private:
 		ContextVk*			m_context;
 		VkBuffer			m_buffer;
+		VkDeviceSize		m_offset;
 		VkDeviceSize		m_size;
 		VkBufferUsageFlags	m_usage;
 		VmaAllocation		m_allocation;

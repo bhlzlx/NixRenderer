@@ -1,15 +1,9 @@
-#include "BufferAllocator.h"
+#include "BuddySystemAllocator.h"
 #include <cassert>
-
-#undef TRUE
-#undef FALSE
-
-#define TRUE 1
-#define FALSE 0
 
 namespace Nix {
 
-	bool BufferAllocator::initialize(size_t _wholeSize, size_t _minSize) {
+	bool BuddySystemAllocator::initialize(size_t _wholeSize, size_t _minSize) {
 		size_t layer = 0;
 		size_t miniCount = 1;
 		while (miniCount<_minSize) {
@@ -21,8 +15,8 @@ namespace Nix {
 		m_maxIndex = fullCount - 1;
 		m_capacity = _wholeSize;
 		m_nodeTable.resize(fullCount);
-		m_nodeTable[0].hasChild = FALSE;
-		m_nodeTable[0].free = TRUE;
+		m_nodeTable[0].hasChild = false;
+		m_nodeTable[0].free = true;
 		m_nodeTable[1] = m_nodeTable[0];
 		for (size_t i = 0; i < m_nodeTable.size(); ++i) {
 			m_nodeTable[i].nodeType = (i & 0x1);
@@ -30,7 +24,7 @@ namespace Nix {
 		return true;
 	}
 
-	size_t BufferAllocator::allocate(size_t _size, size_t& _offset) {
+	bool BuddySystemAllocator::allocate(size_t _size, size_t& offset_, uint16_t& id_) {
 		struct alloc_t {
 			size_t layer;
 			size_t index;
@@ -65,10 +59,13 @@ namespace Nix {
 					// this node is just fit for the allocation size
 					if (!node.hasChild) {
 						if (alloc.index > m_maxIndex) {
-							return 0;
+							return false;
 						}
 						// allocate successfully!
-						_offset = (alloc.index - ((size_t)1 << alloc.layer) ) * m_capacity / ((size_t)1 << alloc.layer);
+						size_t layerStartIndex = ((size_t)1 << alloc.layer);
+						size_t& divideTimes = layerStartIndex;
+						offset_ = (alloc.index - layerStartIndex) * (m_capacity / divideTimes);
+						id_ = alloc.index;
 						updateTableForAllocate(node, alloc.layer, alloc.index);
 						return m_capacity >> alloc.layer;
 					}
@@ -80,26 +77,23 @@ namespace Nix {
 				continue;
 			}
 		}
-		return 0;
+		return false;
 	}
 
-	bool BufferAllocator::free(size_t _offset, size_t _capacity) {
-		assert(_offset % m_minSize == 0);
-		assert(_capacity >= m_minSize);
-
+	bool BuddySystemAllocator::free(uint16_t _id) {
+		_id < m_nodeTable.size();
 		size_t layer = 0;
-		while (_capacity < m_capacity) {
-			_capacity = _capacity << 1;
-			++layer;
+		uint16_t v = _id;
+		while (v != 1) {
+			layer++;
+			v = v >> 1;
 		}
-		// _offset = (alloc.index - (1 << alloc.layer) ) * m_capacity / (1 << alloc.layer);
-		size_t index = (_offset / (m_capacity / ((size_t)1 << layer))) + ((size_t)1 << layer);
-		node_t& node = m_nodeTable[index];
-		updateTableForFree(node, layer, index);
+		node_t& node = m_nodeTable[_id];
+		updateTableForFree(node, layer, _id);
 		return true;
 	}
 
-	bool BufferAllocator::updateTableForAllocate(node_t& _node, size_t _layer, size_t _index )
+	bool BuddySystemAllocator::updateTableForAllocate(node_t& _node, size_t _layer, size_t _index )
 	{
 		_node.free = false;
 		_node.hasChild = false;
@@ -137,7 +131,7 @@ namespace Nix {
 		return true;
 	}
 
-	bool BufferAllocator::updateTableForFree(node_t& _node, size_t _layer, size_t _index)
+	bool BuddySystemAllocator::updateTableForFree(node_t& _node, size_t _layer, size_t _index)
 	{
 		_node.free = true;
 		_node.hasChild = false;
