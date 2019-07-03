@@ -22,9 +22,7 @@ namespace Nix
 		matProjDirty = false;
 	}
 
-	FreeCamera::~FreeCamera()
-	{
-
+	FreeCamera::~FreeCamera() {
 	}
 
 	void FreeCamera::SetEye(glm::vec3 _eye)
@@ -63,22 +61,17 @@ namespace Nix
 
 	void FreeCamera::Tick()
 	{
-		if (matViewDirty)
-		{
+		if (matViewDirty) {
 			forward = glm::normalize(lookAt - eye);
 			leftward = glm::normalize(glm::cross(glm::vec3(0, 1, 0), forward));
 			topward = glm::normalize(glm::cross(forward, leftward));
 			lookAt = eye + forward;
 			matView = glm::lookAt(eye, lookAt, topward);
 		}
-		if (matProjDirty)
-		{
-			if (projType == ProjectionTypePerpective)
-			{
+		if (matProjDirty) {
+			if (projType == ProjectionTypePerpective) {
 				matProj = glm::perspective(fov, aspect, vpNear, vpFar);
-			}
-			else
-			{
+			} else {
 				matProj = glm::ortho<float>(left, right, bottom, top, vpNear, vpFar);
 			}
 		}
