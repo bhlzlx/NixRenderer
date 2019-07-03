@@ -1,7 +1,7 @@
 {
 	"vertexShader" : "particle/particle.vert",
 	"fragmentShader" : "particle/particle.frag",
-	"topologyMode" : "TMPointList",
+	"topologyMode" : "TMPoints",
 	"pologonMode" : "PMFill",
 	"vertexLayout" : {
 		"attributeCount" : 1,

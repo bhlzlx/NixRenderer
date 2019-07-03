@@ -189,7 +189,8 @@ namespace Nix {
 		pipelineCreateInfo.pDynamicState = &dynamicState;
 		//
 		VkPipeline ppl;
-		vkCreateGraphicsPipelines(m_context->getDevice(), m_context->getPipelineCache(), 1, &pipelineCreateInfo, nullptr, &ppl);
+		auto pplCache = m_context->getPipelineCache();
+		vkCreateGraphicsPipelines(m_context->getDevice(), pplCache, 1, &pipelineCreateInfo, nullptr, &ppl);
 
 		PipelineVk* pipeline = new PipelineVk();
 		pipeline->m_pipeline = ppl;
