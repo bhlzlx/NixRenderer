@@ -20,8 +20,6 @@
 #endif
 
 #include <memory>
-#include <vector>
-#include <string>
 
 namespace Nix {
 
@@ -33,6 +31,9 @@ namespace Nix {
 	static const uint32_t UniformChunkSize = 1024 * 512; // 512KB
 	static const uint32_t MaxFlightCount = 3;
 	static const uint32_t MaxArgumentCount = 4;
+	static const uint32_t MaxDescriptorCount = 8;
+	static const uint32_t MaxNameLength = 64;
+	static const uint32_t MaxMipLevelCount = 12;
 
     template < class T >
     struct Point {
@@ -310,7 +311,7 @@ namespace Nix {
 #pragma pack(pop)
 
     struct VertexAttribueDescription {
-		std::string name;
+		char		name[MaxNameLength];
         uint32_t    bufferIndex;
         uint32_t    offset;
         VertexType  type;
@@ -446,7 +447,7 @@ namespace Nix {
 	struct ShaderDescriptor {
 		ShaderDescriptorType	type;
 		uint32_t				binding;
-		std::string				name;
+		char					name[MaxNameLength];
 		ShaderModuleType		shaderStage;
 		uint32_t				dataSize;
 		NIX_JSON( type, binding, name, shaderStage, dataSize)
@@ -454,22 +455,24 @@ namespace Nix {
 
 	struct ArgumentDescription {
 		uint32_t						index;
-		std::vector< ShaderDescriptor > descriptors;
-		NIX_JSON(index, descriptors)
+		uint32_t						descriptorCount;
+		ShaderDescriptor				descriptors[MaxDescriptorCount];
+		NIX_JSON(index, descriptorCount, descriptors)
 	};
 
 	struct MaterialDescription {
 		char									vertexShader[64];
 		char									fragmentShader[64];
 		VertexLayout							vertexLayout;
-		std::vector<ArgumentDescription>		argumentLayouts;
+		uint32_t								argumentCount;
+		ArgumentDescription						argumentLayouts[MaxArgumentCount];
 		//
 		RenderState								renderState;
 		//
 		TopologyMode							topologyMode;
 		PolygonMode								pologonMode;
 		//
-		NIX_JSON(vertexShader, fragmentShader, vertexLayout, argumentLayouts, renderState, topologyMode, pologonMode)
+		NIX_JSON(vertexShader, fragmentShader, vertexLayout, argumentCount, argumentLayouts, renderState, topologyMode, pologonMode)
 	};
 
 	class IRenderPass;
@@ -480,7 +483,8 @@ namespace Nix {
 		const void*						data;
 		uint32_t						length;
 		TextureRegion					baseMipRegion;
-		std::vector< uint64_t >			mipDataOffsets;
+		uint32_t						mipCount;
+		uint64_t						mipDataOffsets[MaxMipLevelCount];
 	};
 
     class NIX_API_DECL ITexture {
@@ -579,9 +583,9 @@ namespace Nix {
 	class NIX_API_DECL IArgument {
 	private:
 	public:
-		virtual bool getUniformBlock( const std::string& _name, uint32_t* id_ ) = 0;
-		virtual bool getUniformMemberOffset(uint32_t _uniform, const std::string& _name, uint32_t* offset_ ) = 0;
-		virtual bool getSampler(const std::string& _name, uint32_t* id_ ) = 0;
+		virtual bool getUniformBlock( const char * _name, uint32_t* id_ ) = 0;
+		virtual bool getUniformMemberOffset(uint32_t _uniform, const char* _name, uint32_t* offset_ ) = 0;
+		virtual bool getSampler(const char* _name, uint32_t* id_ ) = 0;
 		//
 		virtual void setSampler( uint32_t _index, const SamplerState& _sampler, const ITexture* _texture) = 0;
 		virtual void setUniform(uint32_t _index, uint32_t _offset, const void * _data, uint32_t _size) = 0;
@@ -628,9 +632,9 @@ namespace Nix {
 
 	class ILogger {
 	public:
-		virtual void debug( const std::string& _text ) = 0;
-		virtual void warning(const std::string& _text) = 0;
-		virtual void error(const std::string& _text) = 0;
+		virtual void debug( const char * _text ) = 0;
+		virtual void warning( const char* _text ) = 0;
+		virtual void error( const char* _text ) = 0;
 	};
 
 	class IContext;

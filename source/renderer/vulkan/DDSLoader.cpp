@@ -131,8 +131,11 @@ namespace Nix {
 		BufferImageUpload upload;
 		upload.baseMipRegion = region;
 		upload.data = pixelContent;
-		upload.length = pixelContentSize;
-		upload.mipDataOffsets = std::move(offsets);
+		upload.length = (uint32_t)pixelContentSize;
+		upload.mipCount =(uint32_t)offsets.size();
+		for (uint32_t i = 0; i < upload.mipCount; ++i) {
+			upload.mipDataOffsets[i] = offsets[i];
+		}
 		_context->getUploadQueue()->uploadTexture(texture, upload);
 		delete[]pixelContent;
 

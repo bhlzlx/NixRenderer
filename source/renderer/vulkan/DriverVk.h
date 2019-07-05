@@ -30,13 +30,13 @@ namespace Nix {
 
 	class SimplerLogger : public ILogger {
 	public:
-		virtual void debug(const std::string& _text) override {
+		virtual void debug( const char * _text) override {
 			std::cout<< "debug :" << _text << std::endl;
 		}
-		virtual void warning(const std::string& _text) override {
+		virtual void warning(const char* _text) override {
 			std::cout << "warning :" << _text << std::endl;
 		}
-		virtual void error(const std::string& _text) override {
+		virtual void error(const char* _text) override {
 			std::cout << "error :" << _text << std::endl;
 		}
 	};
@@ -91,6 +91,6 @@ namespace Nix {
 		bool validatePipelineCache(const void * _data, size_t _length);
 		inline VkInstance getInstance() { return m_instance; }
 		inline const VkPhysicalDeviceProperties& getPhysicalDeviceProperties() { return m_deviceProps; }
-		bool compileGLSL2SPV(ShaderModuleType _type, const char * _text, std::vector<uint32_t>& _spvBytes, std::string& _compileLog);
+		bool compileGLSL2SPV(ShaderModuleType _type, const char * _text, const uint32_t** _spvBytes, size_t* _length, const char** _compileLog);
 	};
 }

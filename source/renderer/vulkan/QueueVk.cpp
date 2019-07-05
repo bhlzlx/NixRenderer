@@ -539,7 +539,7 @@ namespace Nix {
 		uint32_t baseOffsetX = _upload.baseMipRegion.offset.x, baseOffsetY = _upload.baseMipRegion.offset.y;
 
 		std::vector< VkBufferImageCopy > copies;
-		for (uint32_t miplevel = 0; miplevel < _upload.mipDataOffsets.size(); ++miplevel) {
+		for (uint32_t miplevel = 0; miplevel < _upload.mipCount; ++miplevel) {
 			VkBufferImageCopy copy; {
 				copy.imageOffset = {
 					(int32_t)baseOffsetX >> miplevel, (int32_t)baseOffsetY >> miplevel, (int32_t)_upload.baseMipRegion.offset.z
@@ -588,7 +588,7 @@ namespace Nix {
 			{ // subresourceRange 
 				VK_IMAGE_ASPECT_COLOR_BIT, // aspectMask 
 				0, // baseMipLevel 
-				(uint32_t)_upload.mipDataOffsets.size(), // levelCount
+				(uint32_t)_upload.mipCount, // levelCount
 				_upload.baseMipRegion.baseLayer + _upload.baseMipRegion.offset.z, // baseArrayLayer
 				_upload.baseMipRegion.size.depth // layerCount
 			}
@@ -606,7 +606,7 @@ namespace Nix {
 			{ // subresourceRange 
 				VK_IMAGE_ASPECT_COLOR_BIT, // aspectMask 
 				0, // baseMipLevel 
-				(uint32_t)_upload.mipDataOffsets.size(), // levelCount
+				(uint32_t)_upload.mipCount, // levelCount
 				_upload.baseMipRegion.baseLayer + _upload.baseMipRegion.offset.z, // baseArrayLayer
 				_upload.baseMipRegion.size.depth // layerCount
 			}
@@ -620,7 +620,7 @@ namespace Nix {
 		// for none compressed format, we only provide raw-data for one mip level
 		// so, we have to generate other mipmap levels when the raw-data not provided
 		auto format = NixFormatToVk(_texture->getDesc().format);
-		if (!vkhelper::isCompressedFormat(format) && _texture->getDesc().mipmapLevel > _upload.mipDataOffsets.size()) {
+		if (!vkhelper::isCompressedFormat(format) && _texture->getDesc().mipmapLevel > _upload.mipCount) {
 			auto brrSrc = barrierBefore;
 			brrSrc.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 			brrSrc.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;

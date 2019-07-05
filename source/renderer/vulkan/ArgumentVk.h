@@ -42,9 +42,9 @@ namespace Nix {
 
 		void bind(VkCommandBuffer _commandBuffer);
 
-		virtual bool getUniformBlock(const std::string& _name, uint32_t* id_ ) override;
-		virtual bool getUniformMemberOffset( uint32_t _uniform, const std::string& _name, uint32_t* offset_) override;
-		virtual bool getSampler(const std::string& _name, uint32_t* id_) override;
+		virtual bool getUniformBlock( const char* _name, uint32_t* id_ ) override;
+		virtual bool getUniformMemberOffset( uint32_t _uniform, const char* _name, uint32_t* offset_) override;
+		virtual bool getSampler(const char* _name, uint32_t* id_) override;
 		//
 		virtual void setSampler(uint32_t _index, const SamplerState& _sampler, const ITexture* _texture) override;
 		virtual void setUniform(uint32_t _index, uint32_t _offset, const void * _data, uint32_t _size) override;

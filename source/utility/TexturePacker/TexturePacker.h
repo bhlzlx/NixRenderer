@@ -1,5 +1,6 @@
 #include <NixRenderer.h>
 #include <cassert>
+#include <vector>
 
 namespace Nix {
 

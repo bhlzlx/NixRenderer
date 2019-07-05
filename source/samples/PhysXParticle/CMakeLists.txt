@@ -1,7 +1,7 @@
 project( PhysXParticle )
 
 link_directories(
- E:/PhysX/physx/bin/win.x86_64.vc140.mt/debug
+ E:/Github/PhysX/physx/bin/win.x86_64.vc140.mt/debug
 )
 
 set( PROJECT_SOURCE

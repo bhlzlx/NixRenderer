@@ -22,7 +22,7 @@ namespace Nix {
 					{
 						auto uniformType = _compiler.get_type_from_variable(shaderRes.id);
 						auto uniformChunkSize = _compiler.get_declared_struct_size(uniformType);
-						_descriptor.dataSize = uniformChunkSize;
+						_descriptor.dataSize = (uint32_t)uniformChunkSize;
 						res = shaderRes;
 						return true;
 					}
@@ -158,9 +158,9 @@ namespace Nix {
 
 		std::array<ArgumentLayout, MaxArgumentCount> argumentLayouts;
 
-		for (size_t argumentIndex = 0; argumentIndex < materialDesc.argumentLayouts.size(); ++argumentIndex) {
+		for (uint32_t argumentIndex = 0; argumentIndex < materialDesc.argumentCount; ++argumentIndex) {
 			auto& argument = materialDesc.argumentLayouts[argumentIndex];
-			for (size_t descriptorIndex = 0; descriptorIndex < argument.descriptors.size(); ++descriptorIndex) {
+			for (uint32_t descriptorIndex = 0; descriptorIndex < argument.descriptorCount; ++descriptorIndex) {
 				auto& descinfo = argument.descriptors[descriptorIndex];
 
 				if (descinfo.shaderStage == VertexShader) {
@@ -249,7 +249,7 @@ namespace Nix {
 		}
 		//
 		VkDescriptorSetLayout layouts[MaxArgumentCount];
-		for (uint32_t layoutIndex = 0; layoutIndex < materialDesc.argumentLayouts.size(); ++layoutIndex) {
+		for (uint32_t layoutIndex = 0; layoutIndex < materialDesc.argumentCount; ++layoutIndex) {
 			std::vector<VkDescriptorSetLayoutBinding> bindings;
 			auto& argument = materialDesc.argumentLayouts[layoutIndex];
 
@@ -305,7 +305,7 @@ namespace Nix {
 			info.pNext = nullptr;
 			info.flags = 0;
 			info.pSetLayouts = layouts;
-			info.setLayoutCount = static_cast<uint32_t>(materialDesc.argumentLayouts.size());
+			info.setLayoutCount = static_cast<uint32_t>(materialDesc.argumentCount);
 			info.pushConstantRangeCount = (uint32_t)constantRanges.size();
 			info.pPushConstantRanges = constantRanges.size() ? &constantRanges[0] : nullptr;
 		}
@@ -318,7 +318,7 @@ namespace Nix {
 		material->m_context = _context;
 		material->m_vertexShader = vertSM;
 		material->m_fragmentShader = fragSM;
-		material->m_descriptorSetLayoutCount = (uint32_t)materialDesc.argumentLayouts.size();
+		material->m_descriptorSetLayoutCount = (uint32_t)materialDesc.argumentCount;
 		material->m_pipelineLayout = pipelineLayout;
 		material->m_argumentLayouts = argumentLayouts;
 		material->m_topology = NixTopologyToVk( materialDesc.topologyMode );
@@ -389,6 +389,10 @@ namespace Nix {
 	VkShaderModule MaterialVk::CreateShaderModule(ContextVk* _context, const char * _shader, ShaderModuleType _type, std::vector<uint32_t>& _spvBytes)
 	{
 		auto length = strlen(_shader);
+
+		const char* compileInfo;
+		const uint32_t* spvBytes;
+		size_t spvLength;
 		// 
 		if (length < 96 && length > 4) { // if @_shader is a file path
 			VkDevice device = _context->getDevice();
@@ -405,13 +409,13 @@ namespace Nix {
 			file->release();
 			if (*(const char*)mem->constData() == '#') {
 				DriverVk* driver = (DriverVk*)_context->getDriver();
-				std::string compileInfo;
-				bool rst = driver->compileGLSL2SPV(_type, (const char*)mem->constData(), _spvBytes, compileInfo);
+				bool rst = driver->compileGLSL2SPV(_type, (const char*)mem->constData(), &spvBytes, &spvLength, &compileInfo);
 				if (!rst) {
 					mem->release();
 					return VK_NULL_HANDLE;
 				}
-				VkShaderModule module = NixCreateShaderModule(device, _spvBytes.data(), _spvBytes.size() * sizeof(uint32_t));
+				_spvBytes = std::vector<uint32_t>(spvBytes, spvBytes + spvLength);
+				VkShaderModule module = NixCreateShaderModule(device, spvBytes, spvLength * sizeof(uint32_t));
 				return module;
 			} else {
 				auto module = NixCreateShaderModule(device, mem->constData(), mem->size() - 1 );
@@ -424,14 +428,12 @@ namespace Nix {
 		{
 			if (*_shader == '#') { // @_shader is shader text content
 				DriverVk* driver = (DriverVk*)_context->getDriver();
-				std::vector<uint32_t> spvBytes;
-				std::string compileInfo;
-				bool rst = driver->compileGLSL2SPV(_type, _shader, spvBytes, compileInfo);
+				bool rst = driver->compileGLSL2SPV(_type, _shader, &spvBytes, &spvLength, &compileInfo);
 				if (!rst) {
 					return VK_NULL_HANDLE;
 				}
-				_spvBytes = std::move(spvBytes);
-				return NixCreateShaderModule( _context->getDevice(), spvBytes.data(), spvBytes.size() * sizeof(uint32_t));
+				_spvBytes = std::vector<uint32_t>(spvBytes, spvBytes + spvLength);
+				return NixCreateShaderModule( _context->getDevice(), spvBytes, spvLength * sizeof(uint32_t));
 			}
 		}
 		return VK_NULL_HANDLE;

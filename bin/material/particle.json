@@ -3,23 +3,29 @@
 	"fragmentShader" : "particle/particle.frag",
 	"topologyMode" : "TMPoints",
 	"pologonMode" : "PMFill",
-	"vertexLayout" : {
-		"attributeCount" : 1,
-		"attributes" : [{
-			"name" : "vert_position",
-			"bufferIndex" : 0,
-			"offset" : 0,
-			"type" : "VertexTypeFloat3"
-		}],
-		"bufferCount" : 1,
-		"buffers" : [{
-			"stride": 12,
-			"instanceMode" : 0,
-			"rate" : 1
-		}]
-	},
+  "vertexLayout": {
+    "attributeCount": 1,
+    "attributes": [
+      {
+        "name": "vert_position",
+        "bufferIndex": 0,
+        "offset": 0,
+        "type": "VertexTypeFloat3"
+      }
+    ],
+    "bufferCount": 1,
+    "buffers": [
+      {
+        "stride": 12,
+        "instanceMode": 0,
+        "rate": 1
+      }
+    ]
+  },
+  "argumentCount" :  1,
 	"argumentLayouts" : [{
-		"index" : 0,
+    "index": 0,
+    "descriptorCount": 1,
 		"descriptors" : [{
 			"type" : "SDT_UniformBlock",
 			"binding" : 0,

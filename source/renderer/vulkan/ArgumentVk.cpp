@@ -55,12 +55,12 @@ namespace Nix {
 		);
 	}
 
-	bool ArgumentVk::getUniformBlock(const std::string& _name, uint32_t* id_)
+	bool ArgumentVk::getUniformBlock( const char * _name, uint32_t* id_)
 	{
 		uint32_t i = 0;
 		const ArgumentLayout& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
 		for (; i < argLayout.m_uniformBlockDescriptor.size(); ++i) {
-			if (argLayout.m_uniformBlockDescriptor[i].name == _name) {
+			if ( strcmp(argLayout.m_uniformBlockDescriptor[i].name, _name) == 0 ) {
 				*id_ = i;
 				return true;
 			}
@@ -68,13 +68,13 @@ namespace Nix {
 		return false;
 	}
 
-	bool ArgumentVk::getUniformMemberOffset(uint32_t _uniform, const std::string& _name, uint32_t* offset_)
+	bool ArgumentVk::getUniformMemberOffset(uint32_t _uniform, const char* _name, uint32_t* offset_)
 	{
 		uint32_t i = 0;
 		const ArgumentLayout& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
 		auto binding = argLayout.m_uniformBlockDescriptor[_uniform].binding;
 		for (; i < argLayout.m_uniformMembers.size(); ++i) {
-			if (argLayout.m_uniformMembers[i].name == _name) {
+			if ( argLayout.m_uniformMembers[i].name == _name) {
 				*offset_ = argLayout.m_uniformMembers[i].offset;
 				return true;
 			}
@@ -82,12 +82,12 @@ namespace Nix {
 		return false;
 	}
 
-	bool ArgumentVk::getSampler(const std::string& _name, uint32_t* id_)
+	bool ArgumentVk::getSampler(const char* _name, uint32_t* id_)
 	{
 		uint32_t i = 0;
 		const ArgumentLayout& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
 		for (; i < argLayout.m_samplerImageDescriptor.size(); ++i) {
-			if (argLayout.m_samplerImageDescriptor[i].name == _name) {
+			if ( strcmp(argLayout.m_samplerImageDescriptor[i].name, _name)) {
 				*id_ = i;
 				return true;
 			}

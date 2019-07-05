@@ -471,12 +471,12 @@ namespace Nix {
 		return true;
 	}
 
-	bool DriverVk::compileGLSL2SPV(ShaderModuleType _type, const char * _text, std::vector<uint32_t>& _spvBytes, std::string& _compileLog)
+	bool DriverVk::compileGLSL2SPV(ShaderModuleType _type, const char * _text, const uint32_t ** _spvBytes, size_t* _length, const char** _compileLog)
 	{
 		if (m_compileGLSL2SPV) {
-			return m_compileGLSL2SPV(_type, _text, _spvBytes, _compileLog);
+			return m_compileGLSL2SPV(_type, _text, _spvBytes, _length, _compileLog);
 		}
-		_compileLog = "GLSL compiler component not found!";
+		*_compileLog = "GLSL compiler component not found!";
 		return false;
 	}
 

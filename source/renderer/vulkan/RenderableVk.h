@@ -1,6 +1,7 @@
 #pragma once
 #include "VkInc.h"
 #include <NixRenderer.h>
+#include <vector>
 
 namespace Nix {
 

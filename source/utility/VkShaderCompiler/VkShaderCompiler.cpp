@@ -115,7 +115,7 @@ extern "C" {
 		}
 	};
 
-	bool CompileGLSL2SPV( Nix::ShaderModuleType _type, const char * _text, std::vector<uint32_t>& _spvBytes, std::string& _compileLog )
+	bool CompileGLSL2SPV( Nix::ShaderModuleType _type, const char * _text, const uint32_t** _spvBytes, size_t* _length, const char ** _compileLog )
 	{
 		EShLanguage ShaderType = EShLanguage::EShLangVertex;
 		switch (_type) {
@@ -156,13 +156,16 @@ extern "C" {
 		if (!res) {
 			const char* pLog = Shader.getInfoLog();
 			const char* pDbgLog = Shader.getInfoDebugLog();
-			_compileLog.clear();
-			_compileLog += "Info :";
-			_compileLog += pLog;
-			_compileLog += "\r\n";
-			_compileLog += "Debug :";
-			_compileLog += pDbgLog;
-			_compileLog += "\r\n";
+
+			static thread_local std::string compileLog;
+			compileLog.clear();
+			compileLog += "Info :";
+			compileLog += pLog;
+			compileLog += "\r\n";
+			compileLog += "Debug :";
+			compileLog += pDbgLog;
+			compileLog += "\r\n";
+			*_compileLog = compileLog.c_str();
 			return false;
 		}
 		glslang::TProgram Program;
@@ -171,11 +174,11 @@ extern "C" {
 		assert(res == true);
 		spv::SpvBuildLogger logger;
 		glslang::SpvOptions spvOptions;
-		glslang::GlslangToSpv(*Program.getIntermediate(ShaderType), _spvBytes, &logger, &spvOptions);
-		//
-		if (logger.getAllMessages().length() > 0) {
-			_compileLog += logger.getAllMessages();
-		}
+		static thread_local std::vector<uint32_t> spvBytes;
+		spvBytes.clear();
+		glslang::GlslangToSpv(*Program.getIntermediate(ShaderType), spvBytes, &logger, &spvOptions);
+		*_spvBytes = spvBytes.data();
+		*_length = spvBytes.size();
 		return true;
 	}
 
