@@ -1,3 +1,4 @@
+#pragma once
 #include <NixApplication.h>
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
@@ -13,9 +14,12 @@
 
 #include "../FreeCamera.h"
 
+#include "PhysXSystem.h"
+
 #ifdef _WIN32
     #include <Windows.h>
 #endif
+#include <chrono>
 
 namespace Nix {
     
@@ -43,6 +47,14 @@ namespace Nix {
 
 		float wndWidth;
 		float wndHeight;
+
+		std::chrono::time_point<std::chrono::system_clock> m_timePoint;
+
+		PhysXSystem*				m_phySystem;
+		PhysXScene*					m_phyScene;
+
+		// physx
+
 
 		//
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve );

@@ -1,9 +1,16 @@
 #include "PhysXParticle.h"
+#include "PhysXSystem.h"
+#include "PhysXScene.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #ifdef _WIN32
     #include <Windows.h>
 #endif
+
 namespace Nix {
+
+	static physx::PxDefaultErrorCallback gDefaultErrorCallback;
+	static physx::PxDefaultAllocator gDefaultAllocatorCallback;
 
 	const float perspectiveNear = 0.1f;
 	const float perspectiveFar = 10.0f;
@@ -152,6 +159,14 @@ namespace Nix {
 		}
 		m_camera.SetLookAt(glm::vec3(1, 0, 1));
 		m_camera.SetEye(glm::vec3(0, 0, 0));
+
+		// initialize physx
+		m_timePoint = std::chrono::system_clock::now();
+		m_phySystem = new PhysXSystem();
+		m_phySystem->initialize();
+		m_phyScene = m_phySystem->createScene();
+
+
 		return true;
 	}
 
@@ -180,8 +195,14 @@ namespace Nix {
 
 	void PhysXParticle::tick()
 	{
+		auto now = std::chrono::system_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(now - m_timePoint); 
+		float dt = double(duration.count()) * std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+		m_timePoint = now;
+		m_phyScene->simulate(dt);
 		m_camera.Tick();
 		static uint64_t tickCounter = 0;
+		//m_phyScene
 
 		tickCounter++;
 

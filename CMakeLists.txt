@@ -111,6 +111,7 @@ link_directories(
 
 include_directories(
     ${SOLUTION_DIR}/include
+	${SOLUTION_DIR}/include/physx
     ${SOLUTION_DIR}/include/SDL
     ${SOLUTION_DIR}/include/OpenGLES
     ${SOLUTION_DIR}/include/Utils
@@ -127,6 +128,12 @@ if( MSVC )
     else()
     endif()
 endif()
+
+set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+
+set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MT")
+set( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MTd")
 
 add_subdirectory( thirdpart )
 add_subdirectory( source )
