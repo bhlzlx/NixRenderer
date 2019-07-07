@@ -148,7 +148,7 @@ namespace Nix {
 				for (uint32_t row = 0; row < 20; ++row) {
 					for (uint32_t col = 0; col < 20; ++col) {
 						PT_VERTICES[(row * 20 + col) * 3] = row;
-						PT_VERTICES[(row * 20 + col) * 3 + 1] = 1.0f;
+						PT_VERTICES[(row * 20 + col) * 3 + 1] = 0.5f;
 						PT_VERTICES[(row * 20 + col) * 3 + 2] = col;
 					}
 				}
@@ -157,8 +157,8 @@ namespace Nix {
 				m_renderable->setVertexBuffer(m_vertexBuffer, 0, 0);
 			}
 		}
-		m_camera.SetLookAt(glm::vec3(1, 0, 1));
-		m_camera.SetEye(glm::vec3(0, 0, 0));
+		m_camera.SetLookAt(glm::vec3(0, 0, 0));
+		m_camera.SetEye(glm::vec3(-2, 2, -2));
 
 		// initialize physx
 		m_timePoint = std::chrono::system_clock::now();
