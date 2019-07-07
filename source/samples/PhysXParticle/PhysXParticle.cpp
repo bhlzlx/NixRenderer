@@ -13,7 +13,7 @@ namespace Nix {
 	static physx::PxDefaultAllocator gDefaultAllocatorCallback;
 
 	const float perspectiveNear = 0.1f;
-	const float perspectiveFar = 10.0f;
+	const float perspectiveFar = 20.0f;
 	const float perspectiveFOV = 3.1415926f / 2;
 	const float particleSize = 0.4;
 
@@ -198,8 +198,11 @@ namespace Nix {
 		auto now = std::chrono::system_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(now - m_timePoint); 
 		float dt = double(duration.count()) * std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+		//dt = dt / 1000.0f;
 		m_timePoint = now;
 		m_phyScene->simulate(dt);
+		
+
 		m_camera.Tick();
 		static uint64_t tickCounter = 0;
 		//m_phyScene
@@ -209,6 +212,9 @@ namespace Nix {
 		float imageIndex = (tickCounter / 1024) % 4;
 
 		if (m_context->beginFrame()) {
+
+			m_vertexBuffer->setData(&m_phyScene->m_ballPosition, sizeof(m_phyScene->m_ballPosition), 0);
+
 			m_mainRenderPass->begin(m_primQueue); {
 				glm::mat4x4 identity;
 				m_argCommon->setUniform(m_argSlot, 0, &m_camera.GetViewMatrix(), 64);

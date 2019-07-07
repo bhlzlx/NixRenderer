@@ -36,7 +36,7 @@ namespace Nix {
 		m_scene->addActor(*groundPlane);
 		// 添加一个球测试一下
 		PxSphereGeometry geometry = PxSphereGeometry(10);
-		PxRigidDynamic* rigidBall = PxCreateDynamic(*physics, PxTransform(PxVec3(0, 10, 0)), geometry, *material, 10.0f);
+		PxRigidDynamic* rigidBall = PxCreateDynamic(*physics, PxTransform(PxVec3(0, 1, 0)), geometry, *material, 10.0f);
 		rigidBall->setAngularDamping(0.5f);
 		rigidBall->setLinearVelocity(PxVec3(0, 10, 0));
 		m_scene->addActor(*rigidBall);

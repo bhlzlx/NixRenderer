@@ -208,7 +208,7 @@ namespace Nix {
 	}
 
 	void GraphicsQueueVk::updateBuffer(BufferVk* _buffer, size_t _offset, const void * _data, size_t _length) {
-		if (m_readyForRendering) 
+		if (!m_readyForRendering) 
 		{
 			auto& cmdbuff = m_updatingBuffers[m_flightIndex];
 			if (!m_updatingBuffersActived[m_flightIndex]) {
@@ -344,7 +344,9 @@ namespace Nix {
 			0, nullptr,
 			1, &barrierBefore,
 			0, nullptr);
-		vkCmdCopyBuffer(m_commandBuffer, (const VkBuffer&)stageBuffer, *_buffer, 1, &copy);
+		VkBuffer dst = *_buffer;
+		VkBuffer src = stageBuffer;
+		vkCmdCopyBuffer(m_commandBuffer, src, dst, 1, &copy);
 		vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 			0, nullptr,
 			1, &barrierAfter,
