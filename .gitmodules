@@ -1,0 +1,3 @@
+[submodule "thirdpart/MemoryPool"]
+	path = thirdpart/MemoryPool
+	url = https://github.com/cacay/MemoryPool.git
