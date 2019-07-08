@@ -22,6 +22,7 @@ namespace Nix {
 			return false;
 		}
 		m_pvdClient = m_scene->getScenePvdClient();
+		//m_scene->setSimulationEventCallback()
 		if (m_pvdClient) {
 			m_pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONSTRAINTS, true);
 			m_pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONTACTS, true);
@@ -39,6 +40,8 @@ namespace Nix {
 		PxRigidDynamic* rigidBall = PxCreateDynamic(*physics, PxTransform(PxVec3(0, 1, 0)), geometry, *material, 10.0f);
 		rigidBall->setAngularDamping(0.5f);
 		rigidBall->setLinearVelocity(PxVec3(0, 5, 0));
+		PxShape* shape;
+		//shape->setSimulationFilterData()
 		m_scene->addActor(*rigidBall);
 		//
 		return true;
@@ -65,6 +68,36 @@ namespace Nix {
 
 	void PhysXScene::addBall(float _rad, PxVec3 _p, PxVec3 _v)
 	{
+	}
+
+	void NixSimulationCallback::onConstraintBreak(PxConstraintInfo* constraints, PxU32 count)
+	{
+		return;
+	}
+
+	void NixSimulationCallback::onWake(PxActor** actors, PxU32 count)
+	{
+		return;
+	}
+
+	void NixSimulationCallback::onSleep(PxActor** actors, PxU32 count)
+	{
+		// recycle the particle object
+	}
+
+	void NixSimulationCallback::onContact(const PxContactPairHeader& pairHeader, const PxContactPair* pairs, PxU32 nbPairs)
+	{
+		// will not handle it
+	}
+
+	void NixSimulationCallback::onTrigger(PxTriggerPair* pairs, PxU32 count)
+	{
+		// will not handle it
+	}
+
+	void NixSimulationCallback::onAdvance(const PxRigidBody*const* bodyBuffer, const PxTransform* poseBuffer, const PxU32 count)
+	{
+		// will not handle it
 	}
 
 }

@@ -1,7 +1,12 @@
 project( PhysXParticle )
 
+include_directories(
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../thirdpart/MemoryPool/C-11
+)
+
 link_directories(
- E:/Github/PhysX/physx/bin/win.x86_64.vc140.mt/debug
+ #E:/Github/PhysX/physx/bin/win.x86_64.vc140.mt/debug
+ E:/PhysX/physx/bin/win.x86_64.vc140.mt/debug
 )
 
 set( PROJECT_SOURCE
@@ -13,6 +18,8 @@ set( PROJECT_SOURCE
 	${CMAKE_CURRENT_SOURCE_DIR}/PhysXSystem.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/PhysXScene.h
 	${CMAKE_CURRENT_SOURCE_DIR}/PhysXScene.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/ParticleManager.h
+	${CMAKE_CURRENT_SOURCE_DIR}/ParticleManager.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../../common/NixJpImp.cpp
 )
 
