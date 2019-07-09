@@ -1,6 +1,7 @@
 #include "PhysXParticle.h"
 #include "PhysXSystem.h"
 #include "PhysXScene.h"
+#include "ParticleManager.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #ifdef _WIN32
@@ -12,17 +13,14 @@ namespace Nix {
 	static physx::PxDefaultErrorCallback gDefaultErrorCallback;
 	static physx::PxDefaultAllocator gDefaultAllocatorCallback;
 
+	static ParticleEmiter emiter( physx::PxVec3(0, 2, 0), 3.1415926f/6.0f, 2.0f );
+
 	const float perspectiveNear = 0.1f;
 	const float perspectiveFar = 20.0f;
 	const float perspectiveFOV = 3.1415926f / 2;
 	const float particleSize = 0.4;
 
 	float PT_VERTICES[20 * 20 * 3] = {};
-
-	class Emiter {
-	private:
-	public:
-	};
 
 	void PhysXParticle::onMouseEvent(eMouseButton _bt, eMouseEvent _event, int _x, int _y)
 	{
@@ -153,7 +151,8 @@ namespace Nix {
 					}
 				}
 				m_renderable = m_material->createRenderable();
-				m_vertexBuffer = m_context->createStaticVertexBuffer(PT_VERTICES, sizeof(PT_VERTICES));
+				//m_vertexBuffer = m_context->createStaticVertexBuffer(PT_VERTICES, sizeof(PT_VERTICES));
+				m_vertexBuffer = m_context->createStaticVertexBuffer(nullptr, sizeof(glm::vec3) * 4098);
 				m_renderable->setVertexBuffer(m_vertexBuffer, 0, 0);
 			}
 		}
@@ -201,6 +200,21 @@ namespace Nix {
 		//dt = dt / 1000.0f;
 		m_timePoint = now;
 		m_phyScene->simulate(dt);
+		static std::vector<physx::PxVec3> vertices;
+		vertices.clear();
+		m_phyScene->getParticlePrimitivePositions(vertices);
+		uint32_t pointCount = 0;
+		if ( vertices.size() < 4096) {
+			pointCount = vertices.size();
+		}
+		else {
+			pointCount = 4096;
+		}
+		static uint64_t frameCounter = 0;
+		++frameCounter;
+		if (frameCounter % 16 == 0) {
+			m_phyScene->addParticlePrimitive(PxVec3(0, 2, 0), emiter.emit());
+		}
 		
 
 		m_camera.Tick();
@@ -213,7 +227,9 @@ namespace Nix {
 
 		if (m_context->beginFrame()) {
 
-			m_vertexBuffer->setData(&m_phyScene->m_ballPosition, sizeof(m_phyScene->m_ballPosition), 0);
+			if (vertices.size()) {
+				m_vertexBuffer->setData(vertices.data(), pointCount * sizeof(physx::PxVec3), 0);
+			}		
 
 			m_mainRenderPass->begin(m_primQueue); {
 				glm::mat4x4 identity;
@@ -230,10 +246,10 @@ namespace Nix {
 				m_mainRenderPass->bindArgument(m_argCommon);
 				//
 				//m_mainRenderPass->drawElements(m_renderable, 0, 6);
-				m_mainRenderPass->draw(m_renderable, 0, sizeof(PT_VERTICES) / 12);
+				m_mainRenderPass->draw(m_renderable, 0, pointCount);
 			}
 			m_mainRenderPass->end();
-
+			//
 			m_context->endFrame();
 		}
 	}

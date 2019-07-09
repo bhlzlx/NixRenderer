@@ -2,10 +2,10 @@
 #include <PxPhysicsAPI.h>
 #include <PxFoundation.h>
 #include <extensions/PxDefaultCpuDispatcher.h>
+#include <PxFiltering.h>
 
 namespace Nix {
 	using namespace physx;
-
 	class PhysXScene;
 
 	class PhysXSystem {
@@ -34,7 +34,6 @@ namespace Nix {
 		}
 
 		PhysXScene* createScene();
-
 	};
 
 }

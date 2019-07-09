@@ -1,12 +1,22 @@
 #pragma once
 #include <PxPhysicsAPI.h>
 #include <PxFoundation.h>
+#include <vector>
 
 namespace Nix {
 
+	enum ObjectType {
+		Particle =	1,
+		Mesh =		1 << 1
+	};
+
 	using namespace physx;
 
+	class PhysXScene;
+
 	class NixSimulationCallback : public PxSimulationEventCallback {
+	private:
+		PhysXScene* m_scene;
 	public:
 		virtual void onConstraintBreak(PxConstraintInfo* constraints, PxU32 count) override;
 		virtual void onWake(PxActor** actors, PxU32 count) override;
@@ -23,14 +33,15 @@ namespace Nix {
 		PhysXSystem*			m_physics;
 		PxScene*				m_scene;
 		PxPvdSceneClient*		m_pvdClient;
+		PxMaterial*				m_commonMaterial;
 	public:
-		PxVec3					m_ballPosition;
 	public:
 		PhysXScene();
 		~PhysXScene();
 		bool initialize(PhysXSystem* _physics, const PxSceneDesc& _desc);
 		bool simulate(float _dt);
-		void addPlane( float _x, float _y, float _z );
-		void addBall( float _rad, PxVec3 _p, PxVec3 _v );
+		//
+		void addParticlePrimitive(const PxVec3& _position, const PxVec3& _velocity);
+		void getParticlePrimitivePositions( std::vector<PxVec3>& _positions );
 	};
 }
