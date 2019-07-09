@@ -34,6 +34,7 @@ namespace Nix {
 		PxScene*				m_scene;
 		PxPvdSceneClient*		m_pvdClient;
 		PxMaterial*				m_commonMaterial;
+		NixSimulationCallback	m_simulatorCallback;
 	public:
 	public:
 		PhysXScene();

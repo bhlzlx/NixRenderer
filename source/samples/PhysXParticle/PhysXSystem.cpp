@@ -1,23 +1,48 @@
 #include "PhysXSystem.h"
 #include "PhysXScene.h"
+#include <physx/pvd/PxPvd.h>
 
 namespace Nix {
 
 	static PxDefaultErrorCallback gDefaultErrorCallback;
 	static PxDefaultAllocator gDefaultAllocatorCallback;
 
-// 	PxFilterFlags NixSimulationFilterShader(
-// 		PxFilterObjectAttributes attributes0,
-// 		PxFilterData filterData0,
-// 		PxFilterObjectAttributes attributes1,
-// 		PxFilterData filterData1,
-// 		PxPairFlags& pairFlags,
-// 		const void* constantBlock,
-// 		PxU32 constantBlockSize) {
-// 
-// 
-// 
-// 	}
+ 	PxFilterFlags NixSimulationFilterShader(
+ 		PxFilterObjectAttributes attributes0,
+ 		PxFilterData filterData0,
+ 		PxFilterObjectAttributes attributes1,
+ 		PxFilterData filterData1,
+ 		PxPairFlags& pairFlags,
+ 		const void* constantBlock,
+ 		PxU32 constantBlockSize) {
+
+//		// let triggers through
+//		if (PxFilterObjectIsTrigger(attributes0) || PxFilterObjectIsTrigger(attributes1))
+//		{
+//			pairFlags = PxPairFlag::eTRIGGER_DEFAULT;
+//			return PxFilterFlag::eDEFAULT;
+//		}
+		// generate contacts for all that were not filtered aboves
+		if (filterData0.word3 == Mesh ) {
+			pairFlags = PxPairFlag::eCONTACT_DEFAULT;
+			return PxFilterFlag::eDEFAULT;
+		}
+		else {
+			pairFlags = PxPairFlag::eSOLVE_CONTACT;
+			return PxFilterFlag::eKILL;
+		}
+
+		pairFlags = PxPairFlag::eTRIGGER_DEFAULT;
+
+		// trigger the contact callback for pairs (A,B) where
+		// the filtermask of A contains the ID of B and vice versa.
+		//if ((filterData0.word0 & filterData1.word1) && (filterData1.word0 & filterData0.word1))
+		//	pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
+		//
+		//return PxFilterFlag::eDEFAULT;
+ 
+ 
+ 	}
 
 
 	PhysXSystem::PhysXSystem(){
@@ -41,7 +66,7 @@ namespace Nix {
 		if (!m_pvd) {
 			return false;
 		}
-		m_transport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 2333, 50);
+		m_transport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 50);
 		m_pvd->connect(*m_transport, PxPvdInstrumentationFlag::eALL);
 		// create physics object
 		m_scale = PxTolerancesScale();
@@ -73,7 +98,8 @@ namespace Nix {
 		PxSceneDesc sceneDesc(m_scale);
 		sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
 		sceneDesc.cpuDispatcher = m_cpuDispatcher;
-		sceneDesc.filterShader = PxDefaultSimulationFilterShader;
+		sceneDesc.filterShader = NixSimulationFilterShader;
+		//sceneDesc.filterShader = PxDefaultSimulationFilterShader;
 		PhysXScene* scene = new PhysXScene();
 		bool rst = scene->initialize(this, sceneDesc);
 		if (!rst) {

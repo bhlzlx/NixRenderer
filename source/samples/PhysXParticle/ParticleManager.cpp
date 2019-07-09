@@ -6,7 +6,7 @@ namespace Nix {
 
 	PxVec3 ParticleEmiter::emit() const {
 
-		std::default_random_engine random(time(NULL));
+		static std::default_random_engine random(time(NULL));
 		std::uniform_int_distribution<int> dis1(0, 359);
 
 		dis1(random);

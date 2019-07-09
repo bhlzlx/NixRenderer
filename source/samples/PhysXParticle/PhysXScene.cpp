@@ -23,7 +23,7 @@ namespace Nix {
 			return false;
 		}
 		m_pvdClient = m_scene->getScenePvdClient();
-		//m_scene->setSimulationEventCallback()
+		m_scene->setSimulationEventCallback(&m_simulatorCallback);
 		if (m_pvdClient) {
 			m_pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONSTRAINTS, true);
 			m_pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONTACTS, true);
@@ -35,6 +35,11 @@ namespace Nix {
 		// 地面材质
 		m_commonMaterial = m_physics->getPhysX()->createMaterial(0.5f, 0.5f, 0.6f);
 		PxRigidStatic* groundPlane = PxCreatePlane(*m_physics->getPhysX(), PxPlane(0, 1, 0, 0), *m_commonMaterial);
+		PxShape* shape;
+		groundPlane->getShapes(&shape, sizeof(PxShape*));
+		PxFilterData filterData;
+		filterData.word3 = Mesh;
+		shape->setSimulationFilterData(filterData);
 		m_scene->addActor(*groundPlane);
 		// 添加一个球测试一下
 // 		PxSphereGeometry geometry = PxSphereGeometry(0.5f);
@@ -67,18 +72,26 @@ namespace Nix {
 
 	void PhysXScene::addParticlePrimitive(const PxVec3& _position, const PxVec3& _velocity)
 	{
+		auto physx = m_physics->getPhysX();
+		PxShape* shape = physx->createShape(PxBoxGeometry(0.2f, 0.2f, 0.2f), *m_commonMaterial);
+		PxRigidDynamic* body = physx->createRigidDynamic(PxTransform(_position));
+		body->attachShape(*shape);
+		PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
+		//
+		shape->release();
 		// 添加一个球测试一下
-		PxBoxGeometry geometry = PxBoxGeometry(0.1f, 0.1f, 0.1f);
-		PxRigidDynamic* rigidBall = PxCreateDynamic(*m_physics->getPhysX(), PxTransform(_position), geometry, *m_commonMaterial, 10.0f);
-		rigidBall->setAngularDamping(0.5f);
-		rigidBall->setLinearVelocity(_velocity);
+		//PxBoxGeometry geometry = PxBoxGeometry(0.01f, 0.01f, 0.01f);
+		//PxSphereGeometry geometry(0.01f);
+		//PxRigidDynamic* rigidBall = PxCreateDynamic(*m_physics->getPhysX(), PxTransform(_position), geometry, *m_commonMaterial, 10.0f);
+		//rigidBall->setAngularDamping(0.5f);
+		body->setLinearVelocity(_velocity);
 		
-		PxShape* shape;
-		rigidBall->getShapes(&shape, sizeof(shape), 0);
+		//PxShape* shape;
+		//body->getShapes(&shape, sizeof(shape), 0);
 		PxFilterData filterData;
-		filterData.word0 = Particle;
-		//shape->setSimulationFilterData(filterData);
-		m_scene->addActor(*rigidBall);
+		filterData.word3 = Particle;
+		shape->setSimulationFilterData(filterData);
+		m_scene->addActor(*body);
 	}
 
 	void PhysXScene::getParticlePrimitivePositions(std::vector<PxVec3>& _positions)
@@ -88,8 +101,16 @@ namespace Nix {
 		m_scene->getActors( PxActorTypeFlag::eRIGID_DYNAMIC, actors.data(), actors.size() * sizeof(PxActor*) );
 		for (auto actor : actors) {
 			PxRigidDynamic* rigid = actor->is<PxRigidDynamic>();
+			
 			if (rigid) {
-				_positions.push_back(rigid->getGlobalPose().p);
+				const bool sleeping = rigid->isSleeping();
+				if (sleeping) {
+					rigid->release();
+				}
+				else {
+					_positions.push_back(rigid->getGlobalPose().p);
+				}
+				
 			}
 		}
 	}

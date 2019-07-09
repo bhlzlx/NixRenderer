@@ -13,7 +13,7 @@ namespace Nix {
 	static physx::PxDefaultErrorCallback gDefaultErrorCallback;
 	static physx::PxDefaultAllocator gDefaultAllocatorCallback;
 
-	static ParticleEmiter emiter( physx::PxVec3(0, 2, 0), 3.1415926f/6.0f, 2.0f );
+	static ParticleEmiter emiter( physx::PxVec3(0, 2, 0), 3.1415926f/6.0f, 4.0f );
 
 	const float perspectiveNear = 0.1f;
 	const float perspectiveFar = 20.0f;
@@ -212,7 +212,7 @@ namespace Nix {
 		}
 		static uint64_t frameCounter = 0;
 		++frameCounter;
-		if (frameCounter % 16 == 0) {
+		if (frameCounter % 2 == 0) {
 			m_phyScene->addParticlePrimitive(PxVec3(0, 2, 0), emiter.emit());
 		}
 		
