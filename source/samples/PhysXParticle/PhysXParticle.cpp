@@ -13,12 +13,12 @@ namespace Nix {
 	static physx::PxDefaultErrorCallback gDefaultErrorCallback;
 	static physx::PxDefaultAllocator gDefaultAllocatorCallback;
 
-	static ParticleEmiter emiter( physx::PxVec3(0, 2, 0), 3.1415926f/6.0f, 4.0f );
+	static ParticleEmiter emiter( physx::PxVec3(0, 2, 0), 3.1415926f/6.0f, 8.0f );
 
 	const float perspectiveNear = 0.1f;
 	const float perspectiveFar = 20.0f;
 	const float perspectiveFOV = 3.1415926f / 2;
-	const float particleSize = 0.4;
+	const float particleSize = 2.0f;
 
 	float PT_VERTICES[20 * 20 * 3] = {};
 
@@ -133,6 +133,11 @@ namespace Nix {
 		texDesc.mipmapLevel = 4;
 		texDesc.type = Nix::TextureType::Texture2D;
 
+		auto file = _archieve->open("texture/lightball.ktx");
+		auto mem = CreateMemoryBuffer(file->size());
+		file->read(file->size(), mem);
+		m_texture = m_context->createTextureKTX(mem->constData(), mem->size());
+
 		bool rst = false;
 		m_material = m_context->createMaterial(mtlDesc); {
 			{ // graphics pipeline 
@@ -141,6 +146,10 @@ namespace Nix {
 			{ // arguments
 				m_argCommon = m_material->createArgument(0);
 				rst = m_argCommon->getUniformBlock("Argument", &m_argSlot);
+				SamplerState ss;
+				ss.min = TexFilterLinear;
+				ss.mag = TexFilterLinear;
+				m_argCommon->setSampler(0, ss, m_texture);
 			}
 			{ // renderable
 				for (uint32_t row = 0; row < 20; ++row) {
@@ -212,18 +221,15 @@ namespace Nix {
 		}
 		static uint64_t frameCounter = 0;
 		++frameCounter;
-		if (frameCounter % 2 == 0) {
-			m_phyScene->addParticlePrimitive(PxVec3(0, 2, 0), emiter.emit());
-		}
+
+		m_phyScene->addParticlePrimitive(PxVec3(0, 2, 0), emiter.emit());
 		
 
 		m_camera.Tick();
 		static uint64_t tickCounter = 0;
 		//m_phyScene
 
-		tickCounter++;
-
-		float imageIndex = (tickCounter / 1024) % 4;
+		tickCounter++; 
 
 		if (m_context->beginFrame()) {
 

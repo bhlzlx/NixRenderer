@@ -25,12 +25,17 @@
   "argumentCount" :  1,
 	"argumentLayouts" : [{
     "index": 0,
-    "descriptorCount": 1,
+    "descriptorCount": 2,
 		"descriptors" : [{
 			"type" : "SDT_UniformBlock",
 			"binding" : 0,
 			"name" : "Argument",
 			"shaderStage" : "VertexShader"
+		},{
+			"type" : "SDT_Sampler",
+			"binding" : 1,
+			"name" : "samplerParticle",
+			"shaderStage" : "FragmentShader"
 		}]
 	}],
 	"renderState" : {
@@ -39,8 +44,8 @@
 		"windingMode" : "Clockwise",
 		"scissorEnable" : 1,
 		"depthState" : {
-			"writable": 1,
-			"testable" : 1,
+			"writable": 0,
+			"testable" : 0,
 			"cmpFunc" : "LessEqual"
 		},
 		"stencilState" : {

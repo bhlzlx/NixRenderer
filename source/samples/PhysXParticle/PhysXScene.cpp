@@ -73,7 +73,7 @@ namespace Nix {
 	void PhysXScene::addParticlePrimitive(const PxVec3& _position, const PxVec3& _velocity)
 	{
 		auto physx = m_physics->getPhysX();
-		PxShape* shape = physx->createShape(PxBoxGeometry(0.2f, 0.2f, 0.2f), *m_commonMaterial);
+		PxShape* shape = physx->createShape(PxBoxGeometry(0.5f, 0.5f, 0.5f), *m_commonMaterial);
 		PxRigidDynamic* body = physx->createRigidDynamic(PxTransform(_position));
 		body->attachShape(*shape);
 		PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);

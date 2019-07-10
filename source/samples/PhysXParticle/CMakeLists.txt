@@ -5,8 +5,8 @@ include_directories(
 )
 
 link_directories(
- E:/Github/PhysX/physx/bin/win.x86_64.vc140.mt/debug
- #E:/PhysX/physx/bin/win.x86_64.vc140.mt/debug
+ #E:/Github/PhysX/physx/bin/win.x86_64.vc140.mt/debug
+ E:/PhysX/physx/bin/win.x86_64.vc140.mt/debug
 )
 
 set( PROJECT_SOURCE
