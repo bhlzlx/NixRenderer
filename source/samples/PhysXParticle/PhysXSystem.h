@@ -32,6 +32,9 @@ namespace Nix {
 		PxPhysics* getPhysX() {
 			return m_physics;
 		}
+		PxCooking* getCooking() {
+			return m_cooking;
+		}
 
 		PhysXScene* createScene();
 	};

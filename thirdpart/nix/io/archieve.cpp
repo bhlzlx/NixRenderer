@@ -233,6 +233,9 @@ namespace Nix
         //
         virtual IFile* open( const std::string& _path ) override;
 		virtual bool save(const std::string& _path, const void * _data, size_t _length) override;
+		virtual const char * root() {
+			return _root.c_str();
+		}
         //
         virtual void release() override;
         //

@@ -118,6 +118,8 @@ namespace Nix {
 
 	enum NixFormat : uint8_t {
 		NixInvalidFormat,
+		//
+		NixR8_UNORM,
 		// 32 bit
 		NixRGBA8888_UNORM,
 		NixBGRA8888_UNORM,

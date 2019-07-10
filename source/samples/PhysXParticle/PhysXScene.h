@@ -43,6 +43,7 @@ namespace Nix {
 		bool simulate(float _dt);
 		//
 		void addParticlePrimitive(const PxVec3& _position, const PxVec3& _velocity);
+		void addHeightField(uint8_t * _rawData, uint32_t _row, uint32_t _col, PxVec2 _fieldOffset, float _cellSize);
 		void getParticlePrimitivePositions( std::vector<PxVec3>& _positions );
 	};
 }

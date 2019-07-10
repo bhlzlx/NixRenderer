@@ -44,6 +44,13 @@ namespace Nix {
 		IPipeline*					m_pipeline;
 
 		ITexture*					m_texture;
+		//
+		IMaterial*					m_mtlHF;
+		IPipeline*					m_pipelineHF;
+		IArgument*					m_argHF;
+		IRenderable*				m_renderableHF;
+		ITexture*					m_texHF;
+		IBuffer*					m_indicesHF;
 
 		float wndWidth;
 		float wndHeight;

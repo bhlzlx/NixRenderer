@@ -1,0 +1,53 @@
+{
+	"vertexShader" : "heightField/heightField.vert",
+	"fragmentShader" : "heightField/heightField.frag",
+	"topologyMode" : "TMTriangleList",
+	"pologonMode" : "PMFill",
+	"vertexLayout" : {
+		"attributeCount" : 0
+    },
+    "argumentCount" : 1,
+	"argumentLayouts" : [{
+        "index" : 0,
+        "descriptorCount" : 2,
+		"descriptors" : [{
+			"type" : "SDT_UniformBlock",
+			"binding" : 0,
+			"name" : "Argument",
+			"shaderStage" : "VertexShader"
+		},{
+			"type" : "SDT_Sampler",
+			"binding" : 1,
+			"name" : "samHeightField",
+			"shaderStage" : "VertexShader"
+		}]
+	}],
+	"renderState" : {
+		"writeMask" : 15,
+		"cullMode" : "CullNone",
+		"windingMode" : "Clockwise",
+		"scissorEnable" : 1,
+		"depthState" : {
+			"writable": 1,
+			"testable" : 1,
+			"cmpFunc" : "LessEqual"
+		},
+		"stencilState" : {
+			"enable" : 0,
+			"opFail" : "StencilOpKeep",
+			"opZFail" : "StencilOpKeep",
+			"opPass" : "StencilOpKeep",
+			"enableCCW" : 0,
+			"opFailCCW" : "StencilOpKeep",
+			"opZFailCCW" : "StencilOpKeep",
+			"opPassCCW" : "StencilOpKeep",
+			"cmpFunc" : "Greater"
+		},
+		"blendState" : {
+			"enable" : 1,
+			"dscFactor" : "SourceAlpha",
+			"dstFactor" : "InvertSourceAlpha",
+			"op" : "BlendOpAdd"
+		}
+	}
+}

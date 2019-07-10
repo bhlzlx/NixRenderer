@@ -46,6 +46,7 @@ namespace Nix
         // Open
         virtual IFile* open( const std::string& _path ) = 0;
 		virtual bool save( const std::string& _path, const void * _data, size_t _length ) = 0;
+		virtual const char * root() = 0;
         // List
         // Delete
         // Create

@@ -4,9 +4,11 @@
 #include "ParticleManager.h"
 
 #define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 #ifdef _WIN32
     #include <Windows.h>
 #endif
+#include "nix\string\path.h"
 
 namespace Nix {
 
@@ -19,8 +21,6 @@ namespace Nix {
 	const float perspectiveFar = 20.0f;
 	const float perspectiveFOV = 3.1415926f / 2;
 	const float particleSize = 2.0f;
-
-	float PT_VERTICES[20 * 20 * 3] = {};
 
 	void PhysXParticle::onMouseEvent(eMouseButton _bt, eMouseEvent _event, int _x, int _y)
 	{
@@ -137,6 +137,9 @@ namespace Nix {
 		auto mem = CreateMemoryBuffer(file->size());
 		file->read(file->size(), mem);
 		m_texture = m_context->createTextureKTX(mem->constData(), mem->size());
+		mem->release();
+		file->release();
+
 
 		bool rst = false;
 		m_material = m_context->createMaterial(mtlDesc); {
@@ -152,13 +155,6 @@ namespace Nix {
 				m_argCommon->setSampler(0, ss, m_texture);
 			}
 			{ // renderable
-				for (uint32_t row = 0; row < 20; ++row) {
-					for (uint32_t col = 0; col < 20; ++col) {
-						PT_VERTICES[(row * 20 + col) * 3] = row;
-						PT_VERTICES[(row * 20 + col) * 3 + 1] = 0.5f;
-						PT_VERTICES[(row * 20 + col) * 3 + 2] = col;
-					}
-				}
 				m_renderable = m_material->createRenderable();
 				//m_vertexBuffer = m_context->createStaticVertexBuffer(PT_VERTICES, sizeof(PT_VERTICES));
 				m_vertexBuffer = m_context->createStaticVertexBuffer(nullptr, sizeof(glm::vec3) * 4098);
@@ -174,6 +170,58 @@ namespace Nix {
 		m_phySystem->initialize();
 		m_phyScene = m_phySystem->createScene();
 
+		Nix::TextReader mtlReader;
+		mtlReader.openFile(_archieve, "material/heightField.json");
+		mtlDesc.parse(mtlReader.getText());
+
+		m_mtlHF = m_context->createMaterial(mtlDesc);
+		m_pipeline = m_mtlHF->createPipeline(rpDesc);
+		m_argHF = m_mtlHF->createArgument(0);
+
+
+		std::string filepath = std::string(_archieve->root()) + "/texture/terrian.png";
+		filepath = FormatFilePath(filepath);
+		int width, height, channel;
+		stbi_uc * bytes = stbi_load(filepath.c_str(), &width, &height, &channel, 1);
+		m_phyScene->addHeightField((uint8_t*)bytes, width, height, PxVec2(-32.0f, -32.0f), 1.0f);
+
+		
+
+		TextureDescription hfTexDesc;
+		hfTexDesc.depth = 1;
+		hfTexDesc.format = NixFormat::NixR8_UNORM;
+		hfTexDesc.width = width;
+		hfTexDesc.height = height;
+		hfTexDesc.mipmapLevel = 1;
+		hfTexDesc.type = Texture2D;
+		m_texHF = m_context->createTexture(hfTexDesc);
+		BufferImageUpload ud;
+		ud.baseMipRegion.baseLayer = 0;
+		ud.baseMipRegion.mipLevel = 0;
+		ud.baseMipRegion.offset.x = ud.baseMipRegion.offset.y = ud.baseMipRegion.offset.z = 0;
+		ud.length = sizeof(uint8_t) * width * height;
+		ud.data = bytes;
+		ud.mipDataOffsets[0] = 0;
+		ud.mipCount = 1;
+		m_texHF->uploadSubData(ud);
+		std::vector<uint16_t> indicesDataHF;// .reserve((width - 1) * 6 * height);
+		for (uint32_t r = 0; r < height - 1; ++r) {
+			for (uint32_t c = 0; c<width-1; ++c) {
+				uint16_t upleft = r * width + c;
+				uint16_t downleft = upleft + width;
+				uint16_t upright = upleft + 1;
+				uint16_t downright = downleft + 1;
+				indicesDataHF.push_back(upleft); indicesDataHF.push_back(downleft); indicesDataHF.push_back(downright);
+				indicesDataHF.push_back(upleft); indicesDataHF.push_back(downright); indicesDataHF.push_back(upright);
+			}
+		}
+		m_indicesHF = m_context->createIndexBuffer(indicesDataHF.data(), indicesDataHF.size() * 2);
+
+
+		SamplerState ss;
+		m_argHF->setSampler(0, ss, m_texHF);
+		m_renderableHF = m_mtlHF->createRenderable();
+		m_renderableHF->setIndexBuffer(m_indicesHF, 0);
 
 		return true;
 	}
@@ -222,7 +270,7 @@ namespace Nix {
 		static uint64_t frameCounter = 0;
 		++frameCounter;
 
-		m_phyScene->addParticlePrimitive(PxVec3(0, 2, 0), emiter.emit());
+		m_phyScene->addParticlePrimitive(PxVec3(0, 10, 0), emiter.emit());
 		
 
 		m_camera.Tick();
