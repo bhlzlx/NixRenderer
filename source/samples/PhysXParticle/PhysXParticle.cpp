@@ -22,7 +22,7 @@ namespace Nix {
 	// 同样高度图最大值为1.0f, 所以使用 stb_image读出来的uint8_t最大值255应该除255.0f
 
 	const float perspectiveNear = 0.1f;
-	const float perspectiveFar = 512.0f;
+	const float perspectiveFar = 64.0f;
 	const float perspectiveFOV = 3.1415926f / 2;
 	const float particleSize = 4.0f;
 
@@ -30,11 +30,9 @@ namespace Nix {
 	const float heightFieldYScale = 40.0f;
 	const float heightFieldZScale = 4.0f;
 
-	const float heightFieldOffsetX =  -128.0f;
+	const float heightFieldOffsetX = -128.0f;
 	const float heightFieldOffsetY = 0.0f;
-	const float heightFieldOffsetZ =  -128.0f;
-
-	const float cammeraStepDistance = 0.5f;
+	const float heightFieldOffsetZ = -128.0f;
 
 	void PhysXParticle::onMouseEvent(eMouseButton _bt, eMouseEvent _event, int _x, int _y)
 	{
@@ -83,19 +81,19 @@ namespace Nix {
 			{
 			case 'W':
 			case 'w':
-				m_camera.Forward(cammeraStepDistance);
+				m_camera.Forward(0.1f);
 				break;
 			case 'a':
 			case 'A':
-				m_camera.Leftward(cammeraStepDistance);
+				m_camera.Leftward(0.1f);
 				break;
 			case 's':
 			case 'S':
-				m_camera.Backward(cammeraStepDistance);
+				m_camera.Backward(0.1f);
 				break;
 			case 'd':
 			case 'D':
-				m_camera.Rightward(cammeraStepDistance);
+				m_camera.Rightward(0.1f);
 				break;
 			}
 		}
@@ -164,10 +162,8 @@ namespace Nix {
 				m_argCommon = m_material->createArgument(0);
 				rst = m_argCommon->getUniformBlock("Argument", &m_argSlot);
 				SamplerState ss;
-				ss.min = TexFilterPoint;
-				ss.mag = TexFilterPoint;
-				ss.u = AddressModeClamp;
-				ss.v = AddressModeClamp;
+				ss.min = TexFilterLinear;
+				ss.mag = TexFilterLinear;
 				m_argCommon->setSampler(0, ss, m_texture);
 			}
 			{ // renderable
@@ -243,8 +239,6 @@ namespace Nix {
 
 
 		SamplerState ss;
-		ss.min = TexFilterLinear;
-		ss.mag = TexFilterLinear;
 		m_argHF->setSampler(0, ss, m_texHF);
 		m_renderableHF = m_mtlHF->createRenderable();
 		m_renderableHF->setIndexBuffer(m_indicesHF, 0);
@@ -298,7 +292,7 @@ namespace Nix {
 		static uint64_t frameCounter = 0;
 		++frameCounter;
 
-		m_phyScene->addParticlePrimitive(PxVec3(0, 25, 0), emiter.emit());
+		m_phyScene->addParticlePrimitive(PxVec3(0, 40, 0), emiter.emit());
 		
 
 		m_camera.Tick();
