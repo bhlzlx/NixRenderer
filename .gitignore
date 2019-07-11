@@ -38,6 +38,7 @@ thirdpart/glslang
 thirdpart/rapidjson
 thirdpart/SPIRV-Cross
 thirdpart/physx
+thirdpart/stb
 
 .vs/*
 build/*
