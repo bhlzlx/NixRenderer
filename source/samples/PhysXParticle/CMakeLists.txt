@@ -2,6 +2,7 @@ project( PhysXParticle )
 
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../thirdpart/MemoryPool/C-11
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../thirdpart/physx
 )
 
 link_directories(

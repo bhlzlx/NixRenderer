@@ -45,5 +45,6 @@ namespace Nix {
 		void addParticlePrimitive(const PxVec3& _position, const PxVec3& _velocity);
 		void addHeightField(uint8_t * _rawData, uint32_t _row, uint32_t _col, PxVec3 _fieldOffset, PxVec3 _scale);
 		void getParticlePrimitivePositions( std::vector<PxVec3>& _positions );
+		void raycast( const PxVec3& _start, const PxVec3& _end );
 	};
 }
