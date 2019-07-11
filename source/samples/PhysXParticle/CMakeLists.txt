@@ -1,12 +1,13 @@
 project( PhysXParticle )
 
 include_directories(
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../thirdpart/MemoryPool/C-11
+	${SOLUTION_DIR}/thirdpart/stb
+	${SOLUTION_DIR}/thirdpart/physx
 )
 
 link_directories(
- #E:/Github/PhysX/physx/bin/win.x86_64.vc140.mt/debug
- E:/PhysX/physx/bin/win.x86_64.vc140.mt/debug
+ E:/Github/PhysX/physx/bin/win.x86_64.vc140.mt/debug
+ #E:/PhysX/physx/bin/win.x86_64.vc140.mt/debug
 )
 
 set( PROJECT_SOURCE

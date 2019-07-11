@@ -15,7 +15,7 @@ namespace Nix {
 	static physx::PxDefaultErrorCallback gDefaultErrorCallback;
 	static physx::PxDefaultAllocator gDefaultAllocatorCallback;
 
-	static ParticleEmiter emiter( physx::PxVec3(0, 2, 0), 3.1415926f/6.0f, 8.0f );
+	static ParticleEmiter emiter( physx::PxVec3(0, 2, 0), 3.1415926f/6.0f, 4.0f );
 
 	// 写在前边
 	// 我们规定高度图每两个像素之间是长度为1的单位
@@ -26,13 +26,13 @@ namespace Nix {
 	const float perspectiveFOV = 3.1415926f / 2;
 	const float particleSize = 4.0f;
 
-	const float heightFieldXScale = 4.0f;
-	const float heightFieldYScale = 40.0f;
-	const float heightFieldZScale = 4.0f;
+	const float heightFieldXScale = 1.0f;
+	const float heightFieldYScale = 8.0f;
+	const float heightFieldZScale = 1.0f;
 
-	const float heightFieldOffsetX = -128.0f;
+	const float heightFieldOffsetX = -32.0f;
 	const float heightFieldOffsetY = 0.0f;
-	const float heightFieldOffsetZ = -128.0f;
+	const float heightFieldOffsetZ = -32.0f;
 
 	void PhysXParticle::onMouseEvent(eMouseButton _bt, eMouseEvent _event, int _x, int _y)
 	{
@@ -292,7 +292,7 @@ namespace Nix {
 		static uint64_t frameCounter = 0;
 		++frameCounter;
 
-		m_phyScene->addParticlePrimitive(PxVec3(0, 40, 0), emiter.emit());
+		m_phyScene->addParticlePrimitive(PxVec3(0, 6, 0), emiter.emit());
 		
 
 		m_camera.Tick();
