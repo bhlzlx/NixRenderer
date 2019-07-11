@@ -17,12 +17,13 @@ out gl_PerVertex {
 };
 
 void main(){
-    uint c = gl_VertexID % col;
-    uint r = gl_VertexID / col;
-    float height = texture( samHeightField, vec2((float)c / (float)row), (float)r / (float)col);
+    float c = gl_VertexIndex % col;
+    float r = gl_VertexIndex / col;
+    vec2 uv = vec2( c/row, r/col );
+    float height = texture( samHeightField, uv ).r;
     color = height;
-    height = height * 255.0f;
-    vec3 p( c, height, r );
+    //height = height * 255.0f;
+    vec4 p = vec4( c, height, r, 1.0f );
 	gl_Position = mvp * p;
 	gl_Position.y *= -1;
 }

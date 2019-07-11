@@ -94,7 +94,7 @@ namespace Nix {
 		m_scene->addActor(*body);
 	}
 
-	void PhysXScene::addHeightField(uint8_t * _rawData, uint32_t _row, uint32_t _col, PxVec2 _fieldOffset, float _cellSize )
+	void PhysXScene::addHeightField(uint8_t * _rawData, uint32_t _row, uint32_t _col, PxVec3 _fieldOffset, PxVec3 _scale )
 	{
 		std::vector<PxHeightFieldSample> samples(_row * _col);
 		for (uint32_t r = 0; r < _row; ++r)
@@ -124,13 +124,13 @@ namespace Nix {
 		hfdesc.samples = strideData;
 		PxHeightField* heightField = m_physics->getCooking()->createHeightField(hfdesc, m_physics->getPhysX()->getPhysicsInsertionCallback());
 		
-		PxTransform transform(PxVec3(_fieldOffset.x, 0, _fieldOffset.y));
+		PxTransform transform(_fieldOffset);
 		PxRigidStatic* hfActor = m_physics->getPhysX()->createRigidStatic(transform);
 		if (!hfActor){
 			assert(false);
 		}
 		hfActor->userData = this;
-		PxHeightFieldGeometry hfGeom( heightField, PxMeshGeometryFlags(), 1.f / 16.0f * _cellSize, (PxReal)_cellSize, (PxReal)_cellSize);
+		PxHeightFieldGeometry hfGeom( heightField, PxMeshGeometryFlags(), 1.f / 255.0f * _scale.y, (PxReal)_scale.z, (PxReal)_scale.x);
 		PxShape* hfShape = PxRigidActorExt::createExclusiveShape(*hfActor, hfGeom, *m_commonMaterial);
 		if (!hfShape){
 			assert(false);

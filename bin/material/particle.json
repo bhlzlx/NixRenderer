@@ -45,7 +45,7 @@
 		"scissorEnable" : 1,
 		"depthState" : {
 			"writable": 0,
-			"testable" : 0,
+			"testable" : 1,
 			"cmpFunc" : "LessEqual"
 		},
 		"stencilState" : {

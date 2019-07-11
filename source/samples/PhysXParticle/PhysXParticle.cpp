@@ -17,10 +17,22 @@ namespace Nix {
 
 	static ParticleEmiter emiter( physx::PxVec3(0, 2, 0), 3.1415926f/6.0f, 8.0f );
 
+	// 写在前边
+	// 我们规定高度图每两个像素之间是长度为1的单位
+	// 同样高度图最大值为1.0f, 所以使用 stb_image读出来的uint8_t最大值255应该除255.0f
+
 	const float perspectiveNear = 0.1f;
-	const float perspectiveFar = 20.0f;
+	const float perspectiveFar = 64.0f;
 	const float perspectiveFOV = 3.1415926f / 2;
-	const float particleSize = 2.0f;
+	const float particleSize = 4.0f;
+
+	const float heightFieldXScale = 4.0f;
+	const float heightFieldYScale = 40.0f;
+	const float heightFieldZScale = 4.0f;
+
+	const float heightFieldOffsetX = -128.0f;
+	const float heightFieldOffsetY = 0.0f;
+	const float heightFieldOffsetZ = -128.0f;
 
 	void PhysXParticle::onMouseEvent(eMouseButton _bt, eMouseEvent _event, int _x, int _y)
 	{
@@ -170,12 +182,13 @@ namespace Nix {
 		m_phySystem->initialize();
 		m_phyScene = m_phySystem->createScene();
 
-		Nix::TextReader mtlReader;
-		mtlReader.openFile(_archieve, "material/heightField.json");
-		mtlDesc.parse(mtlReader.getText());
+		Nix::TextReader mtlHFReader;
+		mtlHFReader.openFile(_archieve, "material/heightField.json");
+		Nix::MaterialDescription mtlHFDesc;
+		mtlHFDesc.parse(mtlHFReader.getText());
 
-		m_mtlHF = m_context->createMaterial(mtlDesc);
-		m_pipeline = m_mtlHF->createPipeline(rpDesc);
+		m_mtlHF = m_context->createMaterial(mtlHFDesc);
+		m_pipelineHF = m_mtlHF->createPipeline(rpDesc);
 		m_argHF = m_mtlHF->createArgument(0);
 
 
@@ -183,9 +196,12 @@ namespace Nix {
 		filepath = FormatFilePath(filepath);
 		int width, height, channel;
 		stbi_uc * bytes = stbi_load(filepath.c_str(), &width, &height, &channel, 1);
-		m_phyScene->addHeightField((uint8_t*)bytes, width, height, PxVec2(-32.0f, -32.0f), 1.0f);
-
-		
+		m_phyScene->addHeightField(
+			(uint8_t*)bytes, 
+			width, height, 
+			PxVec3( heightFieldOffsetX, heightFieldOffsetY, heightFieldOffsetZ) , 
+			PxVec3( heightFieldXScale, heightFieldYScale, heightFieldZScale ) 
+		);		
 
 		TextureDescription hfTexDesc;
 		hfTexDesc.depth = 1;
@@ -203,6 +219,10 @@ namespace Nix {
 		ud.data = bytes;
 		ud.mipDataOffsets[0] = 0;
 		ud.mipCount = 1;
+		ud.baseMipRegion.size.width = width;
+		ud.baseMipRegion.size.height = height;
+		ud.baseMipRegion.size.depth = 1;
+
 		m_texHF->uploadSubData(ud);
 		std::vector<uint16_t> indicesDataHF;// .reserve((width - 1) * 6 * height);
 		for (uint32_t r = 0; r < height - 1; ++r) {
@@ -238,7 +258,9 @@ namespace Nix {
 		ss.size = { (int)_width, (int)_height };
 		m_camera.Perspective(perspectiveFOV, (float)_width / (float)_height, perspectiveNear, perspectiveFar);
 		m_pipeline->setViewport(vp);
+		m_pipelineHF->setViewport(vp);
 		m_pipeline->setScissor(ss);
+		m_pipelineHF->setScissor(ss);
 		wndWidth = _width;
 		wndHeight = _height;
 	}
@@ -270,7 +292,7 @@ namespace Nix {
 		static uint64_t frameCounter = 0;
 		++frameCounter;
 
-		m_phyScene->addParticlePrimitive(PxVec3(0, 10, 0), emiter.emit());
+		m_phyScene->addParticlePrimitive(PxVec3(0, 40, 0), emiter.emit());
 		
 
 		m_camera.Tick();
@@ -287,6 +309,23 @@ namespace Nix {
 
 			m_mainRenderPass->begin(m_primQueue); {
 				glm::mat4x4 identity;
+
+				glm::mat4x4 viewMat = m_camera.GetViewMatrix();
+				glm::mat4x4 projMat = m_camera.GetProjMatrix();
+				glm::mat4x4 moveMat = glm::translate(identity, glm::vec3(heightFieldOffsetX, heightFieldOffsetY, heightFieldOffsetZ));
+				glm::mat4x4 scaleMat = glm::scale(identity, glm::vec3(heightFieldXScale, heightFieldYScale, heightFieldZScale));
+				glm::mat4x4 mvp = projMat * viewMat * moveMat * scaleMat;
+				//
+				m_argHF->setUniform(0, 0, &mvp, sizeof(mvp));
+				uint32_t row = 64, col = 64;
+				m_argHF->setUniform(0, 64, &col, 4);
+				m_argHF->setUniform(0, 68, &row, 4);
+
+				m_mainRenderPass->bindPipeline(m_pipelineHF);
+				m_mainRenderPass->bindArgument(m_argHF);
+				m_mainRenderPass->drawElements(m_renderableHF, 0, 63 * 6 * 63);
+
+				// draw particles
 				m_argCommon->setUniform(m_argSlot, 0, &m_camera.GetViewMatrix(), 64);
 				m_argCommon->setUniform(m_argSlot, 64, &m_camera.GetProjMatrix(), 64);
 				m_argCommon->setUniform(m_argSlot, 128, &wndWidth, 4);
@@ -294,7 +333,6 @@ namespace Nix {
 				m_argCommon->setUniform(m_argSlot, 136, &perspectiveNear, 4);
 				m_argCommon->setUniform(m_argSlot, 140, &perspectiveFOV, 4);
 				m_argCommon->setUniform(m_argSlot, 144, &particleSize, 4);
-
 				//
 				m_mainRenderPass->bindPipeline(m_pipeline);
 				m_mainRenderPass->bindArgument(m_argCommon);

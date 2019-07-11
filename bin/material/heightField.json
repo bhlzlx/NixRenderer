@@ -25,7 +25,7 @@
 	"renderState" : {
 		"writeMask" : 15,
 		"cullMode" : "CullNone",
-		"windingMode" : "Clockwise",
+		"windingMode" : "CounterClockwise",
 		"scissorEnable" : 1,
 		"depthState" : {
 			"writable": 1,
@@ -44,7 +44,7 @@
 			"cmpFunc" : "Greater"
 		},
 		"blendState" : {
-			"enable" : 1,
+			"enable" : 0,
 			"dscFactor" : "SourceAlpha",
 			"dstFactor" : "InvertSourceAlpha",
 			"op" : "BlendOpAdd"
