@@ -19,7 +19,7 @@ out gl_PerVertex {
 void main(){
     float c = gl_VertexIndex % col;
     float r = gl_VertexIndex / col;
-    vec2 uv = vec2( c/row, r/col );
+    vec2 uv = vec2( r/col, c/row);
     float height = texture( samHeightField, uv ).r;
     color = height;
     //height = height * 255.0f;
