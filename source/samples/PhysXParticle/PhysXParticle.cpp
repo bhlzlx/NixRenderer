@@ -24,7 +24,7 @@ namespace Nix {
 	const float perspectiveNear = 0.1f;
 	const float perspectiveFar = 512.0f;
 	const float perspectiveFOV = 3.1415926f / 2;
-	const float particleSize = 4.0f;
+	const float particleSize = 2.0f;
 
 	const float heightFieldXScale = 1.0f;
 	const float heightFieldYScale = 8.0f;
