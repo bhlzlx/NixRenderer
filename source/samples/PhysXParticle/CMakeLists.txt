@@ -2,6 +2,7 @@ project( PhysXParticle )
 
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../thirdpart/MemoryPool/C-11
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../thirdpart/physx
 )
 
 link_directories(
@@ -20,6 +21,8 @@ set( PROJECT_SOURCE
 	${CMAKE_CURRENT_SOURCE_DIR}/PhysXScene.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/ParticleManager.h
 	${CMAKE_CURRENT_SOURCE_DIR}/ParticleManager.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/PhysXControllerManager.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/PhysXControllerManager.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../../common/NixJpImp.cpp
 )
 

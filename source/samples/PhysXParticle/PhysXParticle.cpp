@@ -15,24 +15,32 @@ namespace Nix {
 	static physx::PxDefaultErrorCallback gDefaultErrorCallback;
 	static physx::PxDefaultAllocator gDefaultAllocatorCallback;
 
-	static ParticleEmiter emiter( physx::PxVec3(0, 2, 0), 3.1415926f/6.0f, 8.0f );
+	static ParticleEmiter emiter( physx::PxVec3(0, 4, 0), 3.1415926f/9.0f, 5.0f );
 
 	// 写在前边
 	// 我们规定高度图每两个像素之间是长度为1的单位
 	// 同样高度图最大值为1.0f, 所以使用 stb_image读出来的uint8_t最大值255应该除255.0f
 
 	const float perspectiveNear = 0.1f;
-	const float perspectiveFar = 64.0f;
+	const float perspectiveFar = 512.0f;
 	const float perspectiveFOV = 3.1415926f / 2;
-	const float particleSize = 4.0f;
+	const float particleSize = 2.0f;
 
-	const float heightFieldXScale = 4.0f;
-	const float heightFieldYScale = 40.0f;
-	const float heightFieldZScale = 4.0f;
+	const float heightFieldXScale = 1.0f;
+	const float heightFieldYScale = 8.0f;
+	const float heightFieldZScale = 1.0f;
 
-	const float heightFieldOffsetX = -128.0f;
+	const float heightFieldOffsetX =  -32.0f;
 	const float heightFieldOffsetY = 0.0f;
-	const float heightFieldOffsetZ = -128.0f;
+	const float heightFieldOffsetZ =  -32.0f;
+
+	const float cammeraStepDistance = 0.5f;
+
+	PxVec3 emitSource;
+	PxVec3 emitSource1;
+
+	uint32_t hfWidth = 0;
+	uint32_t hfHeight = 0;
 
 	void PhysXParticle::onMouseEvent(eMouseButton _bt, eMouseEvent _event, int _x, int _y)
 	{
@@ -81,19 +89,19 @@ namespace Nix {
 			{
 			case 'W':
 			case 'w':
-				m_camera.Forward(0.1f);
+				m_camera.Forward(cammeraStepDistance);
 				break;
 			case 'a':
 			case 'A':
-				m_camera.Leftward(0.1f);
+				m_camera.Leftward(cammeraStepDistance);
 				break;
 			case 's':
 			case 'S':
-				m_camera.Backward(0.1f);
+				m_camera.Backward(cammeraStepDistance);
 				break;
 			case 'd':
 			case 'D':
-				m_camera.Rightward(0.1f);
+				m_camera.Rightward(cammeraStepDistance);
 				break;
 			}
 		}
@@ -162,8 +170,10 @@ namespace Nix {
 				m_argCommon = m_material->createArgument(0);
 				rst = m_argCommon->getUniformBlock("Argument", &m_argSlot);
 				SamplerState ss;
-				ss.min = TexFilterLinear;
-				ss.mag = TexFilterLinear;
+				ss.min = TexFilterPoint;
+				ss.mag = TexFilterPoint;
+				ss.u = AddressModeClamp;
+				ss.v = AddressModeClamp;
 				m_argCommon->setSampler(0, ss, m_texture);
 			}
 			{ // renderable
@@ -173,8 +183,6 @@ namespace Nix {
 				m_renderable->setVertexBuffer(m_vertexBuffer, 0, 0);
 			}
 		}
-		m_camera.SetLookAt(glm::vec3(0, 0, 0));
-		m_camera.SetEye(glm::vec3(-2, 2, -2));
 
 		// initialize physx
 		m_timePoint = std::chrono::system_clock::now();
@@ -192,16 +200,47 @@ namespace Nix {
 		m_argHF = m_mtlHF->createArgument(0);
 
 
+		//std::string filepath = std::string(_archieve->root()) + "/texture/heightmap.png";
 		std::string filepath = std::string(_archieve->root()) + "/texture/terrian.png";
 		filepath = FormatFilePath(filepath);
 		int width, height, channel;
 		stbi_uc * bytes = stbi_load(filepath.c_str(), &width, &height, &channel, 1);
 		m_phyScene->addHeightField(
-			(uint8_t*)bytes, 
-			width, height, 
-			PxVec3( heightFieldOffsetX, heightFieldOffsetY, heightFieldOffsetZ) , 
-			PxVec3( heightFieldXScale, heightFieldYScale, heightFieldZScale ) 
-		);		
+			(uint8_t*)bytes,
+			width, height,
+			PxVec3(heightFieldOffsetX, heightFieldOffsetY, heightFieldOffsetZ),
+			PxVec3(heightFieldXScale, heightFieldYScale, heightFieldZScale)
+		);
+
+		hfWidth = width;
+		hfHeight = height;
+
+		// 因为我们刚刚添加了高度图，地形信息，所以我们可以立即查询一个相交点
+		// 随机两个粒子发射位置
+		// 随机一个镜头初始位置
+		static std::default_random_engine random(time(NULL));
+		std::uniform_int_distribution<int> dis1( -(int)hfWidth/4, hfWidth/4 );
+		int randX = dis1(random) * heightFieldXScale;
+		int randZ = dis1(random) * heightFieldZScale;
+		bool raycastRst = m_phyScene->raycast(PxVec3(randX, 40, randZ), PxVec3(0, -1, 0), 100, emitSource);
+		assert(raycastRst);
+		emitSource.y = emitSource.y + 1;
+
+		randX = dis1(random) * heightFieldXScale;
+		randZ = dis1(random) * heightFieldZScale;
+		raycastRst = m_phyScene->raycast(PxVec3(randX, 40, randZ), PxVec3(0, -1, 0), 100, emitSource1);
+		assert(raycastRst);
+		emitSource1.y = emitSource1.y + 1;
+
+		randX = dis1(random) * heightFieldXScale;
+		randZ = dis1(random) * heightFieldZScale;
+		PxVec3 eye;
+		raycastRst = m_phyScene->raycast(PxVec3(randX, 40, randZ), PxVec3(0, -1, 0), 100, eye);
+		assert(raycastRst);
+		eye.y = eye.y + 4;
+
+		m_camera.SetLookAt(glm::vec3(0, 0, 0));
+		m_camera.SetEye(glm::vec3( eye.x, eye.y, eye.z ));
 
 		TextureDescription hfTexDesc;
 		hfTexDesc.depth = 1;
@@ -239,6 +278,8 @@ namespace Nix {
 
 
 		SamplerState ss;
+		ss.min = TexFilterLinear;
+		ss.mag = TexFilterLinear;
 		m_argHF->setSampler(0, ss, m_texHF);
 		m_renderableHF = m_mtlHF->createRenderable();
 		m_renderableHF->setIndexBuffer(m_indicesHF, 0);
@@ -292,7 +333,10 @@ namespace Nix {
 		static uint64_t frameCounter = 0;
 		++frameCounter;
 
-		m_phyScene->addParticlePrimitive(PxVec3(0, 40, 0), emiter.emit());
+		if (frameCounter % 4 == 0) {
+			m_phyScene->addParticlePrimitive(emitSource, emiter.emit());
+			m_phyScene->addParticlePrimitive(emitSource1, emiter.emit());
+		}
 		
 
 		m_camera.Tick();
@@ -317,13 +361,12 @@ namespace Nix {
 				glm::mat4x4 mvp = projMat * viewMat * moveMat * scaleMat;
 				//
 				m_argHF->setUniform(0, 0, &mvp, sizeof(mvp));
-				uint32_t row = 64, col = 64;
-				m_argHF->setUniform(0, 64, &col, 4);
-				m_argHF->setUniform(0, 68, &row, 4);
+				m_argHF->setUniform(0, 64, &hfWidth, 4);
+				m_argHF->setUniform(0, 68, &hfHeight, 4);
 
 				m_mainRenderPass->bindPipeline(m_pipelineHF);
 				m_mainRenderPass->bindArgument(m_argHF);
-				m_mainRenderPass->drawElements(m_renderableHF, 0, 63 * 6 * 63);
+				m_mainRenderPass->drawElements(m_renderableHF, 0, (hfWidth - 1) * (hfHeight-1) * 6);
 
 				// draw particles
 				m_argCommon->setUniform(m_argSlot, 0, &m_camera.GetViewMatrix(), 64);

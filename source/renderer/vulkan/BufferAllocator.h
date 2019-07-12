@@ -4,6 +4,17 @@
 
 namespace Nix {
 
+// 	struct BufferAllocation {
+// 		uint64_t id;
+// 		uint32_t offset;
+// 		uint32_t size;
+// 	};
+// 
+// 	class BufferAllocatorVk {
+// 	public:
+// 		virtual BufferAllocation allocate( size_t _size );
+// 	};
+// 
 // 	struct alignas(8) BufferAllocation {
 // 		BufferAllocator*	allocator;
 // 		uint16_t			capacity; // times of minimum size
@@ -20,9 +31,8 @@ namespace Nix {
 // 	public:
 // 	public:
 // 		bool initialize(size_t _size);
-// 		bool initialize( size_t _size, size_t _miniSize );
-// 		BufferAllocation allocate( size_t _size );
-// 		uint16_t 
-// 	};
+// 		bool initialize(size_t _size, size_t _miniSize);
+// 		BufferAllocation allocate(size_t _size);
+//  	};
 
 }

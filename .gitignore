@@ -33,9 +33,15 @@
 *.ipch
 *.ilk
 
-thirdpart/*
-.vs/*
-build/*
-out/*
-bin/Windows/*
+
+thirdpart/glm
+thirdpart/glslang
+thirdpart/rapidjson
+thirdpart/SPIRV-Cross
+thirdpart/physx
+
+.vs
+build
+out
+bin/Windows
 bin/pipeline_cache.bin
