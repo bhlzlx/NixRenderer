@@ -33,10 +33,11 @@
 *.ipch
 *.ilk
 
-thirdpart/glm/*
-thirdpart/glslang/*
-thirdpart/rapidjson/*
-thridpart/SPIRV-Cross/*
+thirdpart/glm
+thirdpart/glslang
+thirdpart/rapidjson
+thirdpart/SPIRV-Cross
+thirdpart/physx
 
 .vs/*
 build/*
