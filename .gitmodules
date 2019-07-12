@@ -1,3 +1,6 @@
 [submodule "thirdpart/MemoryPool"]
 	path = thirdpart/MemoryPool
 	url = https://github.com/cacay/MemoryPool.git
+[submodule "thirdpart/stb"]
+	path = thirdpart/stb
+	url = https://github.com/bhlzlx/stb.git
