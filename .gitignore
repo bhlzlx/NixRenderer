@@ -39,8 +39,8 @@ thirdpart/rapidjson
 thirdpart/SPIRV-Cross
 thirdpart/physx
 
-.vs/*
-build/*
-out/*
-bin/Windows/*
+.vs
+build
+out
+bin/Windows
 bin/pipeline_cache.bin
