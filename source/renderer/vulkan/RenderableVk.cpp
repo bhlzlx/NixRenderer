@@ -105,7 +105,9 @@ namespace Nix {
 
 	void RenderableVk::drawElements(VkCommandBuffer _commandBuffer, uint32_t _indexOffset, uint32_t _indexCount)
 	{
-		vkCmdBindVertexBuffers(_commandBuffer, 0, m_vecBuffer.size(), m_vecBuffer.data(), m_vecBufferOffset.data());
+		if (m_vecBuffer.size()) {
+			vkCmdBindVertexBuffers(_commandBuffer, 0, m_vecBuffer.size(), m_vecBuffer.data(), m_vecBufferOffset.data());
+		}
 		vkCmdBindIndexBuffer(_commandBuffer, m_indexBuffer, m_indexBufferOffset, VK_INDEX_TYPE_UINT16);
 		vkCmdDrawIndexed(_commandBuffer, _indexCount, 1, _indexOffset, 0, 0);
 	}
@@ -118,7 +120,9 @@ namespace Nix {
 
 	void RenderableVk::drawElementInstanced(VkCommandBuffer _commandBuffer, uint32_t _indexOffset, uint32_t _indexCount, uint32_t _baseInstance, uint32_t _instanceCount)
 	{
-		vkCmdBindVertexBuffers(_commandBuffer, 0, m_vecBuffer.size(), m_vecBuffer.data(), m_vecBufferOffset.data());
+		if (m_vecBuffer.size()) {
+			vkCmdBindVertexBuffers(_commandBuffer, 0, m_vecBuffer.size(), m_vecBuffer.data(), m_vecBufferOffset.data());
+		}
 		vkCmdBindIndexBuffer(_commandBuffer, m_indexBuffer, m_indexBufferOffset, VK_INDEX_TYPE_UINT16);
 		vkCmdDrawIndexed(_commandBuffer, _indexCount, _instanceCount, _indexOffset, 0, _baseInstance);
 	}

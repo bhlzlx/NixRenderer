@@ -36,6 +36,9 @@ namespace Nix {
 
 	const float cammeraStepDistance = 0.5f;
 
+	PxVec3 emitSource;
+	PxVec3 emitSource1;
+
 	uint32_t hfWidth = 0;
 	uint32_t hfHeight = 0;
 
@@ -180,8 +183,6 @@ namespace Nix {
 				m_renderable->setVertexBuffer(m_vertexBuffer, 0, 0);
 			}
 		}
-		m_camera.SetLookAt(glm::vec3(0, 0, 0));
-		m_camera.SetEye(glm::vec3(-2, 2, -2));
 
 		// initialize physx
 		m_timePoint = std::chrono::system_clock::now();
@@ -213,6 +214,33 @@ namespace Nix {
 
 		hfWidth = width;
 		hfHeight = height;
+
+		// 因为我们刚刚添加了高度图，地形信息，所以我们可以立即查询一个相交点
+		// 随机两个粒子发射位置
+		// 随机一个镜头初始位置
+		static std::default_random_engine random(time(NULL));
+		std::uniform_int_distribution<int> dis1( -(int)hfWidth/4, hfWidth/4 );
+		int randX = dis1(random) * heightFieldXScale;
+		int randZ = dis1(random) * heightFieldZScale;
+		bool raycastRst = m_phyScene->raycast(PxVec3(randX, 40, randZ), PxVec3(0, -1, 0), 100, emitSource);
+		assert(raycastRst);
+		emitSource.y = emitSource.y + 1;
+
+		randX = dis1(random) * heightFieldXScale;
+		randZ = dis1(random) * heightFieldZScale;
+		raycastRst = m_phyScene->raycast(PxVec3(randX, 40, randZ), PxVec3(0, -1, 0), 100, emitSource1);
+		assert(raycastRst);
+		emitSource1.y = emitSource1.y + 1;
+
+		randX = dis1(random) * heightFieldXScale;
+		randZ = dis1(random) * heightFieldZScale;
+		PxVec3 eye;
+		raycastRst = m_phyScene->raycast(PxVec3(randX, 40, randZ), PxVec3(0, -1, 0), 100, eye);
+		assert(raycastRst);
+		eye.y = eye.y + 4;
+
+		m_camera.SetLookAt(glm::vec3(0, 0, 0));
+		m_camera.SetEye(glm::vec3( eye.x, eye.y, eye.z ));
 
 		TextureDescription hfTexDesc;
 		hfTexDesc.depth = 1;
@@ -305,7 +333,10 @@ namespace Nix {
 		static uint64_t frameCounter = 0;
 		++frameCounter;
 
-		m_phyScene->addParticlePrimitive(PxVec3(0, 6, 0), emiter.emit());
+		if (frameCounter % 4 == 0) {
+			m_phyScene->addParticlePrimitive(emitSource, emiter.emit());
+			m_phyScene->addParticlePrimitive(emitSource1, emiter.emit());
+		}
 		
 
 		m_camera.Tick();

@@ -1,5 +1,6 @@
 #include "PhysXScene.h"
 #include "PhysXSystem.h"
+#include "PhysXControllerManager.h"
 #include <assert.h>
 
 namespace Nix {
@@ -32,7 +33,7 @@ namespace Nix {
 		m_physics = _physics;
 
 		PxPhysics* physics = m_physics->getPhysX();
-		// µØÃæ²ÄÖÊ
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿?
 		m_commonMaterial = m_physics->getPhysX()->createMaterial(0.5f, 0.5f, 0.6f);
 		PxRigidStatic* groundPlane = PxCreatePlane(*m_physics->getPhysX(), PxPlane(0, 1, 0, 0), *m_commonMaterial);
 		PxShape* shape;
@@ -41,7 +42,7 @@ namespace Nix {
 		filterData.word3 = Mesh;
 		shape->setSimulationFilterData(filterData);
 		m_scene->addActor(*groundPlane);
-		// Ìí¼ÓÒ»¸öÇò²âÊÔÒ»ÏÂ
+		// ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿?
 // 		PxSphereGeometry geometry = PxSphereGeometry(0.5f);
 // 		PxRigidDynamic* rigidBall = PxCreateDynamic(*physics, PxTransform(PxVec3(0, 1, 0)), geometry, *m_commonMaterial, 10.0f);
 // 		rigidBall->setAngularDamping(0.5f);
@@ -70,6 +71,15 @@ namespace Nix {
 		return true;
 	}
 
+	Nix::PhysxControllerManager* PhysXScene::createControllerManager()
+	{
+		PhysxControllerManager* manager = new PhysxControllerManager(m_scene);
+		if (manager->initialize()){
+			return manager;
+		}
+		return nullptr;
+	}
+
 	void PhysXScene::addParticlePrimitive(const PxVec3& _position, const PxVec3& _velocity)
 	{
 		auto physx = m_physics->getPhysX();
@@ -79,7 +89,7 @@ namespace Nix {
 		PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
 		//
 		shape->release();
-		// Ìí¼ÓÒ»¸öÇò²âÊÔÒ»ÏÂ
+		// ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿?
 		//PxBoxGeometry geometry = PxBoxGeometry(0.01f, 0.01f, 0.01f);
 		//PxSphereGeometry geometry(0.01f);
 		//PxRigidDynamic* rigidBall = PxCreateDynamic(*m_physics->getPhysX(), PxTransform(_position), geometry, *m_commonMaterial, 10.0f);
@@ -160,6 +170,32 @@ namespace Nix {
 				
 			}
 		}
+	}
+
+	bool PhysXScene::raycast(const PxVec3& _start, const PxVec3& _direction, float _distance, PxVec3& _position)
+	{
+		PxRaycastBuffer rayHit;
+
+		// we dont use query filter currently
+		PxQueryFilterData filterData;
+		PxQueryFilterCallback* cb = nullptr;
+		if (!m_scene->raycast(
+			_start, _direction, _distance,
+			rayHit,
+			PxHitFlag::ePOSITION,
+			filterData,
+			cb
+		)) {
+			// Ã»ï¿½ï¿½ï¿½Îºï¿½ï¿½à½»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½
+			return false;
+		}
+		// ï¿½Ó±ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		//hit.pPhysicsActor = (PhysicsActor*)rayHit.block.actor->userData;
+		//hit.position = PxVec3ToGxVec3(rayHit.block.position);
+		//hit.distance = rayHit.block.distance;
+		//hit.normal = PxVec3ToGxVec3(rayHit.block.normal);
+		_position = rayHit.block.position;
+		return true;
 	}
 
 	void NixSimulationCallback::onConstraintBreak(PxConstraintInfo* constraints, PxU32 count)
