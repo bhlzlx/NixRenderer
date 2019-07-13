@@ -73,8 +73,8 @@ namespace Nix {
 
 	Nix::PhysxControllerManager* PhysXScene::createControllerManager()
 	{
-		PhysxControllerManager* manager = new PhysxControllerManager(m_scene);
-		if (manager->initialize()){
+		PhysxControllerManager* manager = new PhysxControllerManager();
+		if (manager->initialize(this)){
 			return manager;
 		}
 		return nullptr;
@@ -162,7 +162,11 @@ namespace Nix {
 			if (rigid) {
 				const bool sleeping = rigid->isSleeping();
 				if (sleeping) {
-					rigid->release();
+					PxShape* shape = nullptr;
+					rigid->getShapes(&shape, sizeof(shape), 0);
+					if (shape->getSimulationFilterData().word3 == Particle) {
+						rigid->release();
+					}
 				}
 				else {
 					_positions.push_back(rigid->getGlobalPose().p);

@@ -2,6 +2,8 @@
 #include "PhysXSystem.h"
 #include "PhysXScene.h"
 #include "ParticleManager.h"
+#include "PhysXControllerManager.h"
+#include "Player.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -11,6 +13,11 @@
 #include "nix\string\path.h"
 
 namespace Nix {
+
+	PxVec3 moveDirection;
+
+	PhysxControllerManager* controllerManager = nullptr;
+	Player* player = nullptr;
 
 	static physx::PxDefaultErrorCallback gDefaultErrorCallback;
 	static physx::PxDefaultAllocator gDefaultAllocatorCallback;
@@ -89,7 +96,8 @@ namespace Nix {
 			{
 			case 'W':
 			case 'w':
-				m_camera.Forward(cammeraStepDistance);
+				moveDirection = PxVec3(m_camera.GetForword().x, m_camera.GetForword().y, m_camera.GetForword().z);
+				//m_camera.Forward(cammeraStepDistance);
 				break;
 			case 'a':
 			case 'A':
@@ -242,6 +250,17 @@ namespace Nix {
 		m_camera.SetLookAt(glm::vec3(0, 0, 0));
 		m_camera.SetEye(glm::vec3( eye.x, eye.y, eye.z ));
 
+		controllerManager = m_phyScene->createControllerManager();
+		PxVec3 controllerPos;
+		randX = dis1(random) * heightFieldXScale;
+		randZ = dis1(random) * heightFieldZScale;
+		raycastRst = m_phyScene->raycast(PxVec3(randX, 40, randZ), PxVec3(0, -1, 0), 100, controllerPos);
+		assert(raycastRst);
+		controllerPos.y += 4.0f;
+
+		player = new Player();
+		player->initialize(controllerManager, controllerPos);
+
 		TextureDescription hfTexDesc;
 		hfTexDesc.depth = 1;
 		hfTexDesc.format = NixFormat::NixR8_UNORM;
@@ -318,11 +337,22 @@ namespace Nix {
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(now - m_timePoint); 
 		float dt = double(duration.count()) * std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
 		//dt = dt / 1000.0f;
+		if (dt > 0.1f) {
+			dt = 0.1f;
+		}
 		m_timePoint = now;
 		m_phyScene->simulate(dt);
 		static std::vector<physx::PxVec3> vertices;
 		vertices.clear();
 		m_phyScene->getParticlePrimitivePositions(vertices);
+		if (!moveDirection.isZero()) {
+			player->move(moveDirection, dt);
+			moveDirection.x = moveDirection.y = moveDirection.z = 0;
+		}
+		player->tick(dt);
+		auto playerPos = player->getPosition();
+		m_camera.SetEye( glm::vec3(playerPos.x, playerPos.y, playerPos.z) );
+
 		uint32_t pointCount = 0;
 		if ( vertices.size() < 4096) {
 			pointCount = vertices.size();

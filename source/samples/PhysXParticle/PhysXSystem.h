@@ -35,6 +35,9 @@ namespace Nix {
 		PxCooking* getCooking() {
 			return m_cooking;
 		}
+		PxMaterial* getMaterial() {
+			return m_material;
+		}
 
 		PhysXScene* createScene();
 	};

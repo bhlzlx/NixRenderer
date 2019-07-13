@@ -6,8 +6,8 @@ include_directories(
 )
 
 link_directories(
- #E:/Github/PhysX/physx/bin/win.x86_64.vc140.mt/debug
- E:/PhysX/physx/bin/win.x86_64.vc140.mt/debug
+ E:/Github/PhysX/physx/bin/win.x86_64.vc140.mt/debug
+ #E:/PhysX/physx/bin/win.x86_64.vc140.mt/debug
 )
 
 set( PROJECT_SOURCE
@@ -23,6 +23,8 @@ set( PROJECT_SOURCE
 	${CMAKE_CURRENT_SOURCE_DIR}/ParticleManager.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/PhysXControllerManager.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/PhysXControllerManager.h
+	${CMAKE_CURRENT_SOURCE_DIR}/Player.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Player.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../../common/NixJpImp.cpp
 )
 
@@ -38,5 +40,6 @@ target_link_libraries(
 	PhysXExtensions_static_64
 	PhysXFoundation_64
 	PhysXPvdSDK_static_64
+	PhysXCharacterKinematic_static_64
     nix
 )

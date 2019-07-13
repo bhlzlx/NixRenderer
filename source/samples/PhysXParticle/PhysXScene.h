@@ -49,6 +49,13 @@ namespace Nix {
 		~PhysXScene();
 		bool initialize(PhysXSystem* _physics, const PxSceneDesc& _desc);
 		bool simulate(float _dt);
+
+		PhysXSystem* getSystem() {
+			return m_physics;
+		}
+		PxScene* getScene() {
+			return m_scene;
+		}
 		//
         PhysxControllerManager* createControllerManager();
 		void addParticlePrimitive(const PxVec3& _position, const PxVec3& _velocity);
