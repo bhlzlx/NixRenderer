@@ -5,7 +5,7 @@ namespace Nix {
 	
 	void Player::move(const PxVec3& _direction, float _dt)
 	{
-		m_velocity += _direction * 5.0f;// 一秒5个单位算吧
+		m_velocity += _direction * 0.5f;// 一秒5个单位算吧
 	}
 
 	void Player::tick(float _dt)
@@ -17,6 +17,7 @@ namespace Nix {
 			m_velocity.y = 0.0f;
 		}
 		PxVec3 disp = m_velocity / 2.0f;
+		disp.y -= _dt * 1.0f;
 		auto flag = m_controller->move(disp, _dt);
 		if (flag & CollideBottom) {
 			m_walking = true;

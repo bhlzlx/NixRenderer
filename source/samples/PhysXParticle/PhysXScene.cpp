@@ -135,6 +135,7 @@ namespace Nix {
 		PxHeightField* heightField = m_physics->getCooking()->createHeightField(hfdesc, m_physics->getPhysX()->getPhysicsInsertionCallback());
 		
 		PxTransform transform(_fieldOffset);
+		//PxRigidStatic* hfActor = m_physics->getPhysX()->createRigidStatic(transform);
 		PxRigidStatic* hfActor = m_physics->getPhysX()->createRigidStatic(transform);
 		if (!hfActor){
 			assert(false);
@@ -142,6 +143,7 @@ namespace Nix {
 		hfActor->userData = this;
 		PxHeightFieldGeometry hfGeom( heightField, PxMeshGeometryFlags(), 1.f / 255.0f * _scale.y, (PxReal)_scale.z, (PxReal)_scale.x);
 		PxShape* hfShape = PxRigidActorExt::createExclusiveShape(*hfActor, hfGeom, *m_commonMaterial);
+		hfShape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
 		if (!hfShape){
 			assert(false);
 		}

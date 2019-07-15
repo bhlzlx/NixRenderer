@@ -23,15 +23,13 @@ namespace Nix {
 //			return PxFilterFlag::eDEFAULT;
 //		}
 		// generate contacts for all that were not filtered aboves
-		if (filterData0.word3 == Mesh ) {
-			pairFlags = PxPairFlag::eCONTACT_DEFAULT;
+		pairFlags = PxPairFlag::eCONTACT_DEFAULT;
+		if (filterData0.word3 == Particle && filterData1.word3 == Particle) {
+			return PxFilterFlag::eKILL;		
+		} else {
+			
 			return PxFilterFlag::eDEFAULT;
 		}
-		else {
-			pairFlags = PxPairFlag::eSOLVE_CONTACT;
-			return PxFilterFlag::eKILL;
-		}
-
 		pairFlags = PxPairFlag::eTRIGGER_DEFAULT;
 
 		// trigger the contact callback for pairs (A,B) where

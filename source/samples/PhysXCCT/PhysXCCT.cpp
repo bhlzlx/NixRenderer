@@ -1,12 +1,4 @@
-#include "PhysXParticle.h"
-#include "PhysXSystem.h"
-#include "PhysXScene.h"
-#include "ParticleManager.h"
-#include "PhysXControllerManager.h"
-#include "Player.h"
-
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#include "PhysXCCT.h"
 #ifdef _WIN32
     #include <Windows.h>
 #endif
@@ -14,42 +6,7 @@
 
 namespace Nix {
 
-	PxVec3 moveDirection;
-
-	PhysxControllerManager* controllerManager = nullptr;
-	Player* player = nullptr;
-
-	static physx::PxDefaultErrorCallback gDefaultErrorCallback;
-	static physx::PxDefaultAllocator gDefaultAllocatorCallback;
-
-	static ParticleEmiter emiter( physx::PxVec3(0, 4, 0), 3.1415926f/9.0f, 5.0f );
-
-	// 写在前边
-	// 我们规定高度图每两个像素之间是长度为1的单位
-	// 同样高度图最大值为1.0f, 所以使用 stb_image读出来的uint8_t最大值255应该除255.0f
-
-	const float perspectiveNear = 0.1f;
-	const float perspectiveFar = 512.0f;
-	const float perspectiveFOV = 3.1415926f / 2;
-	const float particleSize = 2.0f;
-
-	const float heightFieldXScale = 1.0f;
-	const float heightFieldYScale = 8.0f;
-	const float heightFieldZScale = 1.0f;
-
-	const float heightFieldOffsetX =  -32.0f;
-	const float heightFieldOffsetY = 0.0f;
-	const float heightFieldOffsetZ =  -32.0f;
-
-	const float cammeraStepDistance = 0.5f;
-
-	PxVec3 emitSource;
-	PxVec3 emitSource1;
-
-	uint32_t hfWidth = 0;
-	uint32_t hfHeight = 0;
-
-	void PhysXParticle::onMouseEvent(eMouseButton _bt, eMouseEvent _event, int _x, int _y)
+	void PhysXCCT::onMouseEvent(eMouseButton _bt, eMouseEvent _event, int _x, int _y)
 	{
 		static int lx = 0;
 		static int ly = 0;
@@ -88,7 +45,7 @@ namespace Nix {
 		}
 	}
 
-	void PhysXParticle::onKeyEvent(unsigned char _key, eKeyEvent _event)
+	void PhysXCCT::onKeyEvent(unsigned char _key, eKeyEvent _event)
 	{
 		if (_event == NixApplication::eKeyDown)
 		{
@@ -116,7 +73,7 @@ namespace Nix {
 	}
 
 
-	bool PhysXParticle::initialize(void* _wnd, Nix::IArchieve* _archieve)
+	bool PhysXCCT::initialize(void* _wnd, Nix::IArchieve* _archieve)
 	{
 		printf("%s", "PhysXParticle is initializing!");
 
@@ -306,7 +263,7 @@ namespace Nix {
 		return true;
 	}
 
-	void PhysXParticle::resize(uint32_t _width, uint32_t _height)
+	void PhysXCCT::resize(uint32_t _width, uint32_t _height)
 	{
 		printf("resized!");
 		m_context->resize(_width, _height);
@@ -325,13 +282,13 @@ namespace Nix {
 		wndHeight = _height;
 	}
 
-	void PhysXParticle::release()
+	void PhysXCCT::release()
 	{
 		printf("destroyed");
 		m_context->release();
 	}
 
-	void PhysXParticle::tick()
+	void PhysXCCT::tick()
 	{
 		auto now = std::chrono::system_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(now - m_timePoint); 
@@ -419,19 +376,19 @@ namespace Nix {
 		}
 	}
 
-	const char * PhysXParticle::title()
+	const char * PhysXCCT::title()
 	{
 		return "PhysXParticle";
 	}
 
-	uint32_t PhysXParticle::rendererType()
+	uint32_t PhysXCCT::rendererType()
 	{
 		return 0;
 	}
 
 }
 
-Nix::PhysXParticle theapp;
+Nix::PhysXCCT theapp;
 
 NixApplication* GetApplication() {
     return &theapp;
