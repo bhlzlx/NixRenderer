@@ -5,6 +5,7 @@
 #include <rapidjson/writer.h>
 #include <NixJpDecl.h>
 #include <NixRenderer.h>
+#include <TexturePacker/TexturePacker.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #define STB_IMAGE_IMPLEMENTATION
@@ -15,6 +16,8 @@
 #include <nix/io/archieve.h>
 #include <cstdio>
 #include <cassert>
+#include <random>
+#include <ctime>
 
 #ifdef _WIN32
     #include <Windows.h>
@@ -57,6 +60,7 @@ namespace Nix {
 		IPipeline*					m_pipeline;
 
 		ITexture*					m_texture;
+		ITexturePacker*				m_texturePacker;
 
 		//
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve ) {
@@ -64,10 +68,12 @@ namespace Nix {
 
 			HMODULE library = ::LoadLibraryA("NixVulkan.dll");
 			assert(library);
+			HMODULE packerLibrary = ::LoadLibraryA("TexturePacker.dll");
+			assert(packerLibrary);
 
 			typedef IDriver*(* PFN_CREATE_DRIVER )();
-
 			PFN_CREATE_DRIVER createDriver = reinterpret_cast<PFN_CREATE_DRIVER>(::GetProcAddress(library, "createDriver"));
+			PFN_CREATE_TEXTURE_PACKER createTexturePacker = reinterpret_cast<PFN_CREATE_TEXTURE_PACKER>(::GetProcAddress(packerLibrary, "CreateTexturePacker"));
 
 			// \ 1. create driver
 			m_driver = createDriver();
@@ -98,34 +104,31 @@ namespace Nix {
 			TextureDescription texDesc;
 			texDesc.depth = 1;
 			texDesc.format = NixRGBA8888_UNORM;
-			texDesc.height = 64;
-			texDesc.width = 64;
-			texDesc.mipmapLevel = 4;
+			texDesc.height = 256;
+			texDesc.width = 256;
+			texDesc.mipmapLevel = 1;
 			texDesc.type = Nix::TextureType::Texture2D;
-
-			//Nix::IFile * texFile = _archieve->open("texture/texture_bc3.ktx");
-			//Nix::IFile * texFile = _archieve->open("texture/texture_array_bc3.ktx");
-			//Nix::IFile* texMem = CreateMemoryBuffer(texFile->size());
-			//texFile->read(texFile->size(), texMem);
-			//m_texture = m_context->createTextureKTX(texMem->constData(), texMem->size());
-
+			//
 			m_texture = m_context->createTexture(texDesc);
+			m_texturePacker = createTexturePacker(m_texture, 0);
 
-			Nix::IFile* fishPNG = _archieve->open("texture/fish.png");
-			Nix::IFile* memPNG = CreateMemoryBuffer(fishPNG->size());
-			fishPNG->read(fishPNG->size(), memPNG);
-			
-			int x, y, channel = 4;
-			auto rawData = stbi_load_from_memory((const stbi_uc*)memPNG->constData(), memPNG->size(), &x, &y, &channel, 4);
-			BufferImageUpload upload;
-			upload.baseMipRegion = {
-				0, 0, { 0 , 0 , 0 }, { (uint32_t)x, (uint32_t)y, 1}
-			};
-			upload.data = rawData;
-			upload.length = x * y * 4;
-			std::vector<uint64_t> offsets = {0};
-			upload.mipDataOffsets = offsets;
-			m_texture->uploadSubData(upload);
+			uint32_t data[16*16];
+
+			for (uint32_t i = 0; i < 25; ++i) {
+				static std::default_random_engine random(time(NULL));
+				std::uniform_int_distribution<int> dis1(4, 16);
+				int randW = dis1(random);
+				int randH = dis1(random);
+				Rect<uint16_t> rc;
+				std::uniform_int_distribution<int> dis2(31, 255);
+				uint32_t r = dis2(random);
+				uint32_t g = dis2(random);
+				uint32_t b = dis2(random);
+				for (uint32_t j = 0; j < randW * randH; ++j) {
+					data[j] = 0xff000000 | g << 16 | b << 8 | r ;
+				}
+				m_texturePacker->insert(std::to_string(i).c_str(), (uint8_t*)data, randW * randH * 4, randW, randH, rc);
+			}
 
 			bool rst = false;
 			m_material = m_context->createMaterial(mtlDesc); {
