@@ -95,22 +95,33 @@ namespace Nix {
 			switch (_key)
 			{
 			case 'W':
-			case 'w':
-				//moveDirection = PxVec3(m_camera.GetForword().x, m_camera.GetForword().y, m_camera.GetForword().z);
-				m_camera.Forward(cammeraStepDistance);
+			case 'w': {
+				auto forward = m_camera.GetForward();
+				moveDirection = PxVec3(forward.x, forward.y, forward.z);
 				break;
+			}
 			case 'a':
-			case 'A':
-				m_camera.Leftward(cammeraStepDistance);
+			case 'A': {
+				auto leftward = m_camera.GetLeftward();
+				moveDirection = PxVec3(leftward.x, leftward.y, leftward.z);
+				//m_camera.Leftward(cammeraStepDistance);
 				break;
+			}
 			case 's':
 			case 'S':
-				m_camera.Backward(cammeraStepDistance);
+			{
+				auto rightward = -m_camera.GetLeftward();
+				moveDirection = PxVec3(rightward.x, rightward.y, rightward.z);
+				//m_camera.Backward(cammeraStepDistance);
 				break;
+			}
 			case 'd':
-			case 'D':
-				m_camera.Rightward(cammeraStepDistance);
+			case 'D': {
+				auto backward = -m_camera.GetForward();
+				moveDirection = PxVec3(backward.x, backward.y, backward.z);
+				//m_camera.Rightward(cammeraStepDistance);
 				break;
+			}
 			}
 		}
 	}
@@ -258,8 +269,8 @@ namespace Nix {
 		assert(raycastRst);
 		controllerPos.y += 10.0f;
 
-		//player = new Player();
-		//player->initialize(controllerManager, controllerPos);
+		player = new Player();
+		player->initialize(controllerManager, controllerPos);
 
 		TextureDescription hfTexDesc;
 		hfTexDesc.depth = 1;
@@ -345,13 +356,13 @@ namespace Nix {
 		static std::vector<physx::PxVec3> vertices;
 		vertices.clear();
 		m_phyScene->getParticlePrimitivePositions(vertices);
-		//if (!moveDirection.isZero()) {
-		//	player->move(moveDirection, dt);
-		//	moveDirection.x = moveDirection.y = moveDirection.z = 0;
-		//}
-		//player->tick(dt);
-		//auto playerPos = player->getPosition();
-		//m_camera.SetEye( glm::vec3(playerPos.x, playerPos.y, playerPos.z) );
+		if (!moveDirection.isZero()) {
+			player->move(moveDirection, dt);
+			moveDirection.x = moveDirection.y = moveDirection.z = 0;
+		}
+		player->tick(dt);
+		auto playerPos = player->getPosition();
+		m_camera.SetEye(glm::vec3(playerPos.x, playerPos.y, playerPos.z));
 
 		uint32_t pointCount = 0;
 		if ( vertices.size() < 4096) {

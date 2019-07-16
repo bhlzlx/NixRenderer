@@ -39,8 +39,6 @@ namespace Nix {
 		// cpu dispatcher with 2 thread
 		m_cpuDispatcher = PxDefaultCpuDispatcherCreate(2);
 
-
-
 		//  create scene
 		PxSceneDesc sceneDesc(m_scale);
 		sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);

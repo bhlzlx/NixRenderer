@@ -27,7 +27,9 @@ namespace Nix
 
 	void FreeCamera::SetEye(glm::vec3 _eye)
 	{
+		auto forward = GetForward();
 		this->eye = _eye;
+		this->lookAt = _eye + forward;
 		matViewDirty = true;
 	}
 

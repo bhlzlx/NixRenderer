@@ -11,31 +11,26 @@ namespace Nix {
 
     class PhysxCapsuleController 
 		: PxQueryFilterCallback
-		
 	{
     private:
 		PxController*           m_controller;
-		PxVec3*					m_disp;			// gravity and other force
+		PxVec3					m_disp;			// gravity and other force
 		PxF32					m_minDist;		// 
 
 		PxFilterData			m_filterData;
 		PxControllerFilters		m_filters;
-		PxObstacleContext*		m_obstacleConetxt;
-		PxCapsuleObstacle		m_obstacle;
-		ObstacleHandle			m_obstacleHandle;
+		//PxObstacleContext*		m_obstacleConetxt;
+		//PxCapsuleObstacle		m_obstacle;
+		//ObstacleHandle			m_obstacleHandle;
     public:
 		PhysxCapsuleController( PxController* _controller );
 		uint32_t move( const PxVec3& _displacement, PxF32 _elapseTime );
 		PxVec3 getPosition();
 		void setPosition( const PxVec3& _position );
-		void setObstacle(PxObstacleContext* _obstacle);
-
-
+		//void setObstacle(PxObstacleContext* _obstacle);
+		//
 		virtual PxQueryHitType::Enum preFilter(const PxFilterData& filterData, const PxShape* shape, const PxRigidActor* actor, PxHitFlags& queryFlags) override;
-
-
 		virtual PxQueryHitType::Enum postFilter(const PxFilterData& filterData, const PxQueryHit& hit) override;
-
 	};
 
     class PhysxControllerManager 
@@ -65,20 +60,7 @@ namespace Nix {
 
 		virtual PxControllerBehaviorFlags getBehaviorFlags(const PxShape& shape, const PxActor& actor)
 		{
-			const char* actorName = actor.getName();
-#ifdef PLATFORMS_AS_OBSTACLES
-			PX_ASSERT(actorName != gPlatformName);	// PT: in this mode we should have filtered out those guys already
-#endif
-
-													// PT: ride on planks
-													// 			if (actorName == gPlankName)
-													// 				return PxControllerBehaviorFlag::eCCT_CAN_RIDE_ON_OBJECT
-													// 
-													// 			// PT: ride & slide on platforms
-													// 			if (actorName == gPlatformName)
-													// 				return PxControllerBehaviorFlag::eCCT_CAN_RIDE_ON_OBJECT | PxControllerBehaviorFlag::eCCT_SLIDE;
-
-			return PxControllerBehaviorFlag::eCCT_CAN_RIDE_ON_OBJECT | PxControllerBehaviorFlag::eCCT_SLIDE;
+			return PxControllerBehaviorFlag::eCCT_CAN_RIDE_ON_OBJECT;
 		}
 
 		virtual PxControllerBehaviorFlags getBehaviorFlags(const PxController&)

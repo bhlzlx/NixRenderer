@@ -41,6 +41,8 @@ namespace Nix {
 		PxFilterData filterData;
 		filterData.word3 = Mesh;
 		shape->setSimulationFilterData(filterData);
+		shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
+		shape->setFlag(PxShapeFlag::eVISUALIZATION, true);
 		m_scene->addActor(*groundPlane);
 		// ����һ�������һ��?
 // 		PxSphereGeometry geometry = PxSphereGeometry(0.5f);

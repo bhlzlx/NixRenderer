@@ -46,8 +46,11 @@ namespace Nix
 		void SetLookAt(glm::vec3 _lookAt);
 		const glm::vec3& GetLookAt() const;
 
-		const glm::vec3&  GetForword() const {
+		const glm::vec3&  GetForward() const {
 			return forward;
+		}
+		const glm::vec3& GetLeftward() const {
+			return leftward;
 		}
 
 		void SetTop(glm::vec3 _top);
