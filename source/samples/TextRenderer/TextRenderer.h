@@ -3,13 +3,19 @@
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+
+// dynamic library headers
 #include <NixJpDecl.h>
 #include <NixRenderer.h>
+#include <TexturePacker/TexturePacker.h>
+// math library
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+// image library
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-
+// 
 #include <nix/io/archieve.h>
 #include <cstdio>
 #include <cassert>
@@ -56,17 +62,22 @@ namespace Nix {
 
 		ITexture*					m_texture;
 
+		TexturePacker*				m_texturePacker;
+
 		//
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve ) {
 			printf("%s", "TextRenderer is initializing!");
 
-			HMODULE library = ::LoadLibraryA("NixVulkan.dll");
-			assert(library);
+			HMODULE rendererLibrary = ::LoadLibraryA("NixVulkan.dll");
+			assert(rendererLibrary);
+			HMODULE texpackerLibrary = ::LoadLibraryA("TexturePacker.dll");
+			assert(texpackerLibrary);
 
 			typedef IDriver*(* PFN_CREATE_DRIVER )();
-
-			PFN_CREATE_DRIVER createDriver = reinterpret_cast<PFN_CREATE_DRIVER>(::GetProcAddress(library, "createDriver"));
-
+			PFN_CREATE_DRIVER createDriver = reinterpret_cast<PFN_CREATE_DRIVER>(::GetProcAddress(rendererLibrary, "createDriver"));
+			PFN_CREATE_TEXTURE_PACKER createTexturePacker = nullptr;
+			createTexturePacker = reinterpret_cast<PFN_CREATE_TEXTURE_PACKER>(::GetProcAddress(texpackerLibrary, "CreateTexturePacker"));
+			m_texturePacker = nullptr;
 			// \ 1. create driver
 			m_driver = createDriver();
 			m_driver->initialize(_archieve, DeviceType::DiscreteGPU);
@@ -100,12 +111,6 @@ namespace Nix {
 			texDesc.width = 64;
 			texDesc.mipmapLevel = 4;
 			texDesc.type = Nix::TextureType::Texture2D;
-
-			//Nix::IFile * texFile = _archieve->open("texture/texture_bc3.ktx");
-			//Nix::IFile * texFile = _archieve->open("texture/texture_array_bc3.ktx");
-			//Nix::IFile* texMem = CreateMemoryBuffer(texFile->size());
-			//texFile->read(texFile->size(), texMem);
-			//m_texture = m_context->createTextureKTX(texMem->constData(), texMem->size());
 
 			m_texture = m_context->createTexture(texDesc);
 
