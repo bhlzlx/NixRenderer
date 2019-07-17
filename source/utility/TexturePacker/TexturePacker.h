@@ -9,7 +9,7 @@ namespace Nix {
 
 	class NIX_API_DECL ITexturePacker {
 	public:
-		virtual bool insert(const char* _key, const uint8_t* _bytes, uint32_t _length, uint16_t _width, uint16_t _height, Nix::Rect<uint16_t>& rect_) = 0;
+		virtual bool insert( const uint8_t* _bytes, uint32_t _length, uint16_t _width, uint16_t _height, Nix::Rect<uint16_t>& rect_) = 0;
 	};
 };
 

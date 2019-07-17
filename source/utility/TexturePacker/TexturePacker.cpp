@@ -102,7 +102,7 @@ namespace Nix {
 		uint32_t		m_layer;
 		std::map< std::string, Nix::Rect<uint16_t> > m_record;
 	public:
-		InsertRetFlag  insert(const char* _key, uint16_t _width, uint16_t _height, uint16_t& x_, uint16_t& y_);
+		InsertRetFlag  insert( uint16_t _width, uint16_t _height, uint16_t& x_, uint16_t& y_);
 		//
 		TexturePacker(ITexture* _texture, uint32_t _layer) :
 			m_texture(_texture)
@@ -112,7 +112,7 @@ namespace Nix {
 			m_headNode.right = allocNewNode(0, 0, _texture->getDesc().width, _texture->getDesc().height, TextureNodeFlags::RightNode, nullptr);
 		}
 
-		virtual bool insert(const char* _key, const uint8_t* _bytes, uint32_t _length, uint16_t _width, uint16_t _height, Nix::Rect<uint16_t>& rect_);
+		virtual bool insert(const uint8_t* _bytes, uint32_t _length, uint16_t _width, uint16_t _height, Nix::Rect<uint16_t>& rect_);
 	};
 
 	//
@@ -153,23 +153,30 @@ namespace Nix {
 				flag = this->spliteHorizontal(_w, _h, x_, y_);
 			}
 		}
+		else
+		{
+			return flag;
+		}
 		return flag;
 	}
 
 	TextureNode* allocNewNode(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h, uint16_t _flags, TextureNode* _parent ) {
-		if (_x & 1) {
-			_x = _x + 1;
-			_w = _w - 1;
-			if ((_w & ~(1)) < 4) {
-				return nullptr;
-			}
-		}
-		if (_y & 1) {
-			_y = _y + 1;
-			_h = _h - 1;
-			if ((_h & ~(1)) < 4) {
-				return nullptr;
-			}
+	//	if (_x & 1) {
+	//		_x = _x + 1;
+	//		_w = _w - 1;
+	//		if ((_w & ~(1)) < 4) {
+	//			return nullptr;
+	//		}
+	//	}
+	//	if (_y & 1) {
+	//		_y = _y + 1;
+	//		_h = _h - 1;
+	//		if ((_h & ~(1)) < 4) {
+	//			return nullptr;
+	//		}
+	//	}
+		if (_w < 4 || _h < 4) {
+			return nullptr;
 		}
 		return new TextureNode(_x, _y, _w, _h, _flags, _parent);
 	}
@@ -177,12 +184,14 @@ namespace Nix {
 	{
 		delete _node;
 	}
-	bool TexturePacker::insert(const char* _key, const uint8_t* _bytes, uint32_t _length, uint16_t _width, uint16_t _height, Nix::Rect<uint16_t>& rect_)
+	bool TexturePacker::insert( const uint8_t* _bytes, uint32_t _length, uint16_t _width, uint16_t _height, Nix::Rect<uint16_t>& rect_)
 	{
-		auto realW = (_width + 1) & ~(1);
-		auto realH = (_height + 1) & ~(1);
+//		auto realW = (_width + 1) & ~(1);
+//		auto realH = (_height + 1) & ~(1);
+		auto realW = _width + 1;
+		auto realH = _height + 1;
 
-		InsertRetFlag flag = insert(_key, realW, realH, rect_.origin.x, rect_.origin.y);
+		InsertRetFlag flag = insert( realW, realH, rect_.origin.x, rect_.origin.y);
 		if (flag & InsertSucceed) {
 			rect_.size.width = _width;
 			rect_.size.height = _height;
@@ -202,7 +211,7 @@ namespace Nix {
 			return false;
 		}
 	}
-	InsertRetFlag TexturePacker::insert(const char* _key, uint16_t _width, uint16_t _height, uint16_t& x_, uint16_t& y_)
+	InsertRetFlag TexturePacker::insert( uint16_t _width, uint16_t _height, uint16_t& x_, uint16_t& y_)
 	{
 		this->m_headNode.right;
 		std::vector<TextureNode*> nodes;
@@ -266,12 +275,6 @@ namespace Nix {
 					}
 				}
 			}
-		}
-		if (retFlags & InsertRetFlags::InsertSucceed) {
-			m_record[_key] = {
-				{x_, y_}, 
-				{_width, _height}
-			};
 		}
 		return retFlags;
 	}
