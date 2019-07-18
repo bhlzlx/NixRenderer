@@ -1,6 +1,7 @@
 project( VkShaderCompiler )
 
 add_definitions( "-DNIX_DYNAMIC_LINK" )
+set(CMAKE_DEBUG_POSTFIX "")
 
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/../../common
