@@ -252,10 +252,9 @@ namespace Nix {
 		for (uint32_t layoutIndex = 0; layoutIndex < materialDesc.argumentCount; ++layoutIndex) {
 			std::vector<VkDescriptorSetLayoutBinding> bindings;
 			auto& argument = materialDesc.argumentLayouts[layoutIndex];
-
-			for (auto& descriptor : argument.descriptors)
-			{
-				if (descriptor.type == SDT_UniformBlock)
+            for( uint32_t dscIndex = 0; dscIndex < argument.descriptorCount; ++dscIndex){
+                auto& descriptor = argument.descriptors[dscIndex];
+                if (descriptor.type == SDT_UniformBlock)
 				{
 					VkDescriptorSetLayoutBinding binding;
 					binding.binding = descriptor.binding;
@@ -285,7 +284,7 @@ namespace Nix {
 					binding.pImmutableSamplers = nullptr;
 					bindings.push_back(binding);
 				}
-			}
+            }
 
 			VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {}; {
 				layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;

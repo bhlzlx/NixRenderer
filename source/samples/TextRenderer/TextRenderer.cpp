@@ -65,13 +65,13 @@ namespace Nix {
 		m_texture = m_context->createTexture(texDesc);
 		m_texturePacker = createTexturePacker(m_texture, 0);
 		m_font = new Font();
-		m_font->initialize(_archieve, "font/font00.ttf", 0, m_texturePacker);
+		m_font->initialize(_archieve, "font/hwzhsong.ttf", 0, m_texturePacker);
 		
-		const char16_t message[] = u"~`!@#$%^&*()_+=-0987654321[];',/{}:\"<>?\\|你好，世界！中国字符、】【；‘，。/《》？";
+		const char16_t message[] = u"，你好世界中国字符】【；‘，。/《》？，~`!@#$%^&*()_+=-0987654321[];',/{}:\"<>?\\|！中国字符、】【；‘，。/《》？一";
 		for (auto c : message) {
 			FontCharactor fc;
 			fc.charCode = c;
-			fc.size = 24;
+			fc.size = 28;
 			m_font->getCharacter(fc);
 		}
 

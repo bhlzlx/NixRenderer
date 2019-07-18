@@ -85,15 +85,14 @@ namespace Nix {
 	{
 		char messagePool[2048];
 		sprintf(messagePool, "code : %d\n layer : %s\n message : %s\n", msgCode, pLayerPrefix, pMsg);
-#ifdef __GNUC__
-		printf(messagePool);
-#elif defined _MSC_VER
-		OutputDebugStringA(messagePool);
-#endif
+    #ifdef __GNUC__
+            printf(messagePool);
+    #elif defined _MSC_VER
+            OutputDebugStringA(messagePool);
+    #endif
 		return 0;
 	}
-#endif
-#if __linux__
+#elif defined __linux__
     {
         return 0;
     }

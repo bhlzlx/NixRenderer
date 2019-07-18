@@ -12,6 +12,18 @@
 #endif
 #include "nix\string\path.h"
 
+#ifdef __linux__
+#include <dlfcn.h>
+#endif
+
+#ifdef _WIN32
+#define LoadLibrary( name ) ::LoadLibraryA( name )
+#define GetLibraryAddress( libray, function ) ::GetProcAddress( libray, function )
+#else
+#define LoadLibrary( name ) dlopen(name , RTLD_NOW | RTLD_LOCAL)
+#define GetLibraryAddress( libray, function ) dlsym( libray, function )
+#endif
+
 namespace Nix {
 
 	PxVec3 moveDirection;
@@ -24,9 +36,9 @@ namespace Nix {
 
 	static ParticleEmiter emiter( physx::PxVec3(0, 4, 0), 3.1415926f/9.0f, 5.0f );
 
-	// Ð´ÔÚÇ°±ß
-	// ÎÒÃÇ¹æ¶¨¸ß¶ÈÍ¼Ã¿Á½¸öÏñËØÖ®¼äÊÇ³¤¶ÈÎª1µÄµ¥Î»
-	// Í¬Ñù¸ß¶ÈÍ¼×î´óÖµÎª1.0f, ËùÒÔÊ¹ÓÃ stb_image¶Á³öÀ´µÄuint8_t×î´óÖµ255Ó¦¸Ã³ý255.0f
+	// Ð´ï¿½ï¿½Ç°ï¿½ï¿½
+	// ï¿½ï¿½ï¿½Ç¹æ¶¨ï¿½ß¶ï¿½Í¼Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½Ç³ï¿½ï¿½ï¿½Îª1ï¿½Äµï¿½Î»
+	// Í¬ï¿½ï¿½ï¿½ß¶ï¿½Í¼ï¿½ï¿½ï¿½ÖµÎª1.0f, ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ stb_imageï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½uint8_tï¿½ï¿½ï¿½Öµ255Ó¦ï¿½Ã³ï¿½255.0f
 
 	const float perspectiveNear = 0.1f;
 	const float perspectiveFar = 512.0f;
@@ -130,14 +142,15 @@ namespace Nix {
 	bool PhysXParticle::initialize(void* _wnd, Nix::IArchieve* _archieve)
 	{
 		printf("%s", "PhysXParticle is initializing!");
-
-		HMODULE library = ::LoadLibraryA("NixVulkan.dll");
+#ifdef _WIN32 
+#define RenderderLibrary "NixVulkan.dll"
+#elif defined __ANDROID__
+#define RenderderLibrary "libNixVulkan.so"
+#endif
+		auto library = LoadLibrary(RenderderLibrary);
 		assert(library);
-
 		typedef IDriver*(*PFN_CREATE_DRIVER)();
-
-		PFN_CREATE_DRIVER createDriver = reinterpret_cast<PFN_CREATE_DRIVER>(::GetProcAddress(library, "createDriver"));
-
+		PFN_CREATE_DRIVER createDriver = reinterpret_cast<PFN_CREATE_DRIVER>(GetLibraryAddress(library, "createDriver"));
 		// \ 1. create driver
 		m_driver = createDriver();
 		m_driver->initialize(_archieve, DeviceType::DiscreteGPU);
@@ -234,9 +247,9 @@ namespace Nix {
 		hfWidth = width;
 		hfHeight = height;
 
-		// ÒòÎªÎÒÃÇ¸Õ¸ÕÌí¼ÓÁË¸ß¶ÈÍ¼£¬µØÐÎÐÅÏ¢£¬ËùÒÔÎÒÃÇ¿ÉÒÔÁ¢¼´²éÑ¯Ò»¸öÏà½»µã
-		// Ëæ»úÁ½¸öÁ£×Ó·¢ÉäÎ»ÖÃ
-		// Ëæ»úÒ»¸ö¾µÍ·³õÊ¼Î»ÖÃ
+		// ï¿½ï¿½Îªï¿½ï¿½ï¿½Ç¸Õ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¸ß¶ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¯Ò»ï¿½ï¿½ï¿½à½»ï¿½ï¿½
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó·ï¿½ï¿½ï¿½Î»ï¿½ï¿½
+		// ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½Ê¼Î»ï¿½ï¿½
 		static std::default_random_engine random(time(NULL));
 		std::uniform_int_distribution<int> dis1( -(int)hfWidth/4, hfWidth/4 );
 		int randX = dis1(random) * heightFieldXScale;

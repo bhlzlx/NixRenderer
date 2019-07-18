@@ -16,6 +16,7 @@ namespace Nix {
 		int error = stbtt_InitFont(&m_fontHandle, (const unsigned char*)buffer->constData(), 0);
 		m_id = _fontID;
 		m_texturePacker = _packer;
+		m_outputData = new uint8_t[64*64];
 		return !!error;
 	}
 

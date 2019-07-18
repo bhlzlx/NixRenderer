@@ -35,7 +35,7 @@ namespace Nix {
 	private:
 		stbtt_fontinfo						m_fontHandle;
 		std::map< uint32_t, CharactorInfo > m_mappingTable;
-		uint8_t								m_outputData[64 * 64];
+		uint8_t*							m_outputData;
 		uint8_t								m_id;
 		ITexturePacker*						m_texturePacker;
 	public:

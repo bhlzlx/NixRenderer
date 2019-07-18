@@ -638,22 +638,22 @@ namespace Nix {
 				VkImageBlit blit = {
 					{
 						VK_IMAGE_ASPECT_COLOR_BIT,	// aspectMask 
-						mipLevel,					// baseMipLevel 
+						(uint32_t)mipLevel,					// baseMipLevel 
 						0,							// baseArrayLayer
 						copies[0].imageSubresource.layerCount // layerCount
 					},
 					{
-						{ baseOffsetX >> mipLevel, baseOffsetY>>mipLevel, 0 },
+						{ (int)baseOffsetX >> mipLevel, (int)baseOffsetY>>mipLevel, 0 },
 						{ (int32_t)baseWidth >> mipLevel, (int32_t)baseHeight >> mipLevel, 1 }
 					},
 					{
 						VK_IMAGE_ASPECT_COLOR_BIT,	// aspectMask 
-						mipLevel + 1,					// baseMipLevel 
+						(uint32_t)mipLevel + 1,					// baseMipLevel 
 						0,							// baseArrayLayer
 						copies[0].imageSubresource.layerCount // layerCount
 					},
 					{
-						{ baseOffsetX >> (mipLevel+1), baseOffsetY >> (mipLevel+1), 0 },
+						{ (int)baseOffsetX >> (mipLevel+1), (int)baseOffsetY >> (mipLevel+1), 0 },
 						{ (int32_t)baseWidth >> (mipLevel + 1), (int32_t)baseHeight >> (mipLevel + 1), 1 }
 					}
 				};

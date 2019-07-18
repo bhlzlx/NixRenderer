@@ -3,6 +3,7 @@
 #include "NixRenderer.h"
 #include <map>
 #include <typeinfo>
+#include <string>
 #include <typeindex>
 
 #define KS_JSON_ENUM_TABLE std::map< size_t, std::map< std::string, uint32_t > > NixJsonEnumTable = {

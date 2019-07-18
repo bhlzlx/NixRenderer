@@ -12,9 +12,7 @@
 #endif
 #ifdef __ANDROID__
 #include <dlfcn.h>
-#endif
-
-#ifdef  __linux__
+#elif defined __linux__
 #include <dlfcn.h>
 #include <X11/Xlib.h>
 #endif
