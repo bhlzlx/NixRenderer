@@ -5,12 +5,6 @@ if(Linux)
     set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 endif()
 
-#set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
-#set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
-
-#set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MT")
-#set( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MTd")
-
 add_subdirectory( nix )
 add_subdirectory( SPIRV-Cross )
 add_subdirectory( GLSLang )

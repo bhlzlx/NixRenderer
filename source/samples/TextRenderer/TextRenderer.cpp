@@ -67,7 +67,7 @@ namespace Nix {
 		m_font = new Font();
 		m_font->initialize(_archieve, "font/hwzhsong.ttf", 0, m_texturePacker);
 		
-		const char16_t message[] = u"，你好世界中国字符】【；‘，。/《》？，~`!@#$%^&*()_+=-0987654321[];',/{}:\"<>?\\|！中国字符、】【；‘，。/《》？一";
+		const char16_t message[] = u"你好世界中国字符，】【；‘，。/《》？，~`!@#$%^&*()_+=-0987654321[];',/{}:\"<>?\\|！中国字符、】【；‘，。/《》？一";
 		for (auto c : message) {
 			FontCharactor fc;
 			fc.charCode = c;
