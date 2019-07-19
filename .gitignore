@@ -45,3 +45,6 @@ build
 out
 bin/Windows
 bin/pipeline_cache.bin
+bin/Android
+bin/font/simsun.ttc
+bin/font/simsunb.ttf
