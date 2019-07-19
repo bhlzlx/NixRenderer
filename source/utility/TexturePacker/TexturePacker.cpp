@@ -42,7 +42,7 @@ namespace Nix {
 		TextureNode(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h, uint16_t _flags, TextureNode* _parent);
 		TextureNodeFlag insert(uint16_t _w, uint16_t _h, uint16_t& x_, uint16_t& _y);
 	private:
-		inline InsertRetFlag spliteVertical(uint16_t _w, uint16_t _h, uint16_t& x_, uint16_t& y_) {
+		inline InsertRetFlag splitVertical(uint16_t _w, uint16_t _h, uint16_t& x_, uint16_t& y_) {
 			x_ = this->x;
 			y_ = this->y;
 			//
@@ -58,17 +58,14 @@ namespace Nix {
 			//
 			this->left = allocNewNode(leftX, leftY, leftW, leftH, TextureNodeFlags::LeftNode, this);
 			this->right = allocNewNode(rightX, rightY, rightW, rightH, TextureNodeFlags::RightNode, this);
-
 			InsertRetFlag flag = InsertRetFlags::InsertSucceed;
-
 			if (!this->left && !this->right) {
 				flag |= InsertNeedClear;
 			}
-
 			return flag;
 		}
 
-		inline InsertRetFlag spliteHorizontal(uint16_t _w, uint16_t _h, uint16_t& x_, uint16_t& y_) {
+		inline InsertRetFlag splitHorizontal(uint16_t _w, uint16_t _h, uint16_t& x_, uint16_t& y_) {
 			x_ = this->x;
 			y_ = this->y;
 			//
@@ -84,13 +81,10 @@ namespace Nix {
 			//
 			this->left = allocNewNode(leftX, leftY, leftW, leftH, TextureNodeFlags::LeftNode, this);
 			this->right = allocNewNode(rightX, rightY, rightW, rightH, TextureNodeFlags::RightNode, this);
-
 			InsertRetFlag flag = InsertRetFlags::InsertSucceed;
-
 			if (!this->left && !this->right) {
 				flag |= InsertNeedClear;
 			}
-
 			return flag;
 		}
 	};
@@ -98,20 +92,26 @@ namespace Nix {
 	class TexturePacker : public ITexturePacker {
 	private:
 		TextureNode		m_headNode;
-		ITexture* m_texture;
+		ITexture*		m_texture;
 		uint32_t		m_layer;
+		uint32_t		m_pixelSize;
 		std::map< std::string, Nix::Rect<uint16_t> > m_record;
 	public:
 		InsertRetFlag  insert( uint16_t _width, uint16_t _height, uint16_t& x_, uint16_t& y_);
 		//
-		TexturePacker(ITexture* _texture, uint32_t _layer) :
-			m_texture(_texture)
+		TexturePacker(ITexture* _texture, uint32_t _layer)
+			: m_texture(_texture)
 			, m_layer(_layer)
 		{
+			if (_texture->getDesc().format == NixR8_UNORM) {
+				m_pixelSize = 1;
+			}
+			else if (_texture->getDesc().format == NixRGBA8888_UNORM) {
+				m_pixelSize = 4;
+			}
 			m_headNode.left = nullptr;
 			m_headNode.right = allocNewNode(0, 0, _texture->getDesc().width, _texture->getDesc().height, TextureNodeFlags::RightNode, nullptr);
 		}
-
 		virtual bool insert(const uint8_t* _bytes, uint32_t _length, uint16_t _width, uint16_t _height, Nix::Rect<uint16_t>& rect_);
 	};
 
@@ -146,11 +146,11 @@ namespace Nix {
 		if (this->width >= _w && this->height >= _h) {
 			this->flags |= Taken;
 			if (this->width > this->height) {
-				// splite vertical
-				flag = this->spliteVertical(_w, _h, x_, y_);
+				// split vertical
+				flag = this->splitVertical(_w, _h, x_, y_);
 			} else {
-				// splite horizontal
-				flag = this->spliteHorizontal(_w, _h, x_, y_);
+				// split horizontal
+				flag = this->splitHorizontal(_w, _h, x_, y_);
 			}
 		}
 		else
@@ -161,20 +161,6 @@ namespace Nix {
 	}
 
 	TextureNode* allocNewNode(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h, uint16_t _flags, TextureNode* _parent ) {
-	//	if (_x & 1) {
-	//		_x = _x + 1;
-	//		_w = _w - 1;
-	//		if ((_w & ~(1)) < 4) {
-	//			return nullptr;
-	//		}
-	//	}
-	//	if (_y & 1) {
-	//		_y = _y + 1;
-	//		_h = _h - 1;
-	//		if ((_h & ~(1)) < 4) {
-	//			return nullptr;
-	//		}
-	//	}
 		if (_w < 4 || _h < 4) {
 			return nullptr;
 		}
@@ -184,13 +170,12 @@ namespace Nix {
 	{
 		delete _node;
 	}
+
 	bool TexturePacker::insert( const uint8_t* _bytes, uint32_t _length, uint16_t _width, uint16_t _height, Nix::Rect<uint16_t>& rect_)
 	{
-//		auto realW = (_width + 1) & ~(1);
-//		auto realH = (_height + 1) & ~(1);
 		auto realW = _width + 1;
 		auto realH = _height + 1;
-
+		//
 		InsertRetFlag flag = insert( realW, realH, rect_.origin.x, rect_.origin.y);
 		if (flag & InsertSucceed) {
 			rect_.size.width = _width;
@@ -282,6 +267,14 @@ namespace Nix {
 
 Nix::ITexturePacker* CreateTexturePacker(Nix::ITexture* _texture, uint32_t _layer)
 {
+	switch (_texture->getDesc().format) {
+	case Nix::NixR8_UNORM: {
+	case Nix::NixRGBA8888_UNORM: {
+		break;
+	}
+	default:
+		return nullptr;
+	}
 	Nix::TexturePacker* packer = new Nix::TexturePacker(_texture, _layer);
 	return packer;
 }

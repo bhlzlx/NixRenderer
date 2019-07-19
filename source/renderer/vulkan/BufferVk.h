@@ -20,39 +20,16 @@ namespace Nix {
 	// global vulkan memory allocator
 	class ContextVk;
 
-	typedef uint64_t AllocationHandle;
-	class BufferAllocator {
-	private:
-		VmaAllocation		m_allocation;
-		VkDeviceSize		m_size;
-		
-	public:
-		void initialize( size_t _size );
-		void initialize( size_t _size, size_t _minSize );
-		// 
-		uint16_t allocate( size_t _size );
-		void free( AllocationHandle );
-	};
-
 	class NIX_API_DECL BufferVk {
-		//friend class VkDeferredDeletor;
-		//friend class ContextVk;
 		friend struct ScreenCapture;
 		friend class CachedVertexBuffer;
 		friend class IndexBuffer;
-
-		typedef uint64_t NixAllocation;
+		friend class VertexBuffer;
 	private:
 		ContextVk*			m_context;
-		VkBuffer			m_buffer;
-		VkDeviceSize		m_offset;
-		VkDeviceSize		m_size;
+		IBufferAllocator*	m_allocator;
+		BufferAllocation	m_allocation;
 		VkBufferUsageFlags	m_usage;
-		VmaAllocation		m_allocation;
-		// m_raw != nullptr indicate that, this buffer support persistent mapping
-		// but if m_raw == nullptr does not means it does not support mapping at all
-		// you can try call the mapping function to map the buffer, but dont forget to call unmapp
-		uint8_t*			m_raw;
 		//
 	private:
 		BufferVk(const BufferVk&) {
@@ -63,48 +40,37 @@ namespace Nix {
 			return *this;
 		}
 	public:
-		BufferVk() :
-			m_buffer(VK_NULL_HANDLE),
-			m_size(0),
-			m_usage(0),
-			m_raw(nullptr){
+		BufferVk(){
+		}
+		BufferVk( ContextVk* _context, const BufferAllocation& _allocation, VkBufferUsageFlags _usage ) :
+			m_allocation(_allocation),
+			m_usage(_usage){
 		}
 		BufferVk(BufferVk&& _buffer) {
 			m_context = _buffer.m_context;
-			m_buffer = _buffer.m_buffer;
-			m_size = _buffer.m_size;
 			m_usage = _buffer.m_usage;
 			m_allocation = _buffer.m_allocation;
-			m_raw = _buffer.m_raw;
-			_buffer.m_buffer = VK_NULL_HANDLE;
-			_buffer.m_size = 0;
+			_buffer.m_context = VK_NULL_HANDLE;
 			_buffer.m_usage = 0;
-			_buffer.m_allocation = VK_NULL_HANDLE;
-			_buffer.m_raw = nullptr;
+			_buffer.m_allocation;
 		}
 		BufferVk& operator = (BufferVk&& _buffer) {
-			m_buffer = _buffer.m_buffer;
-			m_size = _buffer.m_size;
+			m_context = _buffer.m_context;
 			m_usage = _buffer.m_usage;
 			m_allocation = _buffer.m_allocation;
-			m_raw = _buffer.m_raw;
-			m_context = _buffer.m_context;
-			_buffer.m_buffer = VK_NULL_HANDLE;
-			_buffer.m_size = 0;
+			_buffer.m_context = VK_NULL_HANDLE;
 			_buffer.m_usage = 0;
-			_buffer.m_allocation = VK_NULL_HANDLE;
-			_buffer.m_raw = nullptr;
+			_buffer.m_allocation;
 			return *this;
 		}
 
 		operator const VkBuffer&() const {
-			return m_buffer;
+			return (VkBuffer&)m_allocation.buffer;
 		}
 		~BufferVk();
-		void* map();
-		void unmap();
+		//
 		uint8_t* raw() {
-			return m_raw;
+			return (uint8_t*)m_allocation.raw;
 		}
 		// for persistent mapping or can be mapped buffer type
 		void writeDataImmediatly(const void * _data, size_t _size, size_t _offset);
@@ -114,9 +80,9 @@ namespace Nix {
 		void updateDataQueued(const void * _data, size_t _size, size_t _offset);
 		//
 		size_t size() const {
-			return static_cast<size_t>(m_size);
+			return static_cast<size_t>(m_allocation.size);
 		}
-		static BufferVk CreateBuffer(size_t _size, VkBufferUsageFlags _usage, ContextVk* _context);
+		//static BufferVk CreateBuffer(size_t _size, VkBufferUsageFlags _usage, ContextVk* _context);
 	};
 
 	class NIX_API_DECL VertexBuffer : public IBuffer {
@@ -135,8 +101,17 @@ namespace Nix {
 			return m_buffer.size();
 		}
 		virtual void release() override;
+		virtual const BufferAllocation& allocation() const override {
+			return m_buffer.m_allocation;
+		}
+		virtual IBufferAllocator* getAllocator() {
+			return m_buffer.m_allocator;
+		}
 		//
 		operator VkBuffer () const {
+			return m_buffer;
+		}
+		operator BufferVk& () {
 			return m_buffer;
 		}
 		size_t getOffset() {
@@ -155,10 +130,10 @@ namespace Nix {
 		CachedVertexBuffer( BufferVk&& _buffer, size_t _size ) : IBuffer(CVBO) {
 			m_buffer = std::move(_buffer);
 			m_size = _size;
-			m_offsets[0] = 0;
-			m_offsets[1] = m_size;
-			m_offsets[2] = m_size * 2;
-			m_mem = (uint8_t*)_buffer.map();
+			m_offsets[0] = _buffer.m_allocation.offset;
+			m_offsets[1] = _buffer.m_allocation.offset + m_size;
+			m_offsets[2] = _buffer.m_allocation.offset + m_size * 2;
+			m_mem = (uint8_t*)_buffer.m_allocation.raw;
 		}
 	public:
 		virtual size_t getSize() override;
@@ -167,6 +142,17 @@ namespace Nix {
 		//
 		operator VkBuffer () const {
 			return m_buffer;
+		}
+		operator BufferVk&() {
+			return m_buffer;
+		}
+
+		virtual const BufferAllocation& allocation() const override {
+			return m_buffer.m_allocation;
+		}
+
+		virtual IBufferAllocator* getAllocator() {
+			return m_buffer.m_allocator;
 		}
 
 		size_t getOffset() {
@@ -187,12 +173,24 @@ namespace Nix {
 		{
 		}
 		virtual void setData( const void* _data, size_t _size, size_t _offset) override;
+		
 		virtual size_t getSize() override {
 			return m_buffer.size();
+		}
+		
+		virtual const BufferAllocation& allocation() const override {
+			return m_buffer.m_allocation;
+		}
+		
+		virtual IBufferAllocator* getAllocator() {
+			return m_buffer.m_allocator;
 		}
 		virtual void release() override;
 		//
 		operator VkBuffer() const {
+			return m_buffer;
+		}
+		operator BufferVk&() {
 			return m_buffer;
 		}
 		size_t getOffset() {

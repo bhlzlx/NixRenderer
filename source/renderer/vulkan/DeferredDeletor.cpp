@@ -11,13 +11,14 @@ namespace Nix {
 
 	struct BufferDeleteItem : public QueueAsyncTask {
 	private:
-		BufferVk* m_buffer;
+		IBuffer* m_buffer;
 	public:
-		BufferDeleteItem(BufferVk* _buffer) : m_buffer(_buffer) {
+		BufferDeleteItem(IBuffer* _buffer) : m_buffer(_buffer) {
 		}
 		//
 		virtual void execute() {
-			delete m_buffer;
+			IBufferAllocator* allocator = m_buffer->getAllocator();
+			allocator->free(m_buffer);
 			delete this;
 		}
 	};
@@ -82,7 +83,7 @@ namespace Nix {
 		}
 	};
 
-	Nix::QueueAsyncTask * GraphicsQueueAsyncTaskManager::createDestroyTask(BufferVk * _buffer)
+	Nix::QueueAsyncTask * GraphicsQueueAsyncTaskManager::createDestroyTask(IBuffer * _buffer)
 	{
 		return new BufferDeleteItem(_buffer);
 	}

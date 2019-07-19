@@ -21,7 +21,7 @@ namespace Nix {
 	class NIX_API_DECL GraphicsQueueAsyncTaskManager
 	{
 	private:
-		QueueAsyncTask * createDestroyTask(BufferVk * _buffer);
+		QueueAsyncTask * createDestroyTask(IBuffer * _buffer);
 		QueueAsyncTask * createDestroyTask(TextureVk* _texture);
 		QueueAsyncTask * createDestroyTask(RenderPassVk* _renderPass);
 		QueueAsyncTask * createDestroyTask(ArgumentVk* _drawable);

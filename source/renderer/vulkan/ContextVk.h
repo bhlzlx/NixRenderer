@@ -19,6 +19,7 @@ namespace Nix {
 	class ShaderModuleVk;
 	class SwapchainVk;
 	class DriverVk;
+	class IBufferAllocator;
 	// a context owns a phy/logic device graphics queue,present queue
 	// contexts shares a upload queue
 	class NIX_API_DECL ContextVk : public IContext {
@@ -63,10 +64,13 @@ namespace Nix {
 		~ContextVk() {
 
 		}
+		virtual IBufferAllocator* createStaticBufferAllocator(size_t _heapSize, size_t _minSize);
+		virtual IBufferAllocator* createCahcedVertexBufferAllocator(size_t _heapSize, size_t _minSize);
+		virtual IBufferAllocator* createIndexBufferAllocator(size_t _heapSize, size_t _minSize);
 
-		virtual IBuffer* createStaticVertexBuffer(const void* _data, size_t _size) override;
-		virtual IBuffer* createCahcedVertexBuffer(size_t _size) override;
-		virtual IBuffer* createIndexBuffer(const void* _data, size_t _size) override;
+		virtual IBuffer* createStaticVertexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator ) override;
+		virtual IBuffer* createCahcedVertexBuffer(size_t _size, IBufferAllocator* _allocator) override;
+		virtual IBuffer* createIndexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator) override;
 		virtual ITexture* createTexture(const TextureDescription& _desc, TextureUsageFlags _usage = TextureUsageNone) override;
 		virtual ITexture* createTextureDDS(const void* _data, size_t _length) override;
 		virtual ITexture* createTextureKTX(const void* _data, size_t _length) override;
@@ -101,7 +105,7 @@ namespace Nix {
 		VkFence createFence() const;
 		GraphicsQueueVk* createGraphicsQueue(VkQueue _id, uint32_t _family, uint32_t _index ) const;
 		UploadQueueVk* createUploadQueue(VkQueue _id, uint32_t _family, uint32_t _index ) const;
-		ShaderModuleVk* createShaderModule(const char * _text, const char * _entryPoint, VkShaderStageFlagBits _stage) const;
+		//ShaderModuleVk* createShaderModule(const char * _text, const char * _entryPoint, VkShaderStageFlagBits _stage) const;
 		//BufferVk&& createBuffer( size_t _size, VkBufferUsageFlags _usage ) const;
 		virtual void resize(uint32_t _width, uint32_t _height) override;
 		virtual bool beginFrame() override;

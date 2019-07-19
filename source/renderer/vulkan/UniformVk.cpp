@@ -17,7 +17,6 @@ namespace Nix {
 	{
 		m_freeList.clear();
 		for (auto buffer : m_vecBuffer) {
-			buffer->unmap();
 			delete buffer;
 		}
 	}

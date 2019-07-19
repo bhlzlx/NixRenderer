@@ -497,6 +497,23 @@ namespace Nix {
         virtual void release() = 0;
     };
 
+	struct BufferAllocation {
+		uint64_t	buffer;
+		uint32_t	offset;
+		uint32_t	size;
+		uint16_t	allocationId;
+		uint8_t*	raw;
+	};
+
+	class IBuffer;
+
+	class IBufferAllocator {
+	public:
+		virtual IBuffer* allocate(size_t _size) = 0;
+		virtual void free(IBuffer*) = 0;
+		virtual BufferType type() = 0;
+	};
+
     class NIX_API_DECL IBuffer {
 	protected:
 		BufferType m_type;
@@ -506,10 +523,13 @@ namespace Nix {
         virtual size_t getSize() = 0;
 		virtual void setData(const void * _data, size_t _size, size_t _offset) = 0;
 		virtual void release() = 0;
+		virtual IBufferAllocator* getAllocator() = 0;
 		// don't re-implement this method
 		virtual BufferType getType() final {
 			return m_type;
 		}
+		virtual const BufferAllocation& allocation() const = 0;
+		virtual ~IBuffer();
     };
 
     class NIX_API_DECL IAttachment {
@@ -670,9 +690,14 @@ namespace Nix {
 		virtual bool resume(void* _wnd, uint32_t _width, uint32_t _height) = 0;
 		virtual bool suspend() = 0;
 		//
-		virtual IBuffer* createStaticVertexBuffer( const void* _data, size_t _size) = 0;
-		virtual IBuffer* createCahcedVertexBuffer(size_t _size) = 0;
-		virtual IBuffer* createIndexBuffer(const void* _data, size_t _size) = 0;
+		virtual IBufferAllocator* createStaticBufferAllocator( size_t _heapSize, size_t _minSize );
+		virtual IBufferAllocator* createCahcedVertexBufferAllocator(size_t _heapSize, size_t _minSize);
+		virtual IBufferAllocator* createIndexBufferAllocator(size_t _heapSize, size_t _minSize);
+		//
+		virtual IBuffer* createStaticVertexBuffer( const void* _data, size_t _size, IBufferAllocator* _allocator) = 0;
+		virtual IBuffer* createCahcedVertexBuffer(size_t _size, IBufferAllocator* _allocator) = 0;
+		virtual IBuffer* createIndexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator) = 0;
+
 		//virtual IUniformBuffer* createUniformBuffer(size_t _size) = 0;
         virtual ITexture* createTexture(const TextureDescription& _desc, TextureUsageFlags _usage = TextureUsageNone ) = 0;
 		virtual ITexture* createTextureDDS( const void* _data, size_t _length ) = 0;

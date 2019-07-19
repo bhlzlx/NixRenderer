@@ -2,53 +2,12 @@
 #include "ContextVk.h"
 #include "QueueVk.h"
 #include "DeferredDeletor.h"
+#include "BufferAllocator.h"
 #include <cassert>
 
 namespace Nix {
 
 	VmaMemoryUsage MappingVmaMemoryUsage(VkBufferUsageFlags _usageFlags);
-
-	Nix::BufferVk BufferVk::CreateBuffer(size_t _size, VkBufferUsageFlags _usage, ContextVk* _context )
-	{
-		VmaAllocationCreateInfo allocInfo = {}; {
-			allocInfo.usage = MappingVmaMemoryUsage(_usage);
-			if (allocInfo.usage == VMA_MEMORY_USAGE_CPU_ONLY) {
-				allocInfo.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
-			}
-		}
-
-		VkBufferCreateInfo bufferInfo = {}; {
-			bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-			bufferInfo.pNext = nullptr;
-			bufferInfo.flags = 0;
-			bufferInfo.usage = _usage;
-			bufferInfo.sharingMode = _context->getQueueFamilies().size() > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
-			bufferInfo.queueFamilyIndexCount = static_cast<uint32_t>(_context->getQueueFamilies().size());
-			bufferInfo.pQueueFamilyIndices = _context->getQueueFamilies().data();
-			bufferInfo.size = _size;
-		}
-
-		BufferVk obj;
-		VkBuffer buffer;
-		VmaAllocation allocation;
-		VkResult rst = vmaCreateBuffer( _context->getVmaAllocator(), &bufferInfo, &allocInfo, &buffer, &allocation, nullptr);
-		if (rst != VK_SUCCESS) {
-			return std::move(obj);
-		}
-		//BufferVk* obj = new BufferVk;
-		obj.m_buffer = buffer;
-		obj.m_size = _size;
-		obj.m_usage = _usage;
-		obj.m_allocation = allocation;
-		obj.m_raw = nullptr;
-		obj.m_context = _context;
-		if (allocInfo.flags & VMA_ALLOCATION_CREATE_MAPPED_BIT) {
-			vmaMapMemory(_context->getVmaAllocator(), allocation, (void**)&obj.m_raw);
-		}
-		//
-		return std::move(obj);
-	}
-
 	VmaMemoryUsage MappingVmaMemoryUsage(VkBufferUsageFlags _usageFlags)
 	{
 		// ************************************
@@ -81,46 +40,46 @@ namespace Nix {
 		return VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_ONLY;
 	}
 	//
-	IBuffer* ContextVk::createStaticVertexBuffer(const void* _data, size_t _size) {
-		auto buffer = BufferVk::CreateBuffer(_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, this);
+	IBuffer* ContextVk::createStaticVertexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator) {
+		VertexBuffer* buffer = dynamic_cast<VertexBuffer*>(_allocator->allocate(_size));
+		assert(buffer);
 		if (_data) {
-			buffer.uploadDataImmediatly(_data, _size, 0);
+			(buffer->operator Nix::BufferVk&()).uploadDataImmediatly(_data, _size,0);
 		}
-		auto svb = new VertexBuffer(std::move(buffer));
-		return svb;
+		return buffer;
 	}
 
-	IBuffer* ContextVk::createIndexBuffer(const void* _data, size_t _size) {
-		auto buffer = BufferVk::CreateBuffer(_size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, this);
-		buffer.uploadDataImmediatly(_data, _size, 0);
-		auto dvb = new IndexBuffer(std::move(buffer));
-		return dvb;
+	IBuffer* ContextVk::createIndexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator) {
+		IndexBuffer* buffer = dynamic_cast<IndexBuffer*>(_allocator->allocate(_size));
+		assert(buffer);
+		if (_data) {
+			(buffer->operator Nix::BufferVk&()).uploadDataImmediatly(_data, _size, 0);
+		}
+		return buffer;
 	}
 
 	void VertexBuffer::setData(const void * _data, size_t _size, size_t _offset) {
 		m_buffer.updateDataQueued(_data, _size, _offset);
 	}
 
-	IBuffer* ContextVk::createCahcedVertexBuffer(size_t _size) {
+	IBuffer* ContextVk::createCahcedVertexBuffer(size_t _size, IBufferAllocator* _allocator) {
 		// transient buffer should use `persistent mapping` feature
-		auto buffer = BufferVk::CreateBuffer(_size * MaxFlightCount, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, this);
-		auto dvb = new CachedVertexBuffer(std::move(buffer), _size);
-		return dvb;
+		CachedVertexBuffer* buffer = dynamic_cast<CachedVertexBuffer*>(_allocator->allocate(_size * 3));
+		assert(buffer);
+		return buffer;
 	}
 
 	void BufferVk::writeDataImmediatly(const void * _data, size_t _size, size_t _offset) {
-		if (m_raw) { // persistent mapping
-			memcpy(m_raw + _offset, _data, _size);
+		if (m_allocation.raw) { // persistent mapping
+			memcpy(m_allocation.raw + _offset, _data, _size);
 		}
 		else
 		{
-			void* ptr = map();
-			if (!ptr) {
+			if (!m_allocation.raw) {
 				assert(false);
 				return;
 			}
-			memcpy(((uint8_t*)ptr) +_offset, _data, _size);
-			unmap();
+			memcpy(((uint8_t*)m_allocation.raw) +_offset, _data, _size);
 		}
 	}
 	void BufferVk::uploadDataImmediatly(const void * _data, size_t _size, size_t _offset) {
@@ -139,28 +98,11 @@ namespace Nix {
 
 	BufferVk::~BufferVk()
 	{
-		if (m_buffer && m_allocation) {
-			vmaDestroyBuffer(m_context->getVmaAllocator(), m_buffer, m_allocation);
-		}
-	}
-
-	void* BufferVk::map()
-	{
-		void* ptr;
-		vmaMapMemory(m_context->getVmaAllocator(), m_allocation, &ptr);
-		return ptr;
-	}
-
-	void BufferVk::unmap()
-	{
-		vmaUnmapMemory(m_context->getVmaAllocator(), m_allocation);
 	}
 
 	void VertexBuffer::release()
 	{
-		BufferVk* movedTarget = new BufferVk(std::move(m_buffer));
-		GetDeferredDeletor().destroyResource(movedTarget);
-		delete this;
+		GetDeferredDeletor().destroyResource(this);
 	}
 	
 	size_t CachedVertexBuffer::getSize() {
@@ -184,10 +126,7 @@ namespace Nix {
 
 	void CachedVertexBuffer::release()
 	{
-		m_buffer.unmap();
-		BufferVk* movedTarget = new BufferVk(std::move(m_buffer));
-		GetDeferredDeletor().destroyResource( movedTarget);
-		delete this;
+		GetDeferredDeletor().destroyResource(this);
 	}
 
 	void IndexBuffer::setData(const void* _data, size_t _size, size_t _offset)
@@ -197,8 +136,6 @@ namespace Nix {
 
 	void IndexBuffer::release()
 	{
-		BufferVk* movedTarget = new BufferVk(std::move(m_buffer));
-		GetDeferredDeletor().destroyResource(movedTarget);
-		delete this;
+		GetDeferredDeletor().destroyResource(this);
 	}
 }
