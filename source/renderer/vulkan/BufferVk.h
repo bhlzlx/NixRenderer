@@ -40,7 +40,10 @@ namespace Nix {
 			return *this;
 		}
 	public:
-		BufferVk(){
+		BufferVk()
+			:m_context(nullptr)
+			,m_allocator(nullptr)
+		{
 		}
 		BufferVk( ContextVk* _context, const BufferAllocation& _allocation, VkBufferUsageFlags _usage ) :
 			m_allocation(_allocation),
@@ -101,9 +104,7 @@ namespace Nix {
 			return m_buffer.size();
 		}
 		virtual void release() override;
-		virtual const BufferAllocation& allocation() const override {
-			return m_buffer.m_allocation;
-		}
+
 		virtual IBufferAllocator* getAllocator() {
 			return m_buffer.m_allocator;
 		}
@@ -127,9 +128,9 @@ namespace Nix {
 		uint64_t		m_frame;
 		size_t			m_offsets[MaxFlightCount];
 	public:
-		CachedVertexBuffer( BufferVk&& _buffer, size_t _size ) : IBuffer(CVBO) {
+		CachedVertexBuffer( BufferVk&& _buffer ) : IBuffer(CVBO) {
 			m_buffer = std::move(_buffer);
-			m_size = _size;
+			m_size = _buffer.m_allocation.size / MaxFlightCount;
 			m_offsets[0] = _buffer.m_allocation.offset;
 			m_offsets[1] = _buffer.m_allocation.offset + m_size;
 			m_offsets[2] = _buffer.m_allocation.offset + m_size * 2;
@@ -146,15 +147,9 @@ namespace Nix {
 		operator BufferVk&() {
 			return m_buffer;
 		}
-
-		virtual const BufferAllocation& allocation() const override {
-			return m_buffer.m_allocation;
-		}
-
 		virtual IBufferAllocator* getAllocator() {
 			return m_buffer.m_allocator;
 		}
-
 		size_t getOffset() {
 			return m_offsets[0];
 		}
@@ -176,10 +171,6 @@ namespace Nix {
 		
 		virtual size_t getSize() override {
 			return m_buffer.size();
-		}
-		
-		virtual const BufferAllocation& allocation() const override {
-			return m_buffer.m_allocation;
 		}
 		
 		virtual IBufferAllocator* getAllocator() {

@@ -4,6 +4,7 @@
 #include "ContextVk.h"
 #include "BufferVk.h"
 #include <cassert>
+#include <functional>
 
 namespace Nix {
 
@@ -44,8 +45,8 @@ namespace Nix {
 
 		std::function< VkBuffer(ContextVk * _context, size_t _size, VmaAllocation& _allocation )>
 									m_vkBufferCreator;
-		std::function< IBuffer*(ContextVk * _context, const BufferAllocation& _allocation ) >
-									m_nixBufferCreator;
+		//std::function< IBuffer*(ContextVk * _context, const BufferAllocation& _allocation ) >
+	//								m_nixBufferCreator;
 		std::vector<VkBuffer>		m_noneGroupedBuffers;
 		std::vector<VmaAllocation>	m_noneGroupedAllocation;
 		std::vector<uint8_t*>		m_noneGroupedRawData;
@@ -75,16 +76,14 @@ namespace Nix {
 		void initialize( 
 			ContextVk* _context, 
 			BufferType _type,
-			std::function< VkBuffer(ContextVk*, size_t, VmaAllocation&)> _vkBufferCreator,
-			std::function< IBuffer*(ContextVk*, const BufferAllocation&) > _nixBufferCreator
+			std::function< VkBuffer(ContextVk*, size_t, VmaAllocation&)> _vkBufferCreator
 		) {
 			m_context = _context;
 			m_vkBufferCreator = _vkBufferCreator;
-			m_nixBufferCreator = _nixBufferCreator;
 			m_type = _type;
 		}
 
-		virtual IBuffer* allocate(size_t _size) {
+		virtual BufferAllocation allocate(size_t _size) {
 			size_t loc = locateCollectionIndex(_size);
 			if (loc != -1) {
 				std::vector<SubAllocator>& vecAllocator = m_allocatorCollection[loc];
@@ -103,8 +102,7 @@ namespace Nix {
 						allocation.allocationId = allocateId;
 						allocation.offset = offset;
 						allocation.size = _size;
-						IBuffer* ret = m_nixBufferCreator(m_context, allocation);
-						return ret;
+						return allocation;
 					}
 				}
 				SubAllocator p;
@@ -132,8 +130,7 @@ namespace Nix {
 				allocation.allocationId = allocateId;
 				allocation.offset = offset;
 				allocation.size = _size;
-				IBuffer* ret = m_nixBufferCreator(m_context, allocation);
-				return ret;
+				return allocation;
 			}
 			else
 			{
@@ -157,17 +154,15 @@ namespace Nix {
 				allocation.allocationId = -1;
 				allocation.offset = 0;
 				allocation.size = _size;
-				IBuffer* ret = m_nixBufferCreator(m_context, allocation);
-				return ret;
+				return allocation;
 			}
 			assert(false);
-			return nullptr;
+			return BufferAllocation();
 		}
 
-		virtual void free(IBuffer* _buffer ) {
-			const BufferAllocation& allocation = _buffer->allocation();
-			if (allocation.size < 1024 * 1024 ) {
-				size_t loc = locateCollectionIndex(allocation.size);
+		virtual void free( const BufferAllocation& _allocation ) {
+			if (_allocation.size < 1024 * 1024 ) {
+				size_t loc = locateCollectionIndex(_allocation.size);
 				std::vector<SubAllocator>& vecAllocators = m_allocatorCollection[loc];
 				for (auto& p : vecAllocators) {
 					union {
@@ -175,10 +170,9 @@ namespace Nix {
 						uint64_t h;
 					} cvt;
 					cvt.b = p.buffer;
-					if (cvt.h == allocation.buffer) {
-						auto freeRst = p.allocator.free(allocation.allocationId);
+					if (cvt.h == _allocation.buffer) {
+						auto freeRst = p.allocator.free(_allocation.allocationId);
 						assert(freeRst);
-						delete _buffer;
 						return;
 					}
 				}
@@ -191,7 +185,7 @@ namespace Nix {
 						uint64_t h;
 					} cvt;
 					cvt.b = m_noneGroupedBuffers[i];
-					if (cvt.h == allocation.buffer) {
+					if (cvt.h == _allocation.buffer) {
 						auto vmaAllocator = m_context->getVmaAllocator();
 						vmaDestroyBuffer(vmaAllocator, cvt.b, m_noneGroupedAllocation[i]);
 						//
@@ -202,7 +196,6 @@ namespace Nix {
 						m_noneGroupedBuffers.erase(m_noneGroupedBuffers.begin() + i);
 						m_noneGroupedRawData.erase(m_noneGroupedRawData.begin() + i);
 						//
-						delete _buffer;
 						return;
 					}
 				}
@@ -238,14 +231,7 @@ namespace Nix {
 			VkResult rst = vmaCreateBuffer(_context->getVmaAllocator(), &bufferInfo, &allocInfo, &buffer, &_allocation, nullptr);
 			assert(rst);
 			return buffer;
-		},
-		[](ContextVk * _context, const BufferAllocation& _allocation)->IBuffer* {
-			// create `BufferVk` object first
-			BufferVk buffer(_context, _allocation, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-			VertexBuffer* vbo = new VertexBuffer(std::move(buffer));
-			return vbo;
-		}
-		);
+		});
 		return allocator;
 	}
 
@@ -273,14 +259,7 @@ namespace Nix {
 			VkResult rst = vmaCreateBuffer(_context->getVmaAllocator(), &bufferInfo, &allocInfo, &buffer, &_allocation, nullptr);
 			assert(rst);
 			return buffer;
-		},
-			[](ContextVk * _context, const BufferAllocation& _allocation)->IBuffer* {
-			// create `BufferVk` object first
-			BufferVk buffer(_context, _allocation, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-			CachedVertexBuffer* vbo = new CachedVertexBuffer( std::move(buffer),_allocation.size/MaxFlightCount);
-			return vbo;
-		}
-		);
+		});
 		return allocator;
 	}
 
@@ -307,14 +286,7 @@ namespace Nix {
 			VkResult rst = vmaCreateBuffer(_context->getVmaAllocator(), &bufferInfo, &allocInfo, &buffer, &_allocation, nullptr);
 			assert(rst);
 			return buffer;
-		},
-			[](ContextVk * _context, const BufferAllocation& _allocation)->IBuffer* {
-			// create `BufferVk` object first
-			BufferVk buffer(_context, _allocation, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-			VertexBuffer* vbo = new VertexBuffer(std::move(buffer));
-			return vbo;
-		}
-		);
+		});
 		return allocator;
 	}
 

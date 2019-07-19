@@ -41,7 +41,9 @@ namespace Nix {
 	}
 	//
 	IBuffer* ContextVk::createStaticVertexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator) {
-		VertexBuffer* buffer = dynamic_cast<VertexBuffer*>(_allocator->allocate(_size));
+		BufferAllocation allocation = _allocator->allocate(_size);
+		BufferVk b(this, allocation, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+		VertexBuffer* buffer = new VertexBuffer(std::move(b));
 		assert(buffer);
 		if (_data) {
 			(buffer->operator Nix::BufferVk&()).uploadDataImmediatly(_data, _size,0);
@@ -50,10 +52,12 @@ namespace Nix {
 	}
 
 	IBuffer* ContextVk::createIndexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator) {
-		IndexBuffer* buffer = dynamic_cast<IndexBuffer*>(_allocator->allocate(_size));
+		BufferAllocation allocation = _allocator->allocate(_size);
+		BufferVk b(this, allocation, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+		IndexBuffer* buffer = new IndexBuffer(std::move(b));
 		assert(buffer);
 		if (_data) {
-			(buffer->operator Nix::BufferVk&()).uploadDataImmediatly(_data, _size, 0);
+			(buffer->operator Nix::BufferVk & ()).uploadDataImmediatly(_data, _size, 0);
 		}
 		return buffer;
 	}
@@ -64,7 +68,9 @@ namespace Nix {
 
 	IBuffer* ContextVk::createCahcedVertexBuffer(size_t _size, IBufferAllocator* _allocator) {
 		// transient buffer should use `persistent mapping` feature
-		CachedVertexBuffer* buffer = dynamic_cast<CachedVertexBuffer*>(_allocator->allocate(_size * 3));
+		BufferAllocation allocation = _allocator->allocate(_size);
+		BufferVk b(this, allocation, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+		CachedVertexBuffer* buffer = new CachedVertexBuffer(std::move(b));
 		assert(buffer);
 		return buffer;
 	}

@@ -48,6 +48,11 @@ namespace Nix {
 		//
 		uint64_t				m_frameCounter;
 		VkCommandBuffer			m_renderCommandBuffer;
+
+		IBufferAllocator*		m_defaultVBOAllocator; // static vertex buffer
+		IBufferAllocator*		m_defaultCVBOAllocator; // cached vertex buffer
+		IBufferAllocator*		m_defaultIBOAllocator; // index buffer
+		IBufferAllocator*		m_defaultSBOAllocator; // staging buffer
 	private:
 		VkPipelineCache			m_pipelineCache;
 		std::map< SamplerState, VkSampler > m_samplerMapping;

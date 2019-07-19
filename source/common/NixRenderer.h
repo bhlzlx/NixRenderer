@@ -503,14 +503,21 @@ namespace Nix {
 		uint32_t	size;
 		uint16_t	allocationId;
 		uint8_t*	raw;
+		BufferAllocation()
+		: buffer(0)
+		, offset(0)
+		, size(0)
+		, allocationId(-1)
+		, raw(nullptr){
+		}
 	};
 
 	class IBuffer;
 
 	class IBufferAllocator {
 	public:
-		virtual IBuffer* allocate(size_t _size) = 0;
-		virtual void free(IBuffer*) = 0;
+		virtual BufferAllocation allocate(size_t _size) = 0;
+		virtual void free( const BufferAllocation& ) = 0;
 		virtual BufferType type() = 0;
 	};
 
@@ -528,8 +535,7 @@ namespace Nix {
 		virtual BufferType getType() final {
 			return m_type;
 		}
-		virtual const BufferAllocation& allocation() const = 0;
-		virtual ~IBuffer();
+		virtual ~IBuffer() = 0;
     };
 
     class NIX_API_DECL IAttachment {
