@@ -21,6 +21,8 @@ namespace Nix {
 	class ContextVk;
 
 	class NIX_API_DECL BufferVk {
+		friend class CommandBufferVk;
+		friend class GraphicsQueueAsyncTaskManager;
 		friend struct ScreenCapture;
 		friend class CachedVertexBuffer;
 		friend class IndexBuffer;
@@ -45,9 +47,11 @@ namespace Nix {
 			,m_allocator(nullptr)
 		{
 		}
-		BufferVk( ContextVk* _context, const BufferAllocation& _allocation, VkBufferUsageFlags _usage ) :
-			m_allocation(_allocation),
-			m_usage(_usage){
+		BufferVk( ContextVk* _context, const BufferAllocation& _allocation, IBufferAllocator* _allocator, VkBufferUsageFlags _usage ) 
+			: m_context(_context)
+			, m_allocation(_allocation)
+			, m_allocator(_allocator)
+			, m_usage(_usage){
 		}
 		BufferVk(BufferVk&& _buffer) {
 			m_context = _buffer.m_context;
@@ -70,7 +74,10 @@ namespace Nix {
 		operator const VkBuffer&() const {
 			return (VkBuffer&)m_allocation.buffer;
 		}
-		~BufferVk();
+
+		~BufferVk() {
+
+		}
 		//
 		uint8_t* raw() {
 			return (uint8_t*)m_allocation.raw;
@@ -116,7 +123,7 @@ namespace Nix {
 			return m_buffer;
 		}
 		size_t getOffset() {
-			return 0;
+			return m_buffer.m_allocation.offset;
 		}
 	};
 
@@ -185,7 +192,7 @@ namespace Nix {
 			return m_buffer;
 		}
 		size_t getOffset() {
-			return 0;
+			return m_buffer.m_allocation.offset;
 		}
 	};
 }

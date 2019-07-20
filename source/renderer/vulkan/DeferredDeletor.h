@@ -21,7 +21,7 @@ namespace Nix {
 	class NIX_API_DECL GraphicsQueueAsyncTaskManager
 	{
 	private:
-		QueueAsyncTask * createDestroyTask(IBuffer * _buffer);
+		QueueAsyncTask * createDestroyTask( IBufferAllocator* _allocator, const BufferAllocation& _allocation );
 		QueueAsyncTask * createDestroyTask(TextureVk* _texture);
 		QueueAsyncTask * createDestroyTask(RenderPassVk* _renderPass);
 		QueueAsyncTask * createDestroyTask(ArgumentVk* _drawable);
@@ -41,6 +41,9 @@ namespace Nix {
 				m_vecItems[m_flightIndex].push_back(item);
 			}
 		}
+
+		template<>
+		void destroyResource<BufferVk*>(BufferVk* _buffer);
 
 		void addCaptureTask() {
 

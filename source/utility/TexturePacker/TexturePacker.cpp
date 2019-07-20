@@ -268,7 +268,7 @@ namespace Nix {
 Nix::ITexturePacker* CreateTexturePacker(Nix::ITexture* _texture, uint32_t _layer)
 {
 	switch (_texture->getDesc().format) {
-	case Nix::NixR8_UNORM: {
+	case Nix::NixR8_UNORM:
 	case Nix::NixRGBA8888_UNORM: {
 		break;
 	}

@@ -278,6 +278,7 @@ namespace Nix {
 		UBO, // uniform buffer object
 		SSBO, // shader storage buffer objects
 		TBO, // Texel buffer object
+		STAGING // staging buffer
 	};
 
 	enum MultiSampleType {
@@ -499,8 +500,8 @@ namespace Nix {
 
 	struct BufferAllocation {
 		uint64_t	buffer;
-		uint32_t	offset;
-		uint32_t	size;
+		size_t		offset;
+		size_t		size;
 		uint16_t	allocationId;
 		uint8_t*	raw;
 		BufferAllocation()
@@ -535,7 +536,8 @@ namespace Nix {
 		virtual BufferType getType() final {
 			return m_type;
 		}
-		virtual ~IBuffer() = 0;
+		virtual ~IBuffer() {
+		}
     };
 
     class NIX_API_DECL IAttachment {
@@ -696,13 +698,13 @@ namespace Nix {
 		virtual bool resume(void* _wnd, uint32_t _width, uint32_t _height) = 0;
 		virtual bool suspend() = 0;
 		//
-		virtual IBufferAllocator* createStaticBufferAllocator( size_t _heapSize, size_t _minSize );
-		virtual IBufferAllocator* createCahcedVertexBufferAllocator(size_t _heapSize, size_t _minSize);
-		virtual IBufferAllocator* createIndexBufferAllocator(size_t _heapSize, size_t _minSize);
+		virtual IBufferAllocator* createVertexBufferAllocator( size_t _heapSize, size_t _minSize ) = 0;
+		virtual IBufferAllocator* createVertexBufferAllocatorPM(size_t _heapSize, size_t _minSize) = 0;
+		virtual IBufferAllocator* createIndexBufferAllocator(size_t _heapSize, size_t _minSize) = 0;
 		//
-		virtual IBuffer* createStaticVertexBuffer( const void* _data, size_t _size, IBufferAllocator* _allocator) = 0;
-		virtual IBuffer* createCahcedVertexBuffer(size_t _size, IBufferAllocator* _allocator) = 0;
-		virtual IBuffer* createIndexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator) = 0;
+		virtual IBuffer* createVertexBuffer( const void * _data, size_t _size, IBufferAllocator* _allocator = nullptr ) = 0;
+		virtual IBuffer* createDynamicVertexBuffer(  size_t _size, IBufferAllocator* _allocator = nullptr) = 0;
+		virtual IBuffer* createIndexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator = nullptr ) = 0;
 
 		//virtual IUniformBuffer* createUniformBuffer(size_t _size) = 0;
         virtual ITexture* createTexture(const TextureDescription& _desc, TextureUsageFlags _usage = TextureUsageNone ) = 0;

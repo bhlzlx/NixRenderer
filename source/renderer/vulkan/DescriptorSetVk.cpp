@@ -55,11 +55,11 @@ namespace Nix {
 		const ArgumentLayout& argLayout = _material->m_argumentLayouts[_descIndex];
 		
 		uint32_t bufferCounter = 0, imageCounter = 0;
-		bufferCounter += argLayout.m_uniformBlockDescriptor.size();
-		bufferCounter += argLayout.m_storageBufferDescriptor.size();
+		bufferCounter += (uint32_t)argLayout.m_uniformBlockDescriptor.size();
+		bufferCounter += (uint32_t)argLayout.m_storageBufferDescriptor.size();
 		//bufferCounter += argLayout.m_texelBufferDescriptor.size();
 		//
-		imageCounter += argLayout.m_samplerImageDescriptor.size();
+		imageCounter += (uint32_t)argLayout.m_samplerImageDescriptor.size();
 		
 		argument->m_vecDescriptorBufferInfo.resize(bufferCounter);
 		argument->m_vecDescriptorImageInfo.resize(imageCounter);
@@ -168,7 +168,7 @@ namespace Nix {
 		VkDescriptorPoolCreateInfo descriptorPoolInfo = {}; {
 			descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 			descriptorPoolInfo.pNext = nullptr;
-			descriptorPoolInfo.poolSizeCount = pools.size();
+			descriptorPoolInfo.poolSizeCount = (uint32_t)pools.size();
 			descriptorPoolInfo.pPoolSizes = pools.data();
 			descriptorPoolInfo.maxSets = 128;
 		}

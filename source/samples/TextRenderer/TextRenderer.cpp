@@ -67,7 +67,7 @@ namespace Nix {
 		m_font = new Font();
 		m_font->initialize(_archieve, "font/hwzhsong.ttf", 0, m_texturePacker);
 		
-		const char16_t message[] = u"你好世界中国字符，】【；‘，。/《》？，~`!@#$%^&*()_+=-0987654321[];',/{}:\"<>?\\|！中国字符、】【；‘，。/《》？一";
+		const char16_t message[] = u"好你世界中国字符，】【；‘，。/《》？，~`!@#$%^&*()_+=-0987654321[];',/{}:\"<>?\\|！中国字符、】【；‘，。/《》？一";
 		for (auto c : message) {
 			FontCharactor fc;
 			fc.charCode = c;
@@ -113,7 +113,7 @@ namespace Nix {
 			}
 			{ // renderable
 				m_renderable = m_material->createRenderable();
-				m_vertexBuffer = m_context->createStaticVertexBuffer(PlaneVertices, sizeof(PlaneVertices));
+				m_vertexBuffer = m_context->createVertexBuffer(PlaneVertices, sizeof(PlaneVertices));
 				m_indexBuffer = m_context->createIndexBuffer(PlaneIndices, sizeof(PlaneIndices));
 				m_renderable->setVertexBuffer(m_vertexBuffer, 0, 0);
 				m_renderable->setIndexBuffer(m_indexBuffer, 0);

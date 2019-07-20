@@ -192,13 +192,13 @@ namespace Nix {
 		if (m_screenCapture.capture && !m_screenCapture.submitted ) {
 			semaphoresToSignal.push_back(m_screenCapture.waitSemaphore);
 			submit.pSignalSemaphores = semaphoresToSignal.data();
-			submit.signalSemaphoreCount = semaphoresToSignal.size();
+			submit.signalSemaphoreCount = (uint32_t)semaphoresToSignal.size();
 			vkQueueSubmit(m_queue, 1, &submit, m_renderFences[m_flightIndex]);
 			m_screenCapture.submitCommand(m_queue);
 		}
 		else {
 			submit.pSignalSemaphores = semaphoresToSignal.data();
-			submit.signalSemaphoreCount = semaphoresToSignal.size();
+			submit.signalSemaphoreCount = (uint32_t)semaphoresToSignal.size();
 			vkQueueSubmit(m_queue, 1, &submit, m_renderFences[m_flightIndex]);
 		}
 
@@ -312,11 +312,13 @@ namespace Nix {
 
 	void CommandBufferVk::updateBuffer(BufferVk* _buffer, size_t _offset, size_t _size, const void* _data)
 	{
-		BufferVk stageBuffer = BufferVk::CreateBuffer(_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_contextVk);
-		stageBuffer.writeDataImmediatly(_data,_size,0);
+		IBufferAllocator* allocator = m_contextVk->stagingBufferAllocator();
+		BufferAllocation stagingBufferAllocation = allocator->allocate(_size);
+		BufferVk stagingBuffer( m_contextVk,  stagingBufferAllocation, allocator, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+		stagingBuffer.writeDataImmediatly(_data,_size,0);
 		VkBufferCopy copy;
-		copy.srcOffset = 0;
-		copy.dstOffset = _offset;
+		copy.srcOffset = stagingBufferAllocation.offset;
+		copy.dstOffset = _offset + _buffer->m_allocation.offset;
 		copy.size = _size;
 		VkBufferMemoryBarrier barrierBefore; {
 			barrierBefore.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
@@ -325,7 +327,7 @@ namespace Nix {
 			barrierBefore.pNext = nullptr;
 			barrierBefore.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barrierBefore.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrierBefore.offset = _offset;
+			barrierBefore.offset = copy.dstOffset;
 			barrierBefore.size = _size;
 			barrierBefore.buffer = *_buffer;
 		}
@@ -336,7 +338,7 @@ namespace Nix {
 			barrierAfter.pNext = nullptr;
 			barrierAfter.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barrierAfter.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrierAfter.offset = _offset;
+			barrierAfter.offset = copy.dstOffset;
 			barrierAfter.size = _size;
 			barrierAfter.buffer = *_buffer;
 		}
@@ -345,7 +347,7 @@ namespace Nix {
 			1, &barrierBefore,
 			0, nullptr);
 		VkBuffer dst = *_buffer;
-		VkBuffer src = stageBuffer;
+		VkBuffer src = stagingBuffer;
 		vkCmdCopyBuffer(m_commandBuffer, src, dst, 1, &copy);
 		vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 			0, nullptr,
@@ -353,8 +355,7 @@ namespace Nix {
 			0, nullptr);
 		//
 		auto deletor = GetDeferredDeletor();
-		auto* Tbuffer = new BufferVk(std::move(stageBuffer));
-		deletor.destroyResource(Tbuffer);
+		deletor.destroyResource(&stagingBuffer);
 	}
 	/*
 	void CommandBufferVk::updateTexture(TextureVk* _texture, const void* _data, size_t _length, const ImageRegion& _region) const
@@ -455,10 +456,11 @@ namespace Nix {
 
 	void CommandBufferVk::updateTexture(TextureVk* _texture, const void* _data, size_t _length, const TextureRegion& _region) const
 	{
-		_length = _length < 64 ? 64 : _length;
-		auto stageBuffer = BufferVk::CreateBuffer(_length, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_contextVk);
-		stageBuffer.writeDataImmediatly(_data,_length,0);
-		//
+		//_length = _length < 64 ? 64 : _length;
+		IBufferAllocator* allocator = m_contextVk->stagingBufferAllocator();
+		BufferAllocation stagingBufferAllocation = allocator->allocate(_length);
+		BufferVk stagingBuffer(m_contextVk, stagingBufferAllocation, allocator, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+		stagingBuffer.writeDataImmediatly(_data, _length, 0);
 		uint32_t width = _region.size.width, height = _region.size.height;
 		int32_t offsetx = _region.offset.x, offsety = _region.offset.y;
 
@@ -475,7 +477,7 @@ namespace Nix {
 				_region.baseLayer,
 				_region.size.depth
 			};
-			copy.bufferOffset = 0;
+			copy.bufferOffset = stagingBufferAllocation.offset;
 			copy.bufferImageHeight = 0;
 			copy.bufferRowLength = 0;
 		}
@@ -519,7 +521,7 @@ namespace Nix {
 			m_commandBuffer, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 			0, nullptr, 0, nullptr,
 			1, &barrierBefore);
-		vkCmdCopyBufferToImage(m_commandBuffer, (const VkBuffer&)stageBuffer, _texture->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+		vkCmdCopyBufferToImage(m_commandBuffer, (const VkBuffer&)stagingBuffer, _texture->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
 		//
 		vkCmdPipelineBarrier(
 			m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
@@ -529,13 +531,14 @@ namespace Nix {
 		_texture->setImageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		//
 		auto deletor = GetDeferredDeletor();
-		auto TBuffer = new BufferVk(std::move(stageBuffer));
-		deletor.destroyResource(TBuffer);
+		deletor.destroyResource(&stagingBuffer);
 	}
 
 	void CommandBufferVk::updateTexture(TextureVk* _texture, BufferImageUpload _upload ) const {
-		auto stageBuffer = BufferVk::CreateBuffer( _upload.length, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_contextVk );
-		stageBuffer.writeDataImmediatly(_upload.data, _upload.length, 0);
+		IBufferAllocator* allocator = m_contextVk->stagingBufferAllocator();
+		BufferAllocation stagingBufferAllocation = allocator->allocate(_upload.length);
+		BufferVk stagingBuffer(m_contextVk, stagingBufferAllocation, allocator, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+		stagingBuffer.writeDataImmediatly(_upload.data, _upload.length, 0);
 
 		uint32_t baseWidth = _upload.baseMipRegion.size.width, baseHeight = _upload.baseMipRegion.size.height;
 		uint32_t baseOffsetX = _upload.baseMipRegion.offset.x, baseOffsetY = _upload.baseMipRegion.offset.y;
@@ -618,7 +621,7 @@ namespace Nix {
 			m_commandBuffer, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 			0, nullptr, 0, nullptr,
 			1, &barrierBefore);
-		vkCmdCopyBufferToImage(m_commandBuffer, (const VkBuffer&)stageBuffer, _texture->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, static_cast<uint32_t>(copies.size()), copies.data());
+		vkCmdCopyBufferToImage(m_commandBuffer, (const VkBuffer&)stagingBuffer, _texture->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, static_cast<uint32_t>(copies.size()), copies.data());
 		// for none compressed format, we only provide raw-data for one mip level
 		// so, we have to generate other mipmap levels when the raw-data not provided
 		auto format = NixFormatToVk(_texture->getDesc().format);
@@ -634,7 +637,7 @@ namespace Nix {
 			vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 				0, nullptr, 0, nullptr,
 				1, &brrSrc);
-			for (size_t mipLevel = 0; mipLevel < _texture->getDesc().mipmapLevel-1; ++mipLevel) {
+			for (uint32_t mipLevel = 0; mipLevel < _texture->getDesc().mipmapLevel-1; ++mipLevel) {
 				VkImageBlit blit = {
 					{
 						VK_IMAGE_ASPECT_COLOR_BIT,	// aspectMask 
@@ -663,7 +666,7 @@ namespace Nix {
 				brrDst.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 				brrDst.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 				brrDst.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-				brrDst.subresourceRange.baseMipLevel = mipLevel + 1;
+				brrDst.subresourceRange.baseMipLevel = (uint32_t)mipLevel + 1;
 				brrDst.subresourceRange.levelCount = 1;
 				vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 					0, nullptr, 0, nullptr,
@@ -679,8 +682,7 @@ namespace Nix {
 		_texture->setImageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		//
 		auto deletor = GetDeferredDeletor();
-		auto TBuffer = new BufferVk(std::move(stageBuffer));
-		deletor.destroyResource(TBuffer);
+		deletor.destroyResource(&stagingBuffer);
 	}
 
 	void CommandBufferVk::getFramePixels(TextureVk* _texture, BufferVk& _stagingBuffer)
@@ -827,10 +829,12 @@ namespace Nix {
 		// check the _length is match
 		auto bytesTotal = NixFormatBits(texture->getDesc().format) * texture->getDesc().width * texture->getDesc().height / 8;
 		assert(bytesTotal <= _length);
-		stagingBuffer = new BufferVk();
-		*stagingBuffer = std::move(BufferVk::CreateBuffer( bytesTotal, VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT, context));
+
+		IBufferAllocator* allocator = _context->stagingBufferAllocator();
+		BufferAllocation stagingBufferAllocation = allocator->allocate(bytesTotal);
+		BufferVk stagingBuffer(_context, stagingBufferAllocation, allocator, VK_BUFFER_USAGE_TRANSFER_SRC_BIT|VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 		realLength = bytesTotal;
-		this->commandBuffer.getFramePixels(texture, *stagingBuffer);
+		this->commandBuffer.getFramePixels(texture, stagingBuffer);
 		invokeFrameCount = context->getFrameCounter() + MaxFlightCount;
 	}
 
@@ -859,7 +863,7 @@ namespace Nix {
 
 	void ScreenCapture::completeCapture()
 	{
-		memcpy(raw, stagingBuffer->m_raw, stagingBuffer->size());
+		memcpy(raw, stagingBuffer->raw(), stagingBuffer->size());
 		capture->onCapture(raw, realLength);
 		if( callback )
 			callback(capture);
@@ -867,9 +871,6 @@ namespace Nix {
 
 	void ScreenCapture::reset()
 	{
-		if (stagingBuffer->m_raw) {
-			stagingBuffer->unmap();
-		}
 		delete stagingBuffer;
 		stagingBuffer = nullptr;
 		texture = nullptr;

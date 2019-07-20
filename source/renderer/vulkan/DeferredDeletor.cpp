@@ -9,16 +9,26 @@ namespace Nix {
 
 	GraphicsQueueAsyncTaskManager DeferredDeletor;
 
+	template<>
+	inline void GraphicsQueueAsyncTaskManager::destroyResource(BufferVk* _buffer) {
+		QueueAsyncTask* item = this->createDestroyTask(_buffer->m_allocator, _buffer->m_allocation);
+		if (item) {
+			m_vecItems[m_flightIndex].push_back(item);
+		}
+	}
+
 	struct BufferDeleteItem : public QueueAsyncTask {
 	private:
-		IBuffer* m_buffer;
+		BufferAllocation m_allocation;
+		IBufferAllocator* m_allocator;
 	public:
-		BufferDeleteItem(IBuffer* _buffer) : m_buffer(_buffer) {
+		BufferDeleteItem( IBufferAllocator* _allocator, BufferAllocation _allocation) 
+		: m_allocator( _allocator )
+		, m_allocation( _allocation){
 		}
 		//
 		virtual void execute() {
-			IBufferAllocator* allocator = m_buffer->getAllocator();
-			allocator->free(m_buffer);
+			m_allocator->free(m_allocation);
 			delete this;
 		}
 	};
@@ -83,9 +93,9 @@ namespace Nix {
 		}
 	};
 
-	Nix::QueueAsyncTask * GraphicsQueueAsyncTaskManager::createDestroyTask(IBuffer * _buffer)
+	Nix::QueueAsyncTask * GraphicsQueueAsyncTaskManager::createDestroyTask(IBufferAllocator* _allocator, const BufferAllocation& _allocation)
 	{
-		return new BufferDeleteItem(_buffer);
+		return new BufferDeleteItem( _allocator, _allocation );
 	}
 
 	Nix::QueueAsyncTask * GraphicsQueueAsyncTaskManager::createDestroyTask(TextureVk* _texture)

@@ -1,8 +1,8 @@
 #include "BufferAllocator.h"
-#include "UniformVk.h"
 #include "VkInc.h"
 #include "ContextVk.h"
 #include "BufferVk.h"
+#include "DriverVk.h"
 #include <cassert>
 #include <functional>
 
@@ -20,6 +20,8 @@ namespace Nix {
 	// smaller than 1MB -> use the 16MB heap
 	// otherwise, use the vulkan allocating API by default!
 
+	// base size -> x256 | alloc below | base size x16
+
 	static_assert(sizeof(uint64_t) >= sizeof(VkBuffer), "handle must bigger than `VkBuffer`");
 	/*
 	union {
@@ -27,7 +29,7 @@ namespace Nix {
 		uint64_t h;
 	} cvt;
 	*/
-	class GenerateBufferAllocator
+	class GeneralMultiLevelBufferAllocator
 		: public IBufferAllocator
 	{
 	private:
@@ -70,7 +72,7 @@ namespace Nix {
 		}
 	public:
 
-		GenerateBufferAllocator() {
+		GeneralMultiLevelBufferAllocator() {
 		}
 
 		void initialize( 
@@ -102,19 +104,20 @@ namespace Nix {
 						allocation.allocationId = allocateId;
 						allocation.offset = offset;
 						allocation.size = _size;
+						allocation.raw = p.raw + allocation.offset;
 						return allocation;
 					}
 				}
-				SubAllocator p;
+				vecAllocator.resize( vecAllocator.size()+1 );
+				SubAllocator& p = vecAllocator.back();
 				size_t HeapSizes[] = {
 					4*1024, 64*1024, 1024* 1024, 16 * 1024 * 1024
 				};
 				p.buffer = m_vkBufferCreator(m_context, HeapSizes[loc], p.allocation);
-				if (m_type == UBO || m_type == CVBO) {
+				if (m_type == UBO || m_type == CVBO || m_type == STAGING) {
 					vmaMapMemory(m_context->getVmaAllocator(), p.allocation, (void**)&p.raw);
 				}
 				p.allocator.initialize(HeapSizes[loc], HeapSizes[loc] / 256);
-				vecAllocator.push_back(p);
 				size_t offset;
 				uint16_t allocateId;
 				bool succeed = p.allocator.allocate(_size, offset, allocateId);
@@ -130,6 +133,7 @@ namespace Nix {
 				allocation.allocationId = allocateId;
 				allocation.offset = offset;
 				allocation.size = _size;
+				allocation.raw = p.raw;
 				return allocation;
 			}
 			else
@@ -208,9 +212,110 @@ namespace Nix {
 		}
 	};
 
-	Nix::IBufferAllocator* createVertexBufferGenerateAllocator(IContext* _context)
+	class UniformBufferAllocator : public IBufferAllocator {
+	private:
+		struct SubAllocator {
+			BuddySystemAllocator allocator;
+			VkBuffer buffer;
+			VmaAllocation allocation;
+			uint8_t* raw;
+		};
+		ContextVk*					m_context;
+		std::vector<SubAllocator>	m_vecAllocatorCollection[2];
+		uint32_t					m_uniformAlignment;
+		// 256KB -> 1KB
+		// 16KB -> 64字节 | 小于1K
+	public:
+		void initialize(ContextVk* _context) {
+			DriverVk* driver = (DriverVk*)_context->getDriver();
+			m_context = _context;
+			m_uniformAlignment = (uint32_t)driver->getPhysicalDeviceProperties().limits.minUniformBufferOffsetAlignment;
+			if (m_uniformAlignment < 64) {
+				m_uniformAlignment = 64;
+			}
+		}
+		// 通过 IBufferAllocator 继承
+		virtual BufferAllocation allocate(size_t _size) override
+		{
+			_size = (_size + m_uniformAlignment - 1) & ~((size_t)m_uniformAlignment - 1);
+			_size = _size * MaxFlightCount;
+			assert(_size < 2048 * MaxFlightCount);
+			size_t loc = _size < 1024 ? 0 : 1;
+			std::vector<SubAllocator>& allocators = m_vecAllocatorCollection[loc];
+			BufferAllocation allocation;
+			for (auto& allocator : allocators) {
+				bool rst = allocator.allocator.allocate(_size, allocation.offset, allocation.allocationId);
+				if (rst) {
+					allocation.buffer = (uint64_t)allocator.buffer;
+					allocation.raw = allocator.raw + allocation.offset;
+					allocation.size = _size;
+					return allocation;
+				}
+			}
+			allocators.resize(allocators.size() + 1);
+			SubAllocator& subAllocator = allocators.back();
+
+			size_t heapSize, minSize;
+
+			if (loc == 1) {
+				heapSize = 256 * 1024;
+				minSize = 1024;
+			}
+			else {
+				heapSize = 16 * 1024;
+				minSize = m_uniformAlignment;
+			}
+			subAllocator.allocator.initialize( heapSize, minSize);
+			VmaAllocationCreateInfo allocInfo = {}; {
+				allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+			}
+			VkBufferCreateInfo bufferInfo = {}; {
+				bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+				bufferInfo.pNext = nullptr;
+				bufferInfo.flags = 0;
+				bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+				bufferInfo.sharingMode = m_context->getQueueFamilies().size() > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
+				bufferInfo.queueFamilyIndexCount = static_cast<uint32_t>(m_context->getQueueFamilies().size());
+				bufferInfo.pQueueFamilyIndices = m_context->getQueueFamilies().data();
+				bufferInfo.size = heapSize;
+			}
+			VkResult rst = vmaCreateBuffer(m_context->getVmaAllocator(), &bufferInfo, &allocInfo, &subAllocator.buffer, &subAllocator.allocation, nullptr);
+			assert(rst == VK_SUCCESS); 
+			vmaMapMemory(m_context->getVmaAllocator(), subAllocator.allocation, (void**)& subAllocator.raw); vmaMapMemory(m_context->getVmaAllocator(), subAllocator.allocation, (void**)& subAllocator.raw);
+			bool allocRst = subAllocator.allocator.allocate(_size, allocation.offset, allocation.allocationId);
+			if (allocRst) {
+				allocation.buffer = (uint64_t)subAllocator.buffer;
+				allocation.raw = subAllocator.raw + allocation.offset;
+				allocation.size = _size;
+				return allocation;
+			}
+			return allocation;
+		}
+
+		virtual void free(const BufferAllocation& _allocation ) override
+		{
+			size_t loc = _allocation.size < 1024 ? 0 : 1;
+
+			std::vector<SubAllocator>& allocators = m_vecAllocatorCollection[loc];
+			BufferAllocation allocation;
+			for (auto& allocator : allocators) {
+				if (allocator.buffer == (VkBuffer)_allocation.buffer) {
+					allocator.allocator.free(_allocation.allocationId);
+					return;
+				}
+			}
+			assert(false);
+		}
+
+		virtual BufferType type() override
+		{
+			return BufferType::UBO;
+		}
+	};
+
+	Nix::IBufferAllocator* createVertexBufferGeneralAllocator(IContext* _context)
 	{
-		GenerateBufferAllocator * allocator = new GenerateBufferAllocator();
+		GeneralMultiLevelBufferAllocator * allocator = new GeneralMultiLevelBufferAllocator();
 		ContextVk* context = (ContextVk*)_context;
 		allocator->initialize(context, BufferType::SVBO, 
 		[](ContextVk * _context, size_t _size, VmaAllocation& _allocation)->VkBuffer {
@@ -221,7 +326,7 @@ namespace Nix {
 				bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 				bufferInfo.pNext = nullptr;
 				bufferInfo.flags = 0;
-				bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+				bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 				bufferInfo.sharingMode = _context->getQueueFamilies().size() > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
 				bufferInfo.queueFamilyIndexCount = static_cast<uint32_t>(_context->getQueueFamilies().size());
 				bufferInfo.pQueueFamilyIndices = _context->getQueueFamilies().data();
@@ -229,15 +334,15 @@ namespace Nix {
 			}
 			VkBuffer buffer = VK_NULL_HANDLE;
 			VkResult rst = vmaCreateBuffer(_context->getVmaAllocator(), &bufferInfo, &allocInfo, &buffer, &_allocation, nullptr);
-			assert(rst);
+			assert(rst == VK_SUCCESS);
 			return buffer;
 		});
 		return allocator;
 	}
 
-	Nix::IBufferAllocator* createPersistentMappingVertexBufferGenerateAllocator(IContext* _context)
+	Nix::IBufferAllocator* createVertexBufferGeneralAllocatorPM(IContext* _context)
 	{
-		GenerateBufferAllocator * allocator = new GenerateBufferAllocator();
+		GeneralMultiLevelBufferAllocator * allocator = new GeneralMultiLevelBufferAllocator();
 		ContextVk* context = (ContextVk*)_context;
 		allocator->initialize(context, BufferType::CVBO,
 			[](ContextVk * _context, size_t _size, VmaAllocation& _allocation)->VkBuffer {
@@ -263,9 +368,9 @@ namespace Nix {
 		return allocator;
 	}
 
-	Nix::IBufferAllocator* createIndexBufferGenerateAllocator(IContext* _context)
+	Nix::IBufferAllocator* createIndexBufferGeneralAllocator(IContext* _context)
 	{
-		GenerateBufferAllocator * allocator = new GenerateBufferAllocator();
+		GeneralMultiLevelBufferAllocator * allocator = new GeneralMultiLevelBufferAllocator();
 		ContextVk* context = (ContextVk*)_context;
 		allocator->initialize(context, BufferType::IBO,
 			[](ContextVk * _context, size_t _size, VmaAllocation& _allocation)->VkBuffer {
@@ -284,15 +389,142 @@ namespace Nix {
 			}
 			VkBuffer buffer = VK_NULL_HANDLE;
 			VkResult rst = vmaCreateBuffer(_context->getVmaAllocator(), &bufferInfo, &allocInfo, &buffer, &_allocation, nullptr);
-			assert(rst);
+			assert(rst == VK_SUCCESS);
 			return buffer;
 		});
 		return allocator;
 	}
 
-	Nix::IBufferAllocator* createUniformBufferGenerateAllocator(IContext* _context)
+	IBufferAllocator* createStagingBufferGeneralAllocator(IContext* _context)
 	{
-		return nullptr;
+		GeneralMultiLevelBufferAllocator* allocator = new GeneralMultiLevelBufferAllocator();
+		ContextVk* context = (ContextVk*)_context;
+		allocator->initialize(context, BufferType::STAGING,
+			[](ContextVk* _context, size_t _size, VmaAllocation& _allocation)->VkBuffer {
+				VmaAllocationCreateInfo allocInfo = {}; {
+					allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+				}
+				VkBufferCreateInfo bufferInfo = {}; {
+					bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+					bufferInfo.pNext = nullptr;
+					bufferInfo.flags = 0;
+					bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+					bufferInfo.sharingMode = _context->getQueueFamilies().size() > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
+					bufferInfo.queueFamilyIndexCount = static_cast<uint32_t>(_context->getQueueFamilies().size());
+					bufferInfo.pQueueFamilyIndices = _context->getQueueFamilies().data();
+					bufferInfo.size = _size;
+				}
+				VkBuffer buffer = VK_NULL_HANDLE;
+				VkResult rst = vmaCreateBuffer(_context->getVmaAllocator(), &bufferInfo, &allocInfo, &buffer, &_allocation, nullptr);
+				assert(rst == VK_SUCCESS);
+				return buffer;
+			});
+		return allocator;
+	}
+
+	Nix::IBufferAllocator* createUniformBufferGeneralAllocator(IContext* _context)
+	{
+		UniformBufferAllocator* allocator = new UniformBufferAllocator();
+		ContextVk* context = (ContextVk*)_context;
+		allocator->initialize(context);
+		return allocator;
+	}
+
+
+	class BufferAllocator : public IBufferAllocator {
+	private:
+		ContextVk*				m_context;
+		BuddySystemAllocator	m_allocator;
+		VkBuffer				m_buffer;
+		VmaAllocation			m_allocation;
+		BufferType				m_type;
+		uint8_t*				m_raw;
+	public:
+
+		bool initialize( ContextVk* _context, size_t _heapSize, size_t _minSize, BufferType _type) {
+
+			VmaAllocationCreateInfo allocInfo = {}; {
+				allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+			}
+			VkBufferCreateInfo bufferInfo = {}; {
+				bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+				bufferInfo.pNext = nullptr;
+				bufferInfo.flags = 0;
+				bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+				bufferInfo.sharingMode = _context->getQueueFamilies().size() > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
+				bufferInfo.queueFamilyIndexCount = static_cast<uint32_t>(_context->getQueueFamilies().size());
+				bufferInfo.pQueueFamilyIndices = _context->getQueueFamilies().data();
+				bufferInfo.size = _heapSize;
+			}
+
+			switch (_type) {
+			case BufferType::IBO: {
+				allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+				bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+				break;
+			}
+			case BufferType::CVBO: {
+				allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+				bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+				break;
+			}
+			case BufferType::SVBO : {
+				allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+				bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+				break;
+			}
+			default: return false;
+			}
+			VkBuffer buffer = VK_NULL_HANDLE;
+			VkResult rst = vmaCreateBuffer(_context->getVmaAllocator(), &bufferInfo, &allocInfo, &buffer, &m_allocation, nullptr);
+			assert(rst);
+			if (!rst) {
+				return false;
+			}
+			m_allocator.initialize(_heapSize, _minSize);
+			return true;
+		}
+		// 通过 IBufferAllocator 继承
+		virtual BufferAllocation allocate(size_t _size) override
+		{
+			BufferAllocation allocation;
+			bool rst = m_allocator.allocate(_size, allocation.offset, allocation.allocationId);
+			if (rst) {
+				allocation.buffer = reinterpret_cast<uint64_t>(m_buffer);
+				allocation.raw = m_raw + allocation.offset;
+			}
+			else {
+				allocation.buffer = 0;
+				allocation.raw = nullptr;
+			}
+			return allocation;
+		}
+		virtual void free(const BufferAllocation& _allocation ) override
+		{
+			bool rst = m_allocator.free(_allocation.allocationId);
+			assert(rst);
+		}
+		virtual BufferType type() override
+		{
+			return m_type;
+		}
+	};
+
+
+	IBufferAllocator* createVertexBufferAllocator(IContext* _context, size_t _heapSize, size_t _minSize) {
+		BufferAllocator* allocator = new BufferAllocator();
+		allocator->initialize( (ContextVk*)_context, _heapSize, _minSize, BufferType::SVBO);
+		return allocator;
+	}
+	IBufferAllocator* createVertexBufferAllocatorPM(IContext* _context, size_t _heapSize, size_t _minSize) {
+		BufferAllocator* allocator = new BufferAllocator();
+		allocator->initialize((ContextVk*)_context, _heapSize, _minSize, BufferType::CVBO);
+		return allocator;
+	}
+	IBufferAllocator* createIndexBufferAllocator(IContext* _context, size_t _heapSize, size_t _minSize) {
+		BufferAllocator* allocator = new BufferAllocator();
+		allocator->initialize((ContextVk*)_context, _heapSize, _minSize, BufferType::IBO);
+		return allocator;
 	}
 
 }

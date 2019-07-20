@@ -121,8 +121,8 @@ namespace Nix {
 			};
 			upload.data = rawData;
 			upload.length = x * y * 4;
-			std::vector<uint64_t> offsets = {0};
-			upload.mipDataOffsets = offsets;
+			upload.mipCount = 1;
+			upload.mipDataOffsets[0] = 0;
 			m_texture->uploadSubData(upload);
 
 			bool rst = false;
@@ -141,7 +141,7 @@ namespace Nix {
 				}
 				{ // renderable
 					m_renderable = m_material->createRenderable();
-					m_vertexBuffer = m_context->createStaticVertexBuffer(PlaneVertices, sizeof(PlaneVertices));
+					m_vertexBuffer = m_context->createVertexBuffer(PlaneVertices, sizeof(PlaneVertices));
 					m_indexBuffer = m_context->createIndexBuffer(PlaneIndices, sizeof(PlaneIndices));
 					m_renderable->setVertexBuffer(m_vertexBuffer, 0, 0);
 					m_renderable->setIndexBuffer(m_indexBuffer, 0);

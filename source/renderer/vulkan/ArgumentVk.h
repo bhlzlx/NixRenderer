@@ -1,7 +1,6 @@
 #pragma once
 #include <NixRenderer.h>
 #include <vector>
-#include "UniformVk.h"
 #include "VkInc.h"
 
 namespace Nix {
@@ -18,9 +17,9 @@ namespace Nix {
 		friend class PipelineVk;
 		friend class ArgumentAllocator;
 	private:
-		std::vector< UniformAllocation >						m_uniformBlocks;
+		std::vector< BufferAllocation >							m_uniformBlocks;
 		std::vector< std::pair< TextureVk*, SamplerState> >		m_textures;
-		std::vector< BufferVk* >								m_ssbos;
+		//std::vector< BufferVk* >								m_ssbos;
 		std::vector< uint32_t >									m_dynamicalOffsets[MaxFlightCount];
 		//
 		uint32_t												m_descriptorSetIndex;

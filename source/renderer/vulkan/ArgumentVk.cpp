@@ -50,7 +50,7 @@ namespace Nix {
 			m_descriptorSetIndex,
 			1,
 			&m_descriptorSets[m_activeIndex],
-			m_dynamicalOffsets[m_activeIndex].size(),
+			(uint32_t)m_dynamicalOffsets[m_activeIndex].size(),
 			m_dynamicalOffsets[m_activeIndex].data()
 		);
 	}
@@ -113,8 +113,8 @@ namespace Nix {
 	void ArgumentVk::setUniform(uint32_t _index, uint32_t _offset, const void * _data, uint32_t _size)
 	{
 		auto flightIndex = m_context->getSwapchain()->getFlightIndex();
-		auto& uniformBlock = m_uniformBlocks[_index];
-		memcpy(uniformBlock.raw + flightIndex*uniformBlock.unitSize + _offset, _data, _size);
+		BufferAllocation ubo = m_uniformBlocks[_index];
+		memcpy(ubo.raw + (flightIndex * ubo.size / MaxFlightCount) + _offset, _data, _size);
 	}
 
 	void ArgumentVk::setShaderCache(uint32_t _offset, const void* _data, uint32_t _size)
@@ -129,6 +129,9 @@ namespace Nix {
 
 	void ArgumentVk::release()
 	{
+		for (auto& uniformAllocation : m_uniformBlocks) {
+			m_context->uniformAllocator()->free(uniformAllocation);
+		}
 		m_material->destroyArgument(this);
 	}
 
@@ -146,8 +149,8 @@ namespace Nix {
 		}
 
 		for (auto& uniformBlockDescriptor : descriptorSetLayout.m_uniformBlockDescriptor) {
-			UniformAllocation allocation;
-			bool rst = context->getUniformAllocator().allocate(uniformBlockDescriptor.dataSize, allocation);
+			IBufferAllocator* allocator = context->uniformAllocator();
+			BufferAllocation allocation = allocator->allocate(uniformBlockDescriptor.dataSize);
 			m_uniformBlocks.push_back(allocation);
 			//
 			VkDescriptorBufferInfo * bufferInfo = nullptr;
@@ -158,9 +161,9 @@ namespace Nix {
 				}
 			}
 			assert(bufferInfo);
-			bufferInfo->buffer = allocation.buffer;
+			bufferInfo->buffer = (VkBuffer)allocation.buffer;
 			bufferInfo->offset = allocation.offset;
-			bufferInfo->range = allocation.unitSize;
+			bufferInfo->range = allocation.size / MaxFlightCount;
 
 			VkWriteDescriptorSet writeDescriptorSet = {}; {
 				writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -179,7 +182,7 @@ namespace Nix {
 			assert(iter != dynamicalBindings.end());
 			size_t idx = iter - dynamicalBindings.begin();
 			for (uint32_t flightIndex = 0; flightIndex < MaxFlightCount; ++flightIndex) {
-				m_dynamicalOffsets[flightIndex][idx] = allocation.unitSize * flightIndex;
+				m_dynamicalOffsets[flightIndex][idx] = (uint32_t)allocation.size / MaxFlightCount * flightIndex + (uint32_t)allocation.offset;
 			}
 		}
 	}

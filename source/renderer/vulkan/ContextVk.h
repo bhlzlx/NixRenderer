@@ -1,6 +1,5 @@
 #pragma once
 #include <NixRenderer.h>
-#include "UniformVk.h"
 #include "VkInc.h"
 #include "SwapchainVk.h"
 #include "DescriptorSetVk.h"
@@ -42,17 +41,17 @@ namespace Nix {
 		IRenderPass*			m_renderPass;
 		//
 		VmaAllocator			m_vmaAllocator;
-		UniformAllocator		m_uniformAllocator;
 		ArgumentAllocator		m_argumentAllocator;
 		IArchieve*				m_archieve;
 		//
 		uint64_t				m_frameCounter;
 		VkCommandBuffer			m_renderCommandBuffer;
 
-		IBufferAllocator*		m_defaultVBOAllocator; // static vertex buffer
-		IBufferAllocator*		m_defaultCVBOAllocator; // cached vertex buffer
-		IBufferAllocator*		m_defaultIBOAllocator; // index buffer
-		IBufferAllocator*		m_defaultSBOAllocator; // staging buffer
+		IBufferAllocator*		m_VBOAllocator; // static vertex buffer
+		IBufferAllocator*		m_VBOAllocatorPM; // cached vertex buffer
+		IBufferAllocator*		m_IBOAllocator; // index buffer
+		IBufferAllocator*		m_stagingBufferAllocator; // staging buffer
+		IBufferAllocator*		m_uniformAllocator;
 	private:
 		VkPipelineCache			m_pipelineCache;
 		std::map< SamplerState, VkSampler > m_samplerMapping;
@@ -69,13 +68,14 @@ namespace Nix {
 		~ContextVk() {
 
 		}
-		virtual IBufferAllocator* createStaticBufferAllocator(size_t _heapSize, size_t _minSize);
-		virtual IBufferAllocator* createCahcedVertexBufferAllocator(size_t _heapSize, size_t _minSize);
-		virtual IBufferAllocator* createIndexBufferAllocator(size_t _heapSize, size_t _minSize);
+		virtual IBufferAllocator* createVertexBufferAllocator(size_t _heapSize, size_t _minSize) override;
+		virtual IBufferAllocator* createVertexBufferAllocatorPM(size_t _heapSize, size_t _minSize) override;
+		virtual IBufferAllocator* createIndexBufferAllocator(size_t _heapSize, size_t _minSize) override;
 
-		virtual IBuffer* createStaticVertexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator ) override;
-		virtual IBuffer* createCahcedVertexBuffer(size_t _size, IBufferAllocator* _allocator) override;
-		virtual IBuffer* createIndexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator) override;
+		virtual IBuffer* createVertexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator = nullptr) override;
+		virtual IBuffer* createDynamicVertexBuffer( size_t _size, IBufferAllocator* _allocator = nullptr) override;
+		virtual IBuffer* createIndexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator = nullptr) override;
+
 		virtual ITexture* createTexture(const TextureDescription& _desc, TextureUsageFlags _usage = TextureUsageNone) override;
 		virtual ITexture* createTextureDDS(const void* _data, size_t _length) override;
 		virtual ITexture* createTextureKTX(const void* _data, size_t _length) override;
@@ -101,7 +101,22 @@ namespace Nix {
 		VkPipelineCache getPipelineCache() { return m_pipelineCache; }
 		void savePipelineCache();
 
-		inline UniformAllocator& getUniformAllocator(){ return m_uniformAllocator; }
+		IBufferAllocator* uniformAllocator() {
+			return m_uniformAllocator;
+		}
+		IBufferAllocator* vertexBufferAllocator() {
+			return m_VBOAllocator;
+		}
+		IBufferAllocator* vertexBufferAllocatorPM() {
+			return m_VBOAllocatorPM;
+		}
+		IBufferAllocator* indexBufferAllocator() {
+			return m_IBOAllocator;
+		}
+		IBufferAllocator* stagingBufferAllocator() {
+			return m_stagingBufferAllocator;
+		}
+
 		inline ArgumentAllocator& getDescriptorSetPool(){ return m_argumentAllocator; }
 		inline VmaAllocator getVmaAllocator() { return m_vmaAllocator;  }
 		inline uint64_t getFrameCounter() const { return m_frameCounter; }

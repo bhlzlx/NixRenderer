@@ -27,7 +27,7 @@ namespace Nix {
 
 	uint32_t RenderableVk::getVertexBufferCount()
 	{
-		return m_vecBuffer.size();
+		return static_cast<uint32_t>(m_vecBuffer.size());
 	}
 
 	Nix::TopologyMode RenderableVk::getTopologyMode()
@@ -89,7 +89,7 @@ namespace Nix {
 			break;
 		}
 		m_indexBuffer = buffer;
-		m_indexBufferOffset = offset;
+		m_indexBufferOffset = offset + _offset;
 	}
 
 	void RenderableVk::release()
@@ -99,14 +99,14 @@ namespace Nix {
 
 	void RenderableVk::draw(VkCommandBuffer _commandBuffer, uint32_t _vertexOffset, uint32_t _vertexCount)
 	{
-		vkCmdBindVertexBuffers(_commandBuffer, 0, m_vecBuffer.size(), m_vecBuffer.data(), m_vecBufferOffset.data());
+		vkCmdBindVertexBuffers(_commandBuffer, 0, (uint32_t)m_vecBuffer.size(), m_vecBuffer.data(), m_vecBufferOffset.data());
 		vkCmdDraw(_commandBuffer, _vertexCount, 1, _vertexOffset, 0);
 	}
 
 	void RenderableVk::drawElements(VkCommandBuffer _commandBuffer, uint32_t _indexOffset, uint32_t _indexCount)
 	{
 		if (m_vecBuffer.size()) {
-			vkCmdBindVertexBuffers(_commandBuffer, 0, m_vecBuffer.size(), m_vecBuffer.data(), m_vecBufferOffset.data());
+			vkCmdBindVertexBuffers(_commandBuffer, 0, (uint32_t)m_vecBuffer.size(), m_vecBuffer.data(), m_vecBufferOffset.data());
 		}
 		vkCmdBindIndexBuffer(_commandBuffer, m_indexBuffer, m_indexBufferOffset, VK_INDEX_TYPE_UINT16);
 		vkCmdDrawIndexed(_commandBuffer, _indexCount, 1, _indexOffset, 0, 0);
@@ -114,14 +114,14 @@ namespace Nix {
 
 	void RenderableVk::drawInstanced(VkCommandBuffer _commandBuffer, uint32_t _vertexOffset, uint32_t _vertexCount, uint32_t _baseInstance, uint32_t _instanceCount)
 	{
-		vkCmdBindVertexBuffers(_commandBuffer, 0, m_vecBuffer.size(), m_vecBuffer.data(), m_vecBufferOffset.data());
+		vkCmdBindVertexBuffers(_commandBuffer, 0, (uint32_t)m_vecBuffer.size(), m_vecBuffer.data(), m_vecBufferOffset.data());
 		vkCmdDraw(_commandBuffer, _vertexCount, _instanceCount, _vertexOffset, _baseInstance);
 	}
 
 	void RenderableVk::drawElementInstanced(VkCommandBuffer _commandBuffer, uint32_t _indexOffset, uint32_t _indexCount, uint32_t _baseInstance, uint32_t _instanceCount)
 	{
 		if (m_vecBuffer.size()) {
-			vkCmdBindVertexBuffers(_commandBuffer, 0, m_vecBuffer.size(), m_vecBuffer.data(), m_vecBufferOffset.data());
+			vkCmdBindVertexBuffers(_commandBuffer, 0, (uint32_t)m_vecBuffer.size(), m_vecBuffer.data(), m_vecBufferOffset.data());
 		}
 		vkCmdBindIndexBuffer(_commandBuffer, m_indexBuffer, m_indexBufferOffset, VK_INDEX_TYPE_UINT16);
 		vkCmdDrawIndexed(_commandBuffer, _indexCount, _instanceCount, _indexOffset, 0, _baseInstance);

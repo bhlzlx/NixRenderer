@@ -40,20 +40,26 @@ namespace Nix {
 		return VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_ONLY;
 	}
 	//
-	IBuffer* ContextVk::createStaticVertexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator) {
+	IBuffer* ContextVk::createVertexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator) {
+		if (!_allocator) {
+			_allocator = m_VBOAllocator;
+		}
 		BufferAllocation allocation = _allocator->allocate(_size);
-		BufferVk b(this, allocation, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+		BufferVk b(this, allocation, _allocator, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 		VertexBuffer* buffer = new VertexBuffer(std::move(b));
 		assert(buffer);
 		if (_data) {
-			(buffer->operator Nix::BufferVk&()).uploadDataImmediatly(_data, _size,0);
+			(buffer->operator Nix::BufferVk&()).uploadDataImmediatly(_data, _size, 0);
 		}
 		return buffer;
 	}
 
 	IBuffer* ContextVk::createIndexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator) {
+		if (!_allocator) {
+			_allocator = m_IBOAllocator;
+		}
 		BufferAllocation allocation = _allocator->allocate(_size);
-		BufferVk b(this, allocation, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+		BufferVk b(this, allocation, _allocator, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 		IndexBuffer* buffer = new IndexBuffer(std::move(b));
 		assert(buffer);
 		if (_data) {
@@ -66,10 +72,13 @@ namespace Nix {
 		m_buffer.updateDataQueued(_data, _size, _offset);
 	}
 
-	IBuffer* ContextVk::createCahcedVertexBuffer(size_t _size, IBufferAllocator* _allocator) {
+	IBuffer* ContextVk::createDynamicVertexBuffer(size_t _size, IBufferAllocator* _allocator) {
+		if (!_allocator) {
+			_allocator = m_VBOAllocatorPM;
+		}
 		// transient buffer should use `persistent mapping` feature
 		BufferAllocation allocation = _allocator->allocate(_size);
-		BufferVk b(this, allocation, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+		BufferVk b(this, allocation, _allocator, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 		CachedVertexBuffer* buffer = new CachedVertexBuffer(std::move(b));
 		assert(buffer);
 		return buffer;
@@ -102,15 +111,6 @@ namespace Nix {
 		m_context->getGraphicsQueue()->updateBuffer(this, _offset, _data, _size);
 	}
 
-	BufferVk::~BufferVk()
-	{
-	}
-
-	void VertexBuffer::release()
-	{
-		GetDeferredDeletor().destroyResource(this);
-	}
-	
 	size_t CachedVertexBuffer::getSize() {
 		return m_buffer.size();
 	}
@@ -130,18 +130,26 @@ namespace Nix {
 		memcpy( m_mem + m_offsets[0] + _offset, _data, _size );
 	}
 
-	void CachedVertexBuffer::release()
-	{
-		GetDeferredDeletor().destroyResource(this);
-	}
-
 	void IndexBuffer::setData(const void* _data, size_t _size, size_t _offset)
 	{
 		m_buffer.m_context->getGraphicsQueue()->updateBuffer(&m_buffer, _offset, _data, _size);
 	}
 
+	void VertexBuffer::release()
+	{
+		GetDeferredDeletor().destroyResource(&m_buffer);
+		delete this;
+	}
+
+	void CachedVertexBuffer::release()
+	{
+		GetDeferredDeletor().destroyResource(&m_buffer);
+		delete this;
+	}
+
 	void IndexBuffer::release()
 	{
-		GetDeferredDeletor().destroyResource(this);
+		GetDeferredDeletor().destroyResource(&m_buffer);
+		delete this;
 	}
 }

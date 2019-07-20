@@ -6,7 +6,7 @@ namespace Nix {
 	bool BuddySystemAllocator::initialize(size_t _wholeSize, size_t _minSize) {
 		size_t layer = 0;
 		size_t miniCount = 1;
-		while (miniCount<_minSize) {
+		while (miniCount< (_wholeSize/_minSize) ) {
 			++layer;
 			miniCount = (size_t)1 << layer;
 		}

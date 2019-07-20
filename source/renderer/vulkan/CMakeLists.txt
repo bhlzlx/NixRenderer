@@ -45,8 +45,8 @@ set( RendererSource
     ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorSetVk.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ArgumentVk.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ArgumentVk.h
-	${CMAKE_CURRENT_SOURCE_DIR}/UniformVk.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/UniformVk.h
+	#${CMAKE_CURRENT_SOURCE_DIR}/UniformVk.cpp
+    #${CMAKE_CURRENT_SOURCE_DIR}/UniformVk.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DeferredDeletor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/DeferredDeletor.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DebuggerVk.cpp

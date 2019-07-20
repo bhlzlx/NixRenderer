@@ -56,10 +56,16 @@ namespace Nix {
 		c.width = x1 - x0;
 		c.height = y1 - y0;
 		Nix::Rect<uint16_t> rc;
-		bool rst = this->m_texturePacker->insert(m_outputData, c.width * c.height, c.width, c.height, rc);
-		c.x = rc.origin.x;
-		c.y = rc.origin.y;
-		m_mappingTable[_char.key] = c;
-		return m_mappingTable[_char.key];
+		if (c.height > 0 && c.width > 0) {
+			bool rst = this->m_texturePacker->insert(m_outputData, c.width * c.height, c.width, c.height, rc);
+			c.x = rc.origin.x;
+			c.y = rc.origin.y;
+			m_mappingTable[_char.key] = c;
+			return m_mappingTable[_char.key];
+		}
+		else
+		{
+			return c;
+		}
 	}
 }
