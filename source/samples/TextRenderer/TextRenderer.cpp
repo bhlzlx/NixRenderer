@@ -63,16 +63,19 @@ namespace Nix {
 		texDesc.type = Nix::TextureType::Texture2D;
 		//
 		m_texture = m_context->createTexture(texDesc);
-		m_texturePacker = createTexturePacker(m_texture, 0);
-		m_font = new Font();
-		m_font->initialize(_archieve, "font/hwzhsong.ttf", 0, m_texturePacker);
-		
+		Size3D<uint16_t> fontTexSize = {
+			512, 512, 2
+		};
+		m_fontTextureManager.initialize(m_context, _archieve, fontTexSize, createTexturePacker);
+		m_fontTextureManager.addFont("font/hwzhsong.ttf");
+		//
 		const char16_t message[] = u"好你世界中国字符，】【；‘，。/《》？，~`!@#$%^&*()_+=-0987654321[];',/{}:\"<>?\\|！中国字符、】【；‘，。/《》？一";
 		for (auto c : message) {
-			FontCharactor fc;
+			CharKey fc;
 			fc.charCode = c;
 			fc.size = 28;
-			m_font->getCharacter(fc);
+			fc.fontId = 0;
+			m_fontTextureManager.getCharactor(fc);
 		}
 
 
@@ -109,7 +112,7 @@ namespace Nix {
 				m_argInstance = m_material->createArgument(1);
 				rst = m_argInstance->getUniformBlock("LocalArgument", &m_matLocal);
 				SamplerState ss;
-				m_argCommon->setSampler(m_samBase, ss, m_texture);
+				m_argCommon->setSampler(m_samBase, ss, m_fontTextureManager.getTexture());
 			}
 			{ // renderable
 				m_renderable = m_material->createRenderable();
@@ -144,7 +147,7 @@ namespace Nix {
 
 		tickCounter++;
 
-		float imageIndex = (tickCounter / 1024) % 4;
+		float imageIndex = 0.0f;// (tickCounter / 1024) % 4;
 
 		if (m_context->beginFrame()) {
 			m_mainRenderPass->begin(m_primQueue); {

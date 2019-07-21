@@ -1,3 +1,4 @@
+#pragma once
 #include <NixRenderer.h>
 #include <cassert>
 #include <cstdint>

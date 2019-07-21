@@ -12,7 +12,7 @@
 #include <stb_image.h>
 
 
-#include "NixFont.h"
+#include "NixFontTextureManager.h"
 #include <nix/io/archieve.h>
 #include <cstdio>
 #include <cassert>
@@ -50,7 +50,7 @@ namespace Nix {
 
 		ITexture* m_texture;
 		ITexturePacker* m_texturePacker;
-		Font* m_font;
+		FontTextureManager m_fontTextureManager;
 
 		//
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve);

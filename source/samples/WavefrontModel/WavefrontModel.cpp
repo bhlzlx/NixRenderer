@@ -163,8 +163,8 @@ namespace Nix {
 					m_renderable = m_material->createRenderable();
 					//m_indexBuffer = m_context->createIndexBuffer(arrangedIndicesBuffer.data(), arrangedIndicesBuffer.size() * sizeof(uint16_t));
 					//m_indexCount = arrangedIndicesBuffer.size();
-					m_vertPosition = m_context->createStaticVertexBuffer( positionData.data(), positionData.size() * sizeof(glm::vec3) );
-					m_vertNormal = m_context->createStaticVertexBuffer(normalData.data(), sizeof(glm::vec3) * normalData.size());
+					m_vertPosition = m_context->createVertexBuffer( positionData.data(), positionData.size() * sizeof(glm::vec3) );
+					m_vertNormal = m_context->createVertexBuffer(normalData.data(), sizeof(glm::vec3) * normalData.size());
 					m_vertCount = positionData.size();
 					m_renderable->setVertexBuffer( m_vertNormal, 0, 1);
 					m_renderable->setVertexBuffer( m_vertPosition, 0, 0);

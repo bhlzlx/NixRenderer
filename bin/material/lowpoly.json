@@ -25,6 +25,7 @@
 			"instanceMode" : 0
 		}]
 	},
+	"argumentCount" : 2,
 	"argumentLayouts" : [{
 		"index" : 0,
 		"descriptors" : [{
