@@ -114,7 +114,8 @@ namespace Nix {
 					4*1024, 64*1024, 1024* 1024, 16 * 1024 * 1024
 				};
 				p.buffer = m_vkBufferCreator(m_context, HeapSizes[loc], p.allocation);
-				if (m_type == UBO || m_type == CVBO || m_type == STAGING) {
+				// does not support uniform buffer at all!
+				if (/*m_type == UBO ||*/ m_type == CVBO || m_type == STAGING) {
 					vmaMapMemory(m_context->getVmaAllocator(), p.allocation, (void**)&p.raw);
 				}
 				p.allocator.initialize(HeapSizes[loc], HeapSizes[loc] / 256);
