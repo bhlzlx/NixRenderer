@@ -4,13 +4,29 @@
 #include <MemoryPool/C-11/MemoryPool.h>
 #include <cassert>
 
+#include "NixFontTextureManager.h"
+#include "TexturePacker/TexturePacker.h"
+
+#ifdef _WIN32
+#include <Windows.h>
+#define OpenLibrary( name ) (void*)::LoadLibraryA(name)
+#define CloseLibrary( library ) ::FreeLibrary((HMODULE)library)
+#define GetExportAddress( libray, function ) ::GetProcAddress( (HMODULE)libray, function )
+#else
+#include <dlfcn.h>
+#define OpenLibrary( name ) dlopen(name , RTLD_NOW | RTLD_LOCAL)
+#define CloseLibrary( library ) dlclose((void*)library)
+#define GetExportAddress( libray, function ) dlsym( (void*)libray, function )
+#endif
+
 namespace Nix {
 
 	static const uint32_t FontLayerCount = 4;
 
 	struct UIVertex {
 		float x; float y; // screen space position( x, y )
-		float u; float v; float t; // texture coordinate( u, v )
+		float u; float v; // texture coordinate( u, v )
+		float layer;	  // texture array layer
 	};
 
 	/*
@@ -164,6 +180,7 @@ namespace Nix {
 	struct PrebuildDrawData {
 		// vertex buffer cached by control
 		PrebuildBufferMemoryHeap::Allocation	vertexBufferAllocation;
+		uint32_t								triangleCapacity;
 		// draw resource reference by control
 		DrawCommand								drawCommand;
 	};
@@ -190,13 +207,21 @@ namespace Nix {
 			uint32_t		layer; // image layer of the texture array
 		};
 	private:
+		IContext*					m_context;
+		IArchieve*					m_archieve;
+		void*						m_packerLibrary;
+		PFN_CREATE_TEXTURE_PACKER	m_createPacker;
 		PrebuildBufferMemoryHeap	m_vertexMemoryHeap;
+		MemoryPool<PrebuildDrawData> 
+									m_prebuilDrawDataPool;
+		FontTextureManager			m_fontTexManager;
 	public:
 		UIRenderer() {
-
 		}
 
-		PrebuildDrawData* build( const TextDraw& _draw );
+		bool initialize(IContext* _context, IArchieve* _archieve);
+
+		PrebuildDrawData* build( const TextDraw& _draw, PrebuildDrawData* _oldDrawData );
 		PrebuildDrawData* build( const ImageDraw* _pImages, uint32_t _count );
 		PrebuildDrawData* build( const ImageDraw* _pImages, uint32_t _count, const TextDraw& _draw );
 	};

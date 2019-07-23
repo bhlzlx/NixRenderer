@@ -1,5 +1,6 @@
 #include <NixRenderer.h>
 #include <stb_truetype.h>
+#include <vector>
 #include "TexturePacker/TexturePacker.h"
 
 namespace Nix {
@@ -29,6 +30,15 @@ namespace Nix {
 	static_assert(sizeof(CharKey) == 4, "key size must be 32bit");
 #pragma pack(pop)
 
+	struct FontInfo {
+		stbtt_fontinfo							handle;
+		int										ascent;
+		int										descent;
+		int										lineGap;
+		std::map< uint32_t, float >				scalingTable;
+		std::map< uint32_t, CharactorInfo >		charTable;
+	};
+
 	class FontTextureManager {
 	private:
 		IContext*						m_context;
@@ -38,11 +48,10 @@ namespace Nix {
 		uint32_t						m_numFontLayer;
 		//
 		std::vector<ITexturePacker*>	m_vecTexturePacker;
-		std::vector<stbtt_fontinfo>		m_vecFontHandle;
-		std::vector< std::map< uint32_t, CharactorInfo > >
-										m_vecMappingTable;
+		std::vector<FontInfo>			m_vecFont;
 		//
-		uint8_t*						m_glyphCache;
+		std::vector<uint8_t>			m_oneChannelGlyph;
+		std::vector<uint8_t>			m_fourChannelGlyph;
 	public:
 		FontTextureManager() {
 		}
