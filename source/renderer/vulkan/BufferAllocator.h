@@ -1,7 +1,7 @@
 #pragma once
 #include <NixRenderer.h>
+#include <nix/memory/BuddySystemAllocator.h>
 #include "VkInc.h"
-#include "BuddySystemAllocator.h"
 #include "vk_mem_alloc.h"
 
 namespace Nix {

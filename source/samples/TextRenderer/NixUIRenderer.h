@@ -1,9 +1,119 @@
 #include <NixRenderer.h>
+#include <nix/io/archieve.h>
+#include <nix/memory/BuddySystemAllocator.h>
+#include <MemoryPool/C-11/MemoryPool.h>
+#include <cassert>
 
 namespace Nix {
 
-	class UIMeshManager {
+	static const uint32_t FontLayerCount = 4;
+
+	struct UIVertex {
+		float x; float y; // screen space position( x, y )
+		float u; float v; float t; // texture coordinate( u, v )
+	};
+
+	/*
+	*	The `vertex buffer` & `index buffer` in `PrebuildDrawData` handled by control object should be allocated in a heap,
+	*	so that, we can get a better memory management, here we use the `buddy system allocator` management method.
+	*/
+
+	/*
+	*	considered that one rect need 4 vertex and one vertex should handle at lease 4 float( [x,y], [u,v] )
+	*	we assumed that a minimum memory heap an supply at least 8196 characters, each character possesses a rect.
+	*   so, we can calculate the minimum heap size 8196(character count) * 4(vertex count) * 4( float count ) * 4( float size )
+	*   8196 * 4 * 4 * 4 = 512 KB = 0.5MB
+	*   but a minimum control, use only 64 bytes, for a 512KB heap, it will take 13 level binary heap
+	*   so we should have a smaller heap to handle the smaller allocation
+	*	512 * 64 = 32 KB
+	*/
+
+	class PrebuildBufferMemoryHeap {
+	public:
+		struct Allocation {
+			BuddySystemAllocator*	allocator;
+			uint32_t				size;
+			uint16_t				allocateId;
+			uint8_t*				ptr;
+		};
 	private:
+		struct Heap {
+			BuddySystemAllocator	allocator;
+			uint8_t*				memory;
+		};
+		std::vector< Heap >			m_heapCollection[2];
+	public:
+		PrebuildBufferMemoryHeap() {
+		}
+		Allocation allocate(uint32_t _rectNum) {
+			uint32_t loc = _rectNum < 16 ? 0 : 1;
+			std::vector< Heap >& heaps = m_heapCollection[loc];
+
+			size_t offset;
+			uint16_t allocateId;
+			for (auto& heap : heaps) {
+				bool allocRst = heap.allocator.allocate(_rectNum * sizeof(UIVertex) * 4, offset, allocateId);
+				if (allocRst) {
+					Allocation allocation;
+					allocation.allocateId = allocateId;
+					allocation.allocator = &heap.allocator;
+					allocation.size = _rectNum * sizeof(UIVertex) * 4;
+					allocation.ptr = heap.memory + offset;
+					return allocation;
+				}
+			}
+			heaps.resize(heaps.size() + 1);
+			//
+			Heap& heap = heaps.back();
+
+			uint32_t heapSizes[] = {
+				sizeof(UIVertex) * 512,
+				sizeof(UIVertex) * 512 * 16
+			};
+
+			uint32_t minSizes[] = {
+				sizeof(UIVertex),
+				sizeof(UIVertex) * 16
+			};
+			heap.allocator.initialize(heapSizes[loc], minSizes[loc]);
+			heap.memory = new uint8_t[heapSizes[loc]];
+			bool allocRst = heap.allocator.allocate(_rectNum * sizeof(UIVertex) * 4, offset, allocateId);
+			assert(allocRst);
+			Allocation allocation;
+			allocation.allocateId = allocateId;
+			allocation.allocator = &heap.allocator;
+			allocation.size = _rectNum * sizeof(UIVertex) * 4;
+			allocation.ptr = heap.memory + offset;
+			return allocation;
+		}
+
+		void free(const Allocation& _allocation){
+			_allocation.allocator->free(_allocation.allocateId);
+		}
+	};
+
+	/*
+	// UI Mesh 无需过度做管理分配，唯一需要做的就是保证 mesh 大小满足一帧绘制所需
+	// 所以 UI Mesh 我直接从默认 VertexBuffer 分配器里分配
+	// 如果有一帧渲染数量突然大于这个容量，那么，回收这个vertex buffer, 分配新的 vertex buffer, 全部在默认分配器上分配
+	*/
+
+	/*
+	 * 因为我们需要对 UI mesh 更新，UI mesh 的顶点设置为持续映射的，但是更新我们实际是一个控件一个控件的写入，并不是一次性
+	 * 所以为了效率，我们应该在 CPU 可访问的主存端再创建一个缓存，这个缓存是一块连续内存,用来存这一帧所需要更新的所有顶点
+	 * 控件上持有的 `PrebuildDrawData` 并不是连续的，所以我们需要在重新构建的时候把这些非连续的变成连续的，就可以方便合并drawcall了
+	 */
+
+	class UIMeshManager {
+		// for vertex buffer and index buffer, a vector for a vertex buffer maybe used only for one frame
+		// because maybe one vertex buffer is not enough for a frame rendering
+	private:
+		// @ m_vertexBufferPM : vertex buffer objects with `persistent mapping` feature
+		std::vector<IBuffer*>						m_vertexBufferPM[MaxFlightCount];
+		// @ m_indexBuffer : index buffer objects with static indices data
+		std::vector<IBuffer*>						m_indexBuffer[MaxFlightCount];
+		//
+		std::vector<std::vector<UIVertex>>			m_vertexBufferRebuild;
 	public:
 	};
 
@@ -13,11 +123,6 @@ namespace Nix {
 	// 普通纹理使用 RGBA8_UNORM texture2d array
 	// UI 渲染器使用的 vertex buffer object 也应该使用一个！
 	// 创建足够大的 vertex/index buffer allocator
-
-	enum UITexType {
-		UITexImage = 0,
-		UITexFont = 1
-	};
 
 	struct DrawState {
 		Nix::Rect<uint16_t>		clip;				//
@@ -29,22 +134,6 @@ namespace Nix {
 			return false;
 		}
 	};
-
-	// 合并策略
-	// 如果一个控件需要更新，那么向上查找它的父控件，一直查到一个**合并结点**，并更新这个合并结点的所有**非合并结点**类型的子控件
-	// 因此！如果一个控件有一批子控件，这些子控件的合并节点最好是连续的，如果合并节点之前有一个非合并节点，那么就会影响drawcall的合并
-	// enum {
-	//		DontCombine = 0, // 默认不合并，生成默认的 draw command
-	//		Combine = 1, // 遍历子控件，但不包括标记为**合并**的子控件，按顺序尽量分配连续的vbo,ibo, 
-	//		ForceCombine = 2, // 遍历所有子控件，按顺序尽量分配连续的vbo,ibo
-	//	};
-	//
-	//  - node( 非合并或者合并或者强制所有子控件合并 )
-	//	      - 合并标记
-	//	      - 合并标记
-	//	      - 合并标记
-	//	      - 非合并标记
-	//	      - 非合并标记
 
 	struct DrawCommand {
 		uint32_t				texType;			// indicate whether it's drawing a set of image or a tile of text
@@ -58,7 +147,7 @@ namespace Nix {
 		DrawState				state;
 		//
 		bool compatible(const DrawCommand& _command) const {
-			if (vertexBufferIndex == _command.vertexBufferIndex && indexBufferIndex == _command.indexBufferIndex && state == _command.state ) {
+			if (vertexBufferIndex == _command.vertexBufferIndex && state == _command.state ) {
 				return true;
 			}
 			return false;
@@ -73,12 +162,10 @@ namespace Nix {
 	};
 
 	struct PrebuildDrawData {
-		DrawState		state;
-		uint8_t*		vertexBuffer;
-		uint32_t		vertexBufferLength;
-		uint8_t*		indexBuffer;
-		uint32_t		indexBufferLength;
-		DrawCommand*	drawCommand;
+		// vertex buffer cached by control
+		PrebuildBufferMemoryHeap::Allocation	vertexBufferAllocation;
+		// draw resource reference by control
+		DrawCommand								drawCommand;
 	};
 
 	class UIRenderer {
@@ -93,27 +180,25 @@ namespace Nix {
 			Nix::Rect<int16_t>		sissor;
 			float					alpha;
 		};
-		//
-		struct ImageVertex {
-			float x; float y; // screen space position( x, y )
-			float u; float v; // texture coordinate( u, v )
-		};
 
 		struct ImageDraw {
-			ImageVertex		TL; // top left
-			ImageVertex		BL; // bottom left
-			ImageVertex		BR; // bottom right
-			ImageVertex		TR; // top right
+			UIVertex		TL; // top left
+			UIVertex		BL; // bottom left
+			UIVertex		BR; // bottom right
+			UIVertex		TR; // top right
 			//
 			uint32_t		layer; // image layer of the texture array
 		};
 	private:
+		PrebuildBufferMemoryHeap	m_vertexMemoryHeap;
 	public:
 		UIRenderer() {
+
 		}
 
-		PrebuildDrawData* drawText( const TextDraw& _draw );
-		PrebuildDrawData* drawImage( const ImageDraw& _draw );
+		PrebuildDrawData* build( const TextDraw& _draw );
+		PrebuildDrawData* build( const ImageDraw* _pImages, uint32_t _count );
+		PrebuildDrawData* build( const ImageDraw* _pImages, uint32_t _count, const TextDraw& _draw );
 	};
 
 

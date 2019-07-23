@@ -28,8 +28,8 @@ set( RendererSource
     ${CMAKE_CURRENT_SOURCE_DIR}/BufferVk.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/BufferVk.h
 
-	${CMAKE_CURRENT_SOURCE_DIR}/BuddySystemAllocator.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/BuddySystemAllocator.h
+	#${CMAKE_CURRENT_SOURCE_DIR}/BuddySystemAllocator.cpp
+    #${CMAKE_CURRENT_SOURCE_DIR}/BuddySystemAllocator.h
 	${CMAKE_CURRENT_SOURCE_DIR}/BufferAllocator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/BufferAllocator.h
 

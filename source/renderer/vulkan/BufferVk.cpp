@@ -77,8 +77,8 @@ namespace Nix {
 			_allocator = m_VBOAllocatorPM;
 		}
 		// transient buffer should use `persistent mapping` feature
-		BufferAllocation allocation = _allocator->allocate(_size);
-		BufferVk b(this, allocation, _allocator, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+		BufferAllocation allocation = _allocator->allocate(_size * MaxFlightCount);
+		BufferVk b(this, allocation, _allocator, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 		CachedVertexBuffer* buffer = new CachedVertexBuffer(std::move(b));
 		assert(buffer);
 		return buffer;
