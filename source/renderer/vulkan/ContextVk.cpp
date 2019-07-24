@@ -360,14 +360,23 @@ namespace Nix {
 	}
 
 	IBufferAllocator* ContextVk::createVertexBufferAllocator(size_t _heapSize, size_t _minSize) {
+		if (!_heapSize || !_minSize) {
+			return this->m_VBOAllocator;
+		}
 		IBufferAllocator* allocator = Nix::createVertexBufferAllocator(this, _heapSize, _minSize);
 		return allocator;
 	}
 	IBufferAllocator* ContextVk::createVertexBufferAllocatorPM(size_t _heapSize, size_t _minSize) {
+		if (!_heapSize || !_minSize) {
+			return this->m_VBOAllocatorPM;
+		}
 		IBufferAllocator* allocator = Nix::createVertexBufferAllocatorPM(this, _heapSize, _minSize);
 		return allocator;
 	}
 	IBufferAllocator* ContextVk::createIndexBufferAllocator(size_t _heapSize, size_t _minSize) {
+		if (!_heapSize || !_minSize) {
+			return this->m_IBOAllocator;
+		}
 		IBufferAllocator* allocator = Nix::createIndexBufferAllocator(this, _heapSize, _minSize);
 		return allocator;
 	}

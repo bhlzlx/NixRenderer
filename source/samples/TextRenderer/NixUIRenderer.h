@@ -19,6 +19,11 @@
 #define GetExportAddress( libray, function ) dlsym( (void*)libray, function )
 #endif
 
+/****************************
+* control -> Prebuild Draw Data
+* Prebuild Draw Data array `push` in to mesh manager => generate `Draw command`
+*/
+
 namespace Nix {
 
 	static const uint32_t FontLayerCount = 4;
@@ -27,6 +32,34 @@ namespace Nix {
 		float x; float y; // screen space position( x, y )
 		float u; float v; // texture coordinate( u, v )
 		float layer;	  // texture array layer
+	};
+
+	struct UIDrawState {
+		Nix::Rect<uint16_t>		scissor;
+		float					alpha;
+		bool operator == (const UIDrawState& _state) const {
+			if (memcmp(this, &_state, sizeof(*this)) == 0) {
+				return true;
+			}
+			return false;
+		}
+	};
+
+	struct DrawCommand {
+		uint32_t				vertexBufferIndex;	// vertex buffer index, should be zero currently
+		uint32_t				vertexOffset;		// vertex offset
+		uint32_t				indexBufferIndex;	// index buffer index
+		uint32_t				indexOffset;		// index buffer offset
+		uint16_t				elementCount;		// `element count` param of the `draw element` function
+		//
+		UIDrawState				state;
+		//
+		bool compatible(const DrawCommand& _command) const {
+			if (vertexBufferIndex == _command.vertexBufferIndex && state == _command.state) {
+				return true;
+			}
+			return false;
+		}
 	};
 
 	/*
@@ -61,10 +94,10 @@ namespace Nix {
 	public:
 		PrebuildBufferMemoryHeap() {
 		}
-		Allocation allocate(uint32_t _rectNum) {
+		Allocation allocateRects(uint32_t _rectNum) {
 			uint32_t loc = _rectNum < 16 ? 0 : 1;
 			std::vector< Heap >& heaps = m_heapCollection[loc];
-
+			//
 			size_t offset;
 			uint16_t allocateId;
 			for (auto& heap : heaps) {
@@ -109,10 +142,10 @@ namespace Nix {
 	};
 
 	/*
-	// UI Mesh 无需过度做管理分配，唯一需要做的就是保证 mesh 大小满足一帧绘制所需
-	// 所以 UI Mesh 我直接从默认 VertexBuffer 分配器里分配
-	// 如果有一帧渲染数量突然大于这个容量，那么，回收这个vertex buffer, 分配新的 vertex buffer, 全部在默认分配器上分配
-	*/
+	 * UI Mesh 无需过度做管理分配，唯一需要做的就是保证 mesh 大小满足一帧绘制所需
+	 * 所以 UI Mesh 我直接从默认 VertexBuffer 分配器里分配
+	 * 如果有一帧渲染数量突然大于这个容量，那么，回收这个vertex buffer, 分配新的 vertex buffer, 全部在默认分配器上分配
+	 */
 
 	/*
 	 * 因为我们需要对 UI mesh 更新，UI mesh 的顶点设置为持续映射的，但是更新我们实际是一个控件一个控件的写入，并不是一次性
@@ -120,17 +153,118 @@ namespace Nix {
 	 * 控件上持有的 `PrebuildDrawData` 并不是连续的，所以我们需要在重新构建的时候把这些非连续的变成连续的，就可以方便合并drawcall了
 	 */
 
+	enum UITopologyType {
+		UITriangle,
+		UIRectangle
+	};
+	struct PrebuildDrawData {
+		PrebuildBufferMemoryHeap::Allocation	vertexBufferAllocation;
+		UITopologyType							type;
+		uint32_t								primitiveCount;
+		uint32_t								primitiveCapacity;
+		//
+		UIDrawState								drawState;
+	};
+
+	class UIMeshBuffer {
+	private:
+		IBuffer*					m_vertexBufferPM;
+		std::vector<UIVertex>		m_vertexBufferMemory;
+		IBuffer*					m_indexBuffer;
+		std::vector<uint16_t>		m_indexBufferMemory;
+		uint32_t					m_vertexCount;
+		uint32_t					m_indexCount;
+	public:
+		void initialize( IContext* _context, uint32_t _vertexCount ) {
+			auto allocator = _context->createVertexBufferAllocatorPM(0, 0);
+			m_vertexBufferPM = _context->createVertexBuffer(nullptr, _vertexCount * sizeof(UIVertex), allocator);
+			allocator = _context->createIndexBufferAllocator(0, 0);
+			m_indexBuffer = _context->createIndexBuffer(nullptr, _vertexCount * 3 / 2, allocator);
+			//
+			m_vertexBufferMemory.resize( _vertexCount );
+			m_indexBufferMemory.resize(_vertexCount * 3 / 2);
+			//
+			m_vertexCount = 0;
+			m_indexCount = 0;
+		}
+		void clear() {
+			m_vertexCount = 0;
+			m_indexCount = 0;
+		}
+
+		bool pushVertices(const PrebuildDrawData* _drawData) {
+			if (_drawData->type == UITopologyType::UIRectangle) {
+				uint32_t dcVtxCount = _drawData->primitiveCount * 4;
+				if (dcVtxCount + m_vertexCount > m_indexBufferMemory.size() ) {
+					return false;
+				}
+				uint16_t baseIndex = m_vertexCount;
+				// copy vertices data
+				UIVertex* begin = (UIVertex*)_drawData->vertexBufferAllocation.ptr;
+				UIVertex* end = begin + dcVtxCount;
+				memcpy(&m_vertexBufferMemory[m_vertexCount], begin, dcVtxCount * sizeof(UIVertex));
+				m_vertexCount += dcVtxCount;
+				// copy indices data
+				for (uint32_t i = 0; i < dcVtxCount; ++i) {
+					uint16_t rcIndices[6] = {
+						baseIndex, baseIndex + 1, baseIndex + 2,
+						baseIndex + 2, baseIndex + 3, baseIndex
+					};
+					memcpy(&m_indexBufferMemory[m_indexCount], rcIndices, sizeof(rcIndices));
+					baseIndex += 4;
+					m_indexCount += 6;
+				}
+			}
+			else {
+				uint32_t dcVtxCount = _drawData->primitiveCount * 3;
+				if (dcVtxCount + m_vertexCount > m_indexBufferMemory.size()) {
+					return false;
+				}
+				uint16_t baseIndex = m_vertexCount;
+				// copy vertices data
+				UIVertex* begin = (UIVertex*)_drawData->vertexBufferAllocation.ptr;
+				UIVertex* end = begin + dcVtxCount;
+				memcpy(&m_vertexBufferMemory[m_vertexCount], begin, dcVtxCount * sizeof(UIVertex));
+				m_vertexCount += dcVtxCount;
+				// copy indices data
+				for (uint32_t i = 0; i < dcVtxCount; ++i) {
+					uint16_t rcIndices[3] = {
+						baseIndex, baseIndex + 1, baseIndex + 2
+					};
+					memcpy(&m_indexBufferMemory[m_indexCount], rcIndices, sizeof(rcIndices));
+					baseIndex += 3;
+					m_indexCount += 3;
+				}
+			}
+			return true;
+		}
+
+		void flushGPUBuffer() {
+			m_vertexBufferPM->setData(m_vertexBufferMemory.data(), m_vertexCount * sizeof(UIVertex), 0);
+			m_indexBuffer->setData(m_indexBufferMemory.data(), m_indexCount * sizeof(uint16_t), 0);
+		}
+	};
+
 	class UIMeshManager {
 		// for vertex buffer and index buffer, a vector for a vertex buffer maybe used only for one frame
 		// because maybe one vertex buffer is not enough for a frame rendering
 	private:
-		// @ m_vertexBufferPM : vertex buffer objects with `persistent mapping` feature
-		std::vector<IBuffer*>						m_vertexBufferPM[MaxFlightCount];
-		// @ m_indexBuffer : index buffer objects with static indices data
-		std::vector<IBuffer*>						m_indexBuffer[MaxFlightCount];
+		static const uint32_t MaxVertexCount = 4096 * 4;
 		//
-		std::vector<std::vector<UIVertex>>			m_vertexBufferRebuild;
+		std::vector<UIMeshBuffer>					m_meshBuffers[MaxFlightCount];
+		//
+		uint32_t									m_flightIndex;
+		uint32_t									m_meshBufferIndex;
+		//
+		std::vector<DrawCommand>					m_vecDrawComamnds;
 	public:
+		UIMeshManager() {
+		}
+		//
+		void initialize();
+		void beginFrame( uint32_t _flightIndex );
+		void pushDrawData( const PrebuildDrawData * _drawData );
+		void endFrame();
 	};
 
 	// UI 渲染器使用的 descriptor set 都是同一个！
@@ -140,49 +274,11 @@ namespace Nix {
 	// UI 渲染器使用的 vertex buffer object 也应该使用一个！
 	// 创建足够大的 vertex/index buffer allocator
 
-	struct DrawState {
-		Nix::Rect<uint16_t>		clip;				//
-		float					alpha;				//
-		bool operator == (const DrawState& _state) const {
-			if (memcmp(this, &_state, sizeof(*this)) == 0) {
-				return true;
-			}
-			return false;
-		}
-	};
-
-	struct DrawCommand {
-		uint32_t				texType;			// indicate whether it's drawing a set of image or a tile of text
-		uint32_t				texLayer;			// indicate the layer of the texture array
-		uint32_t				vertexBufferIndex;	// vertex buffer index, should be zero currently
-		uint32_t				vertexOffset;		// vertex offset
-		uint32_t				indexBufferIndex;	// index buffer index
-		uint32_t				indexOffset;		// index buffer offset
-		uint16_t				elementCount;		// `element count` param of the `draw element` function
-		//
-		DrawState				state;
-		//
-		bool compatible(const DrawCommand& _command) const {
-			if (vertexBufferIndex == _command.vertexBufferIndex && state == _command.state ) {
-				return true;
-			}
-			return false;
-		}
-	};
-
 	class Widget {
 	private:
 		Widget*					m_parent;
 		Nix::Rect<int16_t>		m_rect;
 	public:
-	};
-
-	struct PrebuildDrawData {
-		// vertex buffer cached by control
-		PrebuildBufferMemoryHeap::Allocation	vertexBufferAllocation;
-		uint32_t								triangleCapacity;
-		// draw resource reference by control
-		DrawCommand								drawCommand;
 	};
 
 	class UIRenderer {
@@ -194,7 +290,7 @@ namespace Nix {
 			uint32_t				fontId;
 			uint16_t				fontSize; 
 			Nix::Point<int16_t>		original;
-			Nix::Rect<int16_t>		sissor;
+			Nix::Rect<int16_t>		scissor;
 			float					alpha;
 		};
 
@@ -222,8 +318,8 @@ namespace Nix {
 		bool initialize(IContext* _context, IArchieve* _archieve);
 
 		PrebuildDrawData* build( const TextDraw& _draw, PrebuildDrawData* _oldDrawData );
-		PrebuildDrawData* build( const ImageDraw* _pImages, uint32_t _count );
-		PrebuildDrawData* build( const ImageDraw* _pImages, uint32_t _count, const TextDraw& _draw );
+		//PrebuildDrawData* build( const ImageDraw* _pImages, uint32_t _count );
+		//PrebuildDrawData* build( const ImageDraw* _pImages, uint32_t _count, const TextDraw& _draw );
 	};
 
 

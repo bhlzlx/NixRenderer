@@ -23,22 +23,22 @@ namespace Nix {
 		}
 		return true;
 	}
-
-	Nix::PrebuildDrawData* UIRenderer::build(const TextDraw& _draw, PrebuildDrawData* _oldDrawData)
+	PrebuildDrawData* UIRenderer::build(const TextDraw& _draw, PrebuildDrawData* _oldDrawData)
 	{
 		PrebuildDrawData* drawData = nullptr;
 		if (_oldDrawData) {
-			if (_oldDrawData->triangleCapacity < _draw.length * 2 ) {
+			if (_oldDrawData->primitiveCount < _draw.length || _oldDrawData->type != UITopologyType::UIRectangle) {
 				m_vertexMemoryHeap.free(_oldDrawData->vertexBufferAllocation);
-				_oldDrawData->vertexBufferAllocation = m_vertexMemoryHeap.allocate(_draw.length);
-				_oldDrawData->triangleCapacity = _draw.length * 2;
+				_oldDrawData->vertexBufferAllocation = m_vertexMemoryHeap.allocateRects(_draw.length);
+				_oldDrawData->primitiveCapacity = _oldDrawData->primitiveCount = _draw.length;
 			}
 			drawData = _oldDrawData;
+			_oldDrawData->primitiveCount = _draw.length;
 		}
 		else {
 			drawData = m_prebuilDrawDataPool.newElement();
-			drawData->vertexBufferAllocation = m_vertexMemoryHeap.allocate(_draw.length);
-			drawData->triangleCapacity = _draw.length * 2;
+			drawData->vertexBufferAllocation = m_vertexMemoryHeap.allocateRects(_draw.length);
+			drawData->primitiveCapacity = _oldDrawData->primitiveCount = _draw.length;
 		}
 		//
 		PrebuildBufferMemoryHeap::Allocation& allocation = drawData->vertexBufferAllocation;
@@ -83,7 +83,47 @@ namespace Nix {
 			vtx += 4;
 			x += charInfo.bearingX;
 		}
+		drawData->drawState.alpha = _draw.alpha;
+		memcpy(&drawData->drawState.scissor, &_draw.scissor, sizeof(_draw.scissor));
+		//
 		return drawData;
+	}
+
+	// -------------------------------------------------------------------------------------
+
+	void UIMeshManager::initialize()
+	{
+	}
+
+	void UIMeshManager::beginFrame(uint32_t _flightIndex)
+	{
+		this->m_flightIndex = _flightIndex;
+		this->m_currentBufferIndex = 0;
+		this->m_currentBufferOffset = 0;
+		this->m_vecDrawComamnds.clear();
+	}
+
+	void UIMeshManager::pushDrawData( const PrebuildDrawData* _drawData )
+	{
+		uint32_t verticesNeed = 0;
+		if (_drawData->type == UITopologyType::UIRectangle) {
+			verticesNeed = 4 * _drawData->primitiveCount;
+		}
+		else {
+			verticesNeed = 3 * _drawData->primitiveCount;
+		}
+		if (verticesNeed > MaxVertexCount - m_currentBufferOffset) {
+			++m_currentBufferIndex;
+			if( m_currentBufferIndex >= m_vertexBufferPM)
+		}
+		DrawCommand* prevDrawCommand = m_vecDrawComamnds.size() ? &m_vecDrawComamnds.back() : nullptr;
+		//
+		if (prevDrawCommand && prevDrawCommand->state == _drawData->drawState) {
+		}
+	}
+
+	void UIMeshManager::endFrame()
+	{
 	}
 
 }
