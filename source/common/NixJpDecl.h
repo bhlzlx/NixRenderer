@@ -15,6 +15,8 @@
 #include <typeinfo>
 #include <typeindex>
 
+//#define NIX_JP_IMPLEMENTATION
+
 #ifdef NIX_JSON
 #undef NIX_JSON
 #endif
@@ -88,6 +90,8 @@ bool WriteItem(rapidjson::Value& _object, T& _type, rapidjson::Document::Allocat
 	return _type.serializeObject(_object, _allocator);
 }
 
+#ifdef NIX_JP_IMPLEMENTATION
+
 template <>
 bool WriteItem<float>(rapidjson::Value& _object, float& _type, rapidjson::Document::AllocatorType& _allocator) {
 	_object.SetFloat(_type);
@@ -129,6 +133,24 @@ template <>
 bool WriteItem<bool>(rapidjson::Value& _object, bool& _type, rapidjson::Document::AllocatorType& _allocator) {
 	_object.SetBool(_type); return true;
 }
+#else
+template <>
+bool WriteItem<float>(rapidjson::Value& _object, float& _type, rapidjson::Document::AllocatorType& _allocator);
+template <>
+bool WriteItem<uint8_t>(rapidjson::Value& _object, uint8_t& _type, rapidjson::Document::AllocatorType& _allocator);
+template <>
+bool WriteItem<int>(rapidjson::Value& _object, int& _type, rapidjson::Document::AllocatorType& _allocator);
+template <>
+bool WriteItem<uint32_t>(rapidjson::Value& _object, uint32_t& _type, rapidjson::Document::AllocatorType& _allocator);
+template <>
+bool WriteItem<uint64_t>(rapidjson::Value& _object, uint64_t& _type, rapidjson::Document::AllocatorType& _allocator);
+template <>
+bool WriteItem<int64_t>(rapidjson::Value& _object, int64_t& _type, rapidjson::Document::AllocatorType& _allocator);
+template <>
+bool WriteItem<std::string>(rapidjson::Value& _object, std::string& _type, rapidjson::Document::AllocatorType& _allocator);
+template <>
+bool WriteItem<bool>(rapidjson::Value& _object, bool& _type, rapidjson::Document::AllocatorType& _allocator);
+#endif
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -203,6 +225,8 @@ bool ParseJsonItem(rapidjson::Value& _object, T& _value) {
 	return true;
 }
 
+#ifdef NIX_JP_IMPLEMENTATION
+
 template <>
 bool ParseJsonItem<uint8_t>(rapidjson::Value& _object, uint8_t& _value) {
 	_value = _object.GetInt();
@@ -250,6 +274,25 @@ bool ParseJsonItem<bool>(rapidjson::Value& _object, bool& _value) {
 	_value = _object.GetBool();
 	return true;
 }
+
+#else
+template <>
+bool ParseJsonItem<uint8_t>(rapidjson::Value& _object, uint8_t& _value);
+template<>
+bool ParseJsonItem<float>(rapidjson::Value& _object, float& _value);
+template<>
+bool ParseJsonItem<int>(rapidjson::Value& _object, int& _value);
+template<>
+bool ParseJsonItem<uint32_t>(rapidjson::Value& _object, uint32_t& _value);
+template<>
+bool ParseJsonItem<uint64_t>(rapidjson::Value& _object, uint64_t& _value);
+template<>
+bool ParseJsonItem<int64_t>(rapidjson::Value& _object, int64_t& _value);
+template<>
+bool ParseJsonItem<std::string>(rapidjson::Value& _object, std::string& _value);
+template<>
+bool ParseJsonItem<bool>(rapidjson::Value& _object, bool& _value);
+#endif
 
 
 template < class T >

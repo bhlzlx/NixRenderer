@@ -57,9 +57,12 @@ namespace Nix {
 			m_context = _buffer.m_context;
 			m_usage = _buffer.m_usage;
 			m_allocation = _buffer.m_allocation;
+			m_allocator = _buffer.m_allocator;
 			_buffer.m_context = VK_NULL_HANDLE;
 			_buffer.m_usage = 0;
-			_buffer.m_allocation;
+			_buffer.m_allocation.allocationId = -1;
+			_buffer.m_allocation.buffer = 0;
+			_buffer.m_allocator = nullptr;
 		}
 		BufferVk& operator = (BufferVk&& _buffer) {
 			m_context = _buffer.m_context;

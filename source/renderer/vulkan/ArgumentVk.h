@@ -35,6 +35,8 @@ namespace Nix {
 		std::vector<VkWriteDescriptorSet>						m_vecDescriptorWrites;
 		//
 		bool													m_needUpdate;
+
+		uint32_t												m_constantsShaderStages;
 	public:
 		ArgumentVk();
 		~ArgumentVk();

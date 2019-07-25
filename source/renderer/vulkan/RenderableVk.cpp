@@ -89,7 +89,7 @@ namespace Nix {
 			break;
 		}
 		m_indexBuffer = buffer;
-		m_indexBufferOffset = offset + _offset;
+		m_indexElementOffset = (offset + _offset)/sizeof(uint16_t);
 	}
 
 	void RenderableVk::release()
@@ -108,7 +108,7 @@ namespace Nix {
 		if (m_vecBuffer.size()) {
 			vkCmdBindVertexBuffers(_commandBuffer, 0, (uint32_t)m_vecBuffer.size(), m_vecBuffer.data(), m_vecBufferOffset.data());
 		}
-		vkCmdBindIndexBuffer(_commandBuffer, m_indexBuffer, m_indexBufferOffset, VK_INDEX_TYPE_UINT16);
+		vkCmdBindIndexBuffer(_commandBuffer, m_indexBuffer, m_indexElementOffset, VK_INDEX_TYPE_UINT16);
 		vkCmdDrawIndexed(_commandBuffer, _indexCount, 1, _indexOffset, 0, 0);
 	}
 
@@ -123,7 +123,7 @@ namespace Nix {
 		if (m_vecBuffer.size()) {
 			vkCmdBindVertexBuffers(_commandBuffer, 0, (uint32_t)m_vecBuffer.size(), m_vecBuffer.data(), m_vecBufferOffset.data());
 		}
-		vkCmdBindIndexBuffer(_commandBuffer, m_indexBuffer, m_indexBufferOffset, VK_INDEX_TYPE_UINT16);
+		vkCmdBindIndexBuffer(_commandBuffer, m_indexBuffer, m_indexElementOffset, VK_INDEX_TYPE_UINT16);
 		vkCmdDrawIndexed(_commandBuffer, _indexCount, _instanceCount, _indexOffset, 0, _baseInstance);
 	}
 

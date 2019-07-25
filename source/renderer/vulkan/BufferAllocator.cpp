@@ -363,7 +363,7 @@ namespace Nix {
 			}
 			VkBuffer buffer = VK_NULL_HANDLE;
 			VkResult rst = vmaCreateBuffer(_context->getVmaAllocator(), &bufferInfo, &allocInfo, &buffer, &_allocation, nullptr);
-			assert(rst);
+			assert(rst == VK_SUCCESS);
 			return buffer;
 		});
 		return allocator;

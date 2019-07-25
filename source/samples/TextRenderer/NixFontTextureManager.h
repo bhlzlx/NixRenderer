@@ -51,7 +51,7 @@ namespace Nix {
 		std::vector<FontInfo>			m_vecFont;
 		//
 		std::vector<uint8_t>			m_oneChannelGlyph;
-		std::vector<uint8_t>			m_fourChannelGlyph;
+		std::vector<uint32_t>			m_fourChannelGlyph;
 	public:
 		FontTextureManager() {
 		}
@@ -59,7 +59,7 @@ namespace Nix {
 			return m_texture;
 		}
 		// _size indicate the texture2DArray's size : width/ height/ depth
-		bool initialize( IContext* _context, IArchieve* _archieve, const Nix::Size3D<uint16_t>& _size, PFN_CREATE_TEXTURE_PACKER _creator );
+		bool initialize( IContext* _context, IArchieve* _archieve, ITexture* _texture, PFN_CREATE_TEXTURE_PACKER _creator, uint32_t _packerNum);
 		//
 		uint32_t addFont( const char * _fontFile );
 		//

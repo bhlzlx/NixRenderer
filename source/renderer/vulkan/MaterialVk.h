@@ -48,6 +48,8 @@ namespace Nix {
 		VkPipelineLayout										m_pipelineLayout;
 		VkPrimitiveTopology										m_topology;
 		VkPolygonMode											m_pologonMode;
+		//
+		uint32_t												m_constantsStageFlags;
 	public:
 		MaterialVk() :
 			  m_vertexShader( VK_NULL_HANDLE )
@@ -79,6 +81,9 @@ namespace Nix {
 		}
 		const MaterialDescription& getDescription() const {
 			return m_description;
+		}
+		uint32_t getConstantsStageFlags() const {
+			return m_constantsStageFlags;
 		}
 		//
 		static MaterialVk* CreateMaterial( ContextVk* _context, const MaterialDescription& _desc );

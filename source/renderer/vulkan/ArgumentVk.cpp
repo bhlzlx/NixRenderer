@@ -124,7 +124,7 @@ namespace Nix {
 		assert(_size + _offset <= driver->getPhysicalDeviceProperties().limits.maxPushConstantsSize);
 #endif
 		auto cmd = m_context->getGraphicsQueue()->commandBuffer();
-		vkCmdPushConstants(cmd->operator const VkCommandBuffer &(), m_material->getPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, _offset, _size, _data);
+		vkCmdPushConstants(cmd->operator const VkCommandBuffer &(), m_material->getPipelineLayout(), m_material->getConstantsStageFlags(), _offset, _size, _data);
 	}
 
 	void ArgumentVk::release()

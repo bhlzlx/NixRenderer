@@ -1,0 +1,15 @@
+{
+	"colorCount" : 1,
+	"colors" : [{
+		"format" : "NixBGRA8888_UNORM",
+		"multisample" : "MsaaNone",
+		"loadAction" : "Clear",
+		"usage" : "AOU_ShaderRead"
+	}],
+	"depthStencil" : {
+		"format" : "NixInvalidFormat",
+		"multisample" : "MsaaNone",
+		"loadAction" : "Clear",
+		"usage" : "AOU_DepthStencilAttachment"
+	}
+}

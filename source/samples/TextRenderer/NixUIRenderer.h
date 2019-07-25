@@ -1,8 +1,10 @@
+#pragma once
+
 #include <NixRenderer.h>
 #include <nix/io/archieve.h>
 #include <nix/memory/BuddySystemAllocator.h>
 #include <MemoryPool/C-11/MemoryPool.h>
-#include <cassert>
+#include <assert.h>
 
 #include "NixFontTextureManager.h"
 #include "TexturePacker/TexturePacker.h"
@@ -35,7 +37,7 @@ namespace Nix {
 	};
 
 	struct UIDrawState {
-		Nix::Rect<uint16_t>		scissor;
+		Nix::Scissor			scissor;
 		float					alpha;
 		bool operator == (const UIDrawState& _state) const {
 			if (memcmp(this, &_state, sizeof(*this)) == 0) {
@@ -168,14 +170,17 @@ namespace Nix {
 
 	class UIMeshBuffer {
 	private:
+		IRenderable*				m_renderable;
 		IBuffer*					m_vertexBufferPM;
 		std::vector<UIVertex>		m_vertexBufferMemory;
 		IBuffer*					m_indexBuffer;
 		std::vector<uint16_t>		m_indexBufferMemory;
 		uint32_t					m_vertexCount;
 		uint32_t					m_indexCount;
+		//
+		std::vector<DrawCommand>	m_vecCommands;
 	public:
-		void initialize( IContext* _context, uint32_t _vertexCount ) {
+		void initialize( IContext* _context, IRenderable* _renderable, uint32_t _vertexCount ) {
 			auto allocator = _context->createVertexBufferAllocatorPM(0, 0);
 			m_vertexBufferPM = _context->createVertexBuffer(nullptr, _vertexCount * sizeof(UIVertex), allocator);
 			allocator = _context->createIndexBufferAllocator(0, 0);
@@ -186,15 +191,27 @@ namespace Nix {
 			//
 			m_vertexCount = 0;
 			m_indexCount = 0;
+			//
+			m_renderable = _renderable;
+			m_renderable->setVertexBuffer(m_vertexBufferPM, 0, 0);
+			m_renderable->setIndexBuffer(m_indexBuffer, 0);
 		}
+		
 		void clear() {
 			m_vertexCount = 0;
 			m_indexCount = 0;
+			m_vecCommands.clear();
 		}
 
 		bool pushVertices(const PrebuildDrawData* _drawData) {
+
+			uint32_t dcVtxCount = 0;
+			uint32_t dcIdxCount = 0;
+
 			if (_drawData->type == UITopologyType::UIRectangle) {
-				uint32_t dcVtxCount = _drawData->primitiveCount * 4;
+				dcVtxCount = _drawData->primitiveCount * 4;
+				dcIdxCount = _drawData->primitiveCount * 4 * 3 / 2;
+				//
 				if (dcVtxCount + m_vertexCount > m_indexBufferMemory.size() ) {
 					return false;
 				}
@@ -205,7 +222,7 @@ namespace Nix {
 				memcpy(&m_vertexBufferMemory[m_vertexCount], begin, dcVtxCount * sizeof(UIVertex));
 				m_vertexCount += dcVtxCount;
 				// copy indices data
-				for (uint32_t i = 0; i < dcVtxCount; ++i) {
+				for (uint32_t i = 0; i < _drawData->primitiveCount; ++i) {
 					uint16_t rcIndices[6] = {
 						baseIndex, baseIndex + 1, baseIndex + 2,
 						baseIndex + 2, baseIndex + 3, baseIndex
@@ -216,7 +233,9 @@ namespace Nix {
 				}
 			}
 			else {
-				uint32_t dcVtxCount = _drawData->primitiveCount * 3;
+				dcVtxCount = _drawData->primitiveCount * 3;
+				dcIdxCount = _drawData->primitiveCount * 3;
+				//
 				if (dcVtxCount + m_vertexCount > m_indexBufferMemory.size()) {
 					return false;
 				}
@@ -227,44 +246,55 @@ namespace Nix {
 				memcpy(&m_vertexBufferMemory[m_vertexCount], begin, dcVtxCount * sizeof(UIVertex));
 				m_vertexCount += dcVtxCount;
 				// copy indices data
-				for (uint32_t i = 0; i < dcVtxCount; ++i) {
+				for (uint32_t i = 0; i < _drawData->primitiveCount; ++i) {
 					uint16_t rcIndices[3] = {
-						baseIndex, baseIndex + 1, baseIndex + 2
+						baseIndex, baseIndex + 1, baseIndex + 2	
 					};
 					memcpy(&m_indexBufferMemory[m_indexCount], rcIndices, sizeof(rcIndices));
 					baseIndex += 3;
 					m_indexCount += 3;
 				}
 			}
+			// can merge the draw call
+			if ( m_vecCommands.size() && m_vecCommands.back().state == _drawData->drawState ) {
+				DrawCommand& cmd = m_vecCommands.back();
+				cmd.elementCount += dcIdxCount;
+			}
+			else
+			{
+				DrawCommand cmd;
+				cmd.elementCount = dcIdxCount;
+				cmd.indexOffset = (m_indexCount - dcIdxCount);
+				cmd.vertexOffset = (m_vertexCount - dcVtxCount) * sizeof(UIVertex);
+				cmd.state = _drawData->drawState;
+				m_vecCommands.push_back(cmd);
+			}
 			return true;
 		}
 
-		void flushGPUBuffer() {
+		void flushMeshBuffer() {
 			m_vertexBufferPM->setData(m_vertexBufferMemory.data(), m_vertexCount * sizeof(UIVertex), 0);
 			m_indexBuffer->setData(m_indexBufferMemory.data(), m_indexCount * sizeof(uint16_t), 0);
 		}
-	};
 
-	class UIMeshManager {
-		// for vertex buffer and index buffer, a vector for a vertex buffer maybe used only for one frame
-		// because maybe one vertex buffer is not enough for a frame rendering
-	private:
-		static const uint32_t MaxVertexCount = 4096 * 4;
-		//
-		std::vector<UIMeshBuffer>					m_meshBuffers[MaxFlightCount];
-		//
-		uint32_t									m_flightIndex;
-		uint32_t									m_meshBufferIndex;
-		//
-		std::vector<DrawCommand>					m_vecDrawComamnds;
-	public:
-		UIMeshManager() {
+		void draw(IRenderPass* _renderPass, IArgument* _argument, IPipeline* _pipeline, float _screenWidth, float _screenHeight ) {
+			struct Constants {
+				float screenWidth;
+				float screenHeight;
+				float alpha;
+			} constants;
+
+			constants.screenWidth = _screenWidth;
+			constants.screenHeight = _screenHeight;
+
+			for ( auto& dc : this->m_vecCommands ) {
+				_pipeline->setScissor(dc.state.scissor);
+				constants.alpha = dc.state.alpha;
+				_argument->setShaderCache(0, &constants, sizeof(constants));
+				_renderPass->bindArgument(_argument);
+				_renderPass->drawElements(m_renderable, dc.indexOffset, dc.elementCount);
+			}
 		}
-		//
-		void initialize();
-		void beginFrame( uint32_t _flightIndex );
-		void pushDrawData( const PrebuildDrawData * _drawData );
-		void endFrame();
 	};
 
 	// UI 渲染器使用的 descriptor set 都是同一个！
@@ -290,7 +320,7 @@ namespace Nix {
 			uint32_t				fontId;
 			uint16_t				fontSize; 
 			Nix::Point<int16_t>		original;
-			Nix::Rect<int16_t>		scissor;
+			Nix::Scissor			scissor;
 			float					alpha;
 		};
 
@@ -303,7 +333,16 @@ namespace Nix {
 			uint32_t		layer; // image layer of the texture array
 		};
 	private:
+		static const uint32_t MaxVertexCount = 4096 * 4;
+		//
 		IContext*					m_context;
+		IMaterial*					m_material;
+		IPipeline*					m_pipeline;
+		IArgument*					m_argument;
+		ITexture*					m_uiTexArray;
+		// ---------------------------------------------------------------------------------------------------
+		// resources
+		// ---------------------------------------------------------------------------------------------------
 		IArchieve*					m_archieve;
 		void*						m_packerLibrary;
 		PFN_CREATE_TEXTURE_PACKER	m_createPacker;
@@ -311,15 +350,41 @@ namespace Nix {
 		MemoryPool<PrebuildDrawData> 
 									m_prebuilDrawDataPool;
 		FontTextureManager			m_fontTexManager;
+
+		// ---------------------------------------------------------------------------------------------------
+		// runtime drawing
+		// ---------------------------------------------------------------------------------------------------
+		std::vector<UIMeshBuffer>					m_meshBuffers[MaxFlightCount];
+		std::vector<IRenderable*>					m_renderables[MaxFlightCount];
+		uint32_t									m_flightIndex;
+		uint32_t									m_meshBufferIndex;
 	public:
 		UIRenderer() {
 		}
 
+		// ---------------------------------------------------------------------------------------------------
+		//  build draw data
+		// ---------------------------------------------------------------------------------------------------
+
 		bool initialize(IContext* _context, IArchieve* _archieve);
+		uint32_t addFont( const char * _filepath );
+
+		// ---------------------------------------------------------------------------------------------------
+		//  build draw data
+		// ---------------------------------------------------------------------------------------------------
 
 		PrebuildDrawData* build( const TextDraw& _draw, PrebuildDrawData* _oldDrawData );
 		//PrebuildDrawData* build( const ImageDraw* _pImages, uint32_t _count );
 		//PrebuildDrawData* build( const ImageDraw* _pImages, uint32_t _count, const TextDraw& _draw );
+
+		// ---------------------------------------------------------------------------------------------------
+		// runtime drawing
+		// ---------------------------------------------------------------------------------------------------
+		void beginBuild(uint32_t _flightIndex);
+		void buildDrawCall(const PrebuildDrawData * _drawData);
+		void endBuild();
+		//
+		void render(IRenderPass* _renderPass, float _width, float _height);
 	};
 
 

@@ -16,18 +16,13 @@ namespace Nix {
 	};
 
 	//
-	inline bool Triangle::initialize(void* _wnd, Nix::IArchieve* _archieve) {
-		printf("%s", "Triangle is initializing!");
+	inline bool TextSample::initialize(void* _wnd, Nix::IArchieve* _archieve) {
+		printf("%s", "Text Renderer is initializing!");
 
 		HMODULE library = ::LoadLibraryA("NixVulkan.dll");
 		assert(library);
-		HMODULE packerLibrary = ::LoadLibraryA("TexturePacker.dll");
-		assert(packerLibrary);
-
 		typedef IDriver* (*PFN_CREATE_DRIVER)();
 		PFN_CREATE_DRIVER createDriver = reinterpret_cast<PFN_CREATE_DRIVER>(::GetProcAddress(library, "createDriver"));
-		PFN_CREATE_TEXTURE_PACKER createTexturePacker = reinterpret_cast<PFN_CREATE_TEXTURE_PACKER>(::GetProcAddress(packerLibrary, "CreateTexturePacker"));
-
 		// \ 1. create driver
 		m_driver = createDriver();
 		m_driver->initialize(_archieve, DeviceType::DiscreteGPU);
@@ -38,93 +33,29 @@ namespace Nix {
 		m_primQueue = m_context->getGraphicsQueue(0);
 
 		RpClear clear;
-		clear.colors[0] = { 1.0, 1.0, 0.0f, 1.0f };
+		clear.colors[0] = { .5f, .5f, .5f, 1.0f };
 		clear.depth = 1.0f;
 		clear.stencil = 1;
 		m_mainRenderPass->setClear(clear);
-		//
-		MaterialDescription mtlDesc;
-		Nix::TextReader mtlReader;
-		mtlReader.openFile(_archieve, "material/triangle.json");
-		mtlDesc.parse(mtlReader.getText());
-		RenderPassDescription rpDesc;
-		Nix::TextReader rpReader;
-		rpReader.openFile(_archieve, "renderpass/swapchain.json");
-		rpDesc.parse(rpReader.getText());
-		rpDesc.colors[0].format = m_context->swapchainColorFormat();
-		rpDesc.depthStencil.format = m_driver->selectDepthFormat(true);
 
-		TextureDescription texDesc;
-		texDesc.depth = 1;
-		texDesc.format = NixR8_UNORM;
-		texDesc.height = 256;
-		texDesc.width = 256;
-		texDesc.mipmapLevel = 1;
-		texDesc.type = Nix::TextureType::Texture2D;
-		//
-		m_texture = m_context->createTexture(texDesc);
-		Size3D<uint16_t> fontTexSize = {
-			512, 512, 2
-		};
-		m_fontTextureManager.initialize(m_context, _archieve, fontTexSize, createTexturePacker);
-		m_fontTextureManager.addFont("font/hwzhsong.ttf");
-		//
-		const char16_t message[] = u"好你世界中国字符，】【；‘，。/《》？，~`!@#$%^&*()_+=-0987654321[];',/{}:\"<>?\\|！中国字符、】【；‘，。/《》？一";
-		for (auto c : message) {
-			CharKey fc;
-			fc.charCode = c;
-			fc.size = 28;
-			fc.fontId = 0;
-			m_fontTextureManager.getCharactor(fc);
-		}
+		m_uiRenderer.initialize(m_context, _archieve);
+		m_uiRenderer.addFont("font/hwzhsong.ttf");
 
+		Nix::UIRenderer::TextDraw draw;
+		draw.fontId = 0;
+		draw.fontSize = 24;
+		draw.alpha = 1.0f;
+		draw.length = 13;
+		draw.text = u"你好，世界！phantom";
+		draw.original = { 32, 32 };
+		draw.scissor.origin = {0 , 0};
+		draw.scissor.size = {512, 512};
 
-		//uint32_t data[64 * 64];
-		//
-		//for (uint32_t i = 0; i < 10000; ++i) {
-		//	static std::default_random_engine random(time(NULL));
-		//	std::uniform_int_distribution<int> dis1(8, 24);
-		//	int randW = dis1(random);
-		//	int randH = dis1(random);
-		//	Rect<uint16_t> rc;
-		//	std::uniform_int_distribution<int> dis2(31, 255);
-		//	uint32_t r = dis2(random);
-		//	uint32_t g = dis2(random);
-		//	uint32_t b = dis2(random);
-		//	for (uint32_t j = 0; j < randW * randH; ++j) {
-		//		data[j] = 0xff000000 | g << 16 | b << 8 | r;
-		//	}
-		//	auto ret = m_texturePacker->insert((uint8_t*)data, randW * randH * 4, randW, randH, rc);
-		//	if (!ret) {
-		//		break;
-		//	}
-		//}
+		m_drawData = m_uiRenderer.build(draw, nullptr);
 
-		bool rst = false;
-		m_material = m_context->createMaterial(mtlDesc); {
-			{ // graphics pipeline 
-				m_pipeline = m_material->createPipeline(rpDesc);
-			}
-			{ // arguments
-				m_argCommon = m_material->createArgument(0);
-				rst = m_argCommon->getSampler("samBase", &m_samBase);
-				rst = m_argCommon->getUniformBlock("GlobalArgument", &m_matGlobal);
-				m_argInstance = m_material->createArgument(1);
-				rst = m_argInstance->getUniformBlock("LocalArgument", &m_matLocal);
-				SamplerState ss;
-				m_argCommon->setSampler(m_samBase, ss, m_fontTextureManager.getTexture());
-			}
-			{ // renderable
-				m_renderable = m_material->createRenderable();
-				m_vertexBuffer = m_context->createVertexBuffer(PlaneVertices, sizeof(PlaneVertices));
-				m_indexBuffer = m_context->createIndexBuffer(PlaneIndices, sizeof(PlaneIndices));
-				m_renderable->setVertexBuffer(m_vertexBuffer, 0, 0);
-				m_renderable->setIndexBuffer(m_indexBuffer, 0);
-			}
-		}
 		return true;
 	}
-	inline void Triangle::resize(uint32_t _width, uint32_t _height) {
+	inline void TextSample::resize(uint32_t _width, uint32_t _height) {
 		printf("resized!");
 		m_context->resize(_width, _height);
 		Viewport vp = {
@@ -134,49 +65,41 @@ namespace Nix {
 		ss.origin = { 0, 0 };
 		ss.size = { (int)_width, (int)_height };
 		//
-		m_pipeline->setViewport(vp);
-		m_pipeline->setScissor(ss);
+		m_width = _width;
+		m_height = _height;
 	}
-	inline void Triangle::release() {
+	inline void TextSample::release() {
 		printf("destroyed");
 		m_context->release();
 	}
-	inline void Triangle::tick() {
+	inline void TextSample::tick() {
 
 		static uint64_t tickCounter = 0;
-
 		tickCounter++;
 
-		float imageIndex = 0.0f;// (tickCounter / 1024) % 4;
-
 		if (m_context->beginFrame()) {
+
+			m_uiRenderer.beginBuild(tickCounter%MaxFlightCount);
+			m_uiRenderer.buildDrawCall(m_drawData);
+			m_uiRenderer.endBuild();
+
 			m_mainRenderPass->begin(m_primQueue); {
-				glm::mat4x4 identity;
-				m_argCommon->setUniform(m_matGlobal, 0, &identity, 64);
-				m_argCommon->setUniform(m_matGlobal, 64, &identity, 64);
-				m_argCommon->setUniform(m_matGlobal, 128, &imageIndex, 4);
-				m_argInstance->setUniform(m_matLocal, 0, &identity, 64);
-				//
-				m_mainRenderPass->bindPipeline(m_pipeline);
-				m_mainRenderPass->bindArgument(m_argCommon);
-				m_mainRenderPass->bindArgument(m_argInstance);
-				//
-				m_mainRenderPass->drawElements(m_renderable, 0, 6);
+				m_uiRenderer.render(m_mainRenderPass, m_width, m_height);
 			}
 			m_mainRenderPass->end();
 
 			m_context->endFrame();
 		}
 	}
-	inline const char* Triangle::title() {
+	inline const char* TextSample::title() {
 		return "Text Rendering( texture packer test )";
 	}
-	inline uint32_t Triangle::rendererType() {
+	inline uint32_t TextSample::rendererType() {
 		return 0;
 	}
 }
 
-Nix::Triangle theapp;
+Nix::TextSample theapp;
 
 NixApplication* GetApplication() {
 	return &theapp;

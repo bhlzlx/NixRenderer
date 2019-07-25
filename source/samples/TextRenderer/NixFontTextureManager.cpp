@@ -4,22 +4,15 @@
 
 namespace Nix {
 
-	bool FontTextureManager::initialize(IContext* _context, IArchieve* _archieve, const Nix::Size3D<uint16_t>& _size, PFN_CREATE_TEXTURE_PACKER _creator)
+	bool FontTextureManager::initialize(IContext* _context, IArchieve* _archieve, ITexture* _texture, PFN_CREATE_TEXTURE_PACKER _creator, uint32_t _packerNum)
 	{
-		Nix::TextureDescription desc;
-		desc.depth = _size.depth;
-		desc.width = _size.width;
-		desc.height = _size.height;
-		desc.mipmapLevel = 1;
-		desc.type = Nix::Texture2DArray;
-		desc.format = NixRGBA8888_UNORM;
-		// create the texture array with format R8
-		m_texture = _context->createTexture( desc );
+		const Nix::TextureDescription& desc = _texture->getDesc();
+		m_texture = _texture;
 		if (!m_texture) {
 			return false;
 		}
 		// initialize the texture packers
-		for (uint16_t i = 0; i < _size.depth; ++i) {
+		for (uint16_t i = 0; i < _packerNum ; ++i) {
 			ITexturePacker * packer = _creator(m_texture, i);
 			assert(packer);
 			m_vecTexturePacker.push_back(packer);
@@ -92,7 +85,7 @@ namespace Nix {
 			shiftX, shiftY, // shift x, shift y 
 			_c.charCode);
 		//
-		CharactorInfo c;
+		static CharactorInfo c;
 		c.bearingX = x0;
 		c.bearingY = -y0;
 		c.width = x1 - x0;
@@ -102,13 +95,13 @@ namespace Nix {
 		//
 		for (size_t pixelIndex = 0; pixelIndex < pixelNum; ++pixelIndex) {
 			uint32_t color = m_oneChannelGlyph[pixelIndex];
-			color = 0xff000000 | color << 16 | color << 8 | color;
+			color = (color<<24) | (color << 16) | (color << 8) | (color);
 			m_fourChannelGlyph[pixelIndex] = color;
 		}
 		Nix::Rect<uint16_t> rc;
 		if (c.height > 0 && c.width > 0) {
 			for (auto texturePacker : m_vecTexturePacker) {
-				bool rst = texturePacker->insert(&m_fourChannelGlyph[0], c.width * c.height * 4, c.width, c.height, rc);
+				bool rst = texturePacker->insert((const uint8_t*)&m_fourChannelGlyph[0], c.width * c.height * 4, c.width, c.height, rc);
 				c.x = rc.origin.x;
 				c.y = rc.origin.y;
 				mappingTable[_c.key] = c;

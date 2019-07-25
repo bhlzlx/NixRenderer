@@ -15,7 +15,7 @@ namespace Nix {
 		std::vector< VkBuffer >			m_vecBuffer;
 		std::vector< VkDeviceSize >		m_vecBufferOffset;
 		VkBuffer						m_indexBuffer;
-		VkDeviceSize					m_indexBufferOffset;
+		VkDeviceSize					m_indexElementOffset;
 		TopologyMode					m_topologyMode; // will no use, only for debugging
 		//
 		MaterialVk*						m_material;
@@ -37,7 +37,7 @@ namespace Nix {
 			return m_indexBuffer;
 		}
 		inline VkDeviceSize getIndexBufferOffset() {
-			return m_indexBufferOffset;
+			return m_indexElementOffset;
 		}
 		//
 		virtual uint32_t getVertexBufferCount() override;

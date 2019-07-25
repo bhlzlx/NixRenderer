@@ -10,9 +10,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-
-
-#include "NixFontTextureManager.h"
+#pragma once
+#include "NixUIRenderer.h"
 #include <nix/io/archieve.h>
 #include <cstdio>
 #include <cassert>
@@ -25,32 +24,17 @@
 
 namespace Nix {
 
-	class Triangle : public NixApplication {
+	class TextSample : public NixApplication {
 	private:
-		IDriver* m_driver;
-		IContext* m_context;
-		IRenderPass* m_mainRenderPass;
-		IGraphicsQueue* m_primQueue;
-		//
-		IMaterial* m_material;
+		IDriver*				m_driver;
+		IContext*				m_context;
+		IRenderPass*			m_mainRenderPass;
+		IGraphicsQueue*			m_primQueue;
+		Nix::UIRenderer			m_uiRenderer;
+		Nix::PrebuildDrawData*	m_drawData;
 
-		IArgument* m_argCommon;
-		uint32_t					m_samBase;
-		uint32_t					m_matGlobal;
-
-		IArgument* m_argInstance;
-		uint32_t					m_matLocal;
-
-		IRenderable* m_renderable;
-
-		IBuffer* m_vertexBuffer;
-		IBuffer* m_indexBuffer;
-
-		IPipeline* m_pipeline;
-
-		ITexture* m_texture;
-		ITexturePacker* m_texturePacker;
-		FontTextureManager m_fontTextureManager;
+		float					m_width;
+		float					m_height;
 
 		//
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve);
@@ -67,5 +51,5 @@ namespace Nix {
 	};
 }
 
-extern Nix::Triangle theapp;
+extern Nix::TextSample theapp;
 

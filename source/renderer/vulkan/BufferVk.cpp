@@ -69,7 +69,12 @@ namespace Nix {
 	}
 
 	void VertexBuffer::setData(const void * _data, size_t _size, size_t _offset) {
-		m_buffer.updateDataQueued(_data, _size, _offset);
+		if (m_buffer.m_allocation.raw) {
+			memcpy( m_buffer.m_allocation.raw + _offset, _data, _size );
+		}
+		else {
+			m_buffer.updateDataQueued(_data, _size, _offset);
+		}
 	}
 
 	IBuffer* ContextVk::createDynamicVertexBuffer(size_t _size, IBufferAllocator* _allocator) {

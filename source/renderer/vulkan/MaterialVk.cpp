@@ -228,24 +228,33 @@ namespace Nix {
 		//\ 3 - push constants information
 		std::vector< VkPushConstantRange > constantRanges;
 
+		uint32_t constantsShaderFlags = 0;
+
 		if (vertexResource.push_constant_buffers.size()) {
 			auto& vc = vertexResource.push_constant_buffers[0];
 			auto ranges = vertCompiler.get_active_buffer_ranges(vc.id);
 			VkPushConstantRange range = {};
-			range.offset = (uint32_t)ranges[0].offset;
-			range.size = (uint32_t)ranges[0].range;
+			range.offset = ranges[0].offset;
+			range.size = (ranges.back().offset - range.offset) + ranges.back().range;
+			//range.offset = (uint32_t)ranges[0].offset;
+			//range.size = (uint32_t)ranges[0].range;
 			range.stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
 			constantRanges.push_back(range);
+
+			constantsShaderFlags = VK_SHADER_STAGE_VERTEX_BIT;
 		}
 
 		if (fragmentResource.push_constant_buffers.size()) {
 			auto& fc = fragmentResource.push_constant_buffers[0];
-			auto ranges = vertCompiler.get_active_buffer_ranges(fc.id);
+			auto ranges = fragCompiler.get_active_buffer_ranges(fc.id);
 			VkPushConstantRange range = {};
-			range.offset = (uint32_t)ranges[0].offset;
-			range.size = (uint32_t)ranges[0].range;
-			range.stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
+			range.offset = ranges[0].offset;
+			range.size = (ranges.back().offset - range.offset) + ranges.back().range;
+
+			range.stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
 			constantRanges.push_back(range);
+
+			constantsShaderFlags |= VK_SHADER_STAGE_FRAGMENT_BIT;
 		}
 		//
 		VkDescriptorSetLayout layouts[MaxArgumentCount];
@@ -322,6 +331,7 @@ namespace Nix {
 		material->m_argumentLayouts = argumentLayouts;
 		material->m_topology = NixTopologyToVk( materialDesc.topologyMode );
 		material->m_pologonMode = NixPolygonModeToVk(materialDesc.pologonMode);
+		material->m_constantsStageFlags = constantsShaderFlags;
 		//
 		return material;
 	}
