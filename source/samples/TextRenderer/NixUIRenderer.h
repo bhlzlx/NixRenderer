@@ -1,5 +1,4 @@
 #pragma once
-
 #include <NixRenderer.h>
 #include <nix/io/archieve.h>
 #include <nix/memory/BuddySystemAllocator.h>
@@ -21,6 +20,8 @@
 #define GetExportAddress( libray, function ) dlsym( (void*)libray, function )
 #endif
 
+#include "NixUIDefine.h"
+
 /****************************
 * control -> Prebuild Draw Data
 * Prebuild Draw Data array `push` in to mesh manager => generate `Draw command`
@@ -28,44 +29,8 @@
 
 namespace Nix {
 
-	static const uint32_t FontLayerCount = 4;
-
-	struct UIVertex {
-		float x; float y; // screen space position( x, y )
-		float u; float v; // texture coordinate( u, v )
-		float layer;	  // texture array layer
-	};
-
-	struct UIDrawState {
-		Nix::Scissor			scissor;
-		float					alpha;
-		bool operator == (const UIDrawState& _state) const {
-			if (memcmp(this, &_state, sizeof(*this)) == 0) {
-				return true;
-			}
-			return false;
-		}
-	};
-
-	struct DrawCommand {
-		uint32_t				vertexBufferIndex;	// vertex buffer index, should be zero currently
-		uint32_t				vertexOffset;		// vertex offset
-		uint32_t				indexBufferIndex;	// index buffer index
-		uint32_t				indexOffset;		// index buffer offset
-		uint16_t				elementCount;		// `element count` param of the `draw element` function
-		//
-		UIDrawState				state;
-		//
-		bool compatible(const DrawCommand& _command) const {
-			if (vertexBufferIndex == _command.vertexBufferIndex && state == _command.state) {
-				return true;
-			}
-			return false;
-		}
-	};
-
 	/*
-	*	The `vertex buffer` & `index buffer` in `PrebuildDrawData` handled by control object should be allocated in a heap,
+	*	The `vertex buffer` & `index buffer` in `UIDrawData` handled by control object should be allocated in a heap,
 	*	so that, we can get a better memory management, here we use the `buddy system allocator` management method.
 	*/
 
@@ -79,7 +44,7 @@ namespace Nix {
 	*	512 * 64 = 32 KB
 	*/
 
-	class PrebuildBufferMemoryHeap {
+	class DrawDataMemoryHeap {
 	public:
 		struct Allocation {
 			BuddySystemAllocator*	allocator;
@@ -94,7 +59,7 @@ namespace Nix {
 		};
 		std::vector< Heap >			m_heapCollection[2];
 	public:
-		PrebuildBufferMemoryHeap() {
+		DrawDataMemoryHeap() {
 		}
 		Allocation allocateRects(uint32_t _rectNum) {
 			uint32_t loc = _rectNum < 16 ? 0 : 1;
@@ -152,15 +117,15 @@ namespace Nix {
 	/*
 	 * 因为我们需要对 UI mesh 更新，UI mesh 的顶点设置为持续映射的，但是更新我们实际是一个控件一个控件的写入，并不是一次性
 	 * 所以为了效率，我们应该在 CPU 可访问的主存端再创建一个缓存，这个缓存是一块连续内存,用来存这一帧所需要更新的所有顶点
-	 * 控件上持有的 `PrebuildDrawData` 并不是连续的，所以我们需要在重新构建的时候把这些非连续的变成连续的，就可以方便合并drawcall了
+	 * 控件上持有的 `UIDrawData` 并不是连续的，所以我们需要在重新构建的时候把这些非连续的变成连续的，就可以方便合并drawcall了
 	 */
 
 	enum UITopologyType {
 		UITriangle,
 		UIRectangle
 	};
-	struct PrebuildDrawData {
-		PrebuildBufferMemoryHeap::Allocation	vertexBufferAllocation;
+	struct UIDrawData {
+		DrawDataMemoryHeap::Allocation			vertexBufferAllocation;
 		UITopologyType							type;
 		uint32_t								primitiveCount;
 		uint32_t								primitiveCapacity;
@@ -178,7 +143,7 @@ namespace Nix {
 		uint32_t					m_vertexCount;
 		uint32_t					m_indexCount;
 		//
-		std::vector<DrawCommand>	m_vecCommands;
+		std::vector<UIDrawBatch>	m_vecCommands;
 	public:
 		void initialize( IContext* _context, IRenderable* _renderable, uint32_t _vertexCount ) {
 			auto allocator = _context->createVertexBufferAllocatorPM(0, 0);
@@ -203,7 +168,7 @@ namespace Nix {
 			m_vecCommands.clear();
 		}
 
-		bool pushVertices(const PrebuildDrawData* _drawData) {
+		bool pushVertices(const UIDrawData* _drawData) {
 
 			uint32_t dcVtxCount = 0;
 			uint32_t dcIdxCount = 0;
@@ -212,7 +177,7 @@ namespace Nix {
 				dcVtxCount = _drawData->primitiveCount * 4;
 				dcIdxCount = _drawData->primitiveCount * 4 * 3 / 2;
 				//
-				if (dcVtxCount + m_vertexCount > m_indexBufferMemory.size() ) {
+				if ((dcVtxCount + m_vertexCount) > (uint32_t)m_indexBufferMemory.size() ) {
 					return false;
 				}
 				uint16_t baseIndex = m_vertexCount;
@@ -236,7 +201,7 @@ namespace Nix {
 				dcVtxCount = _drawData->primitiveCount * 3;
 				dcIdxCount = _drawData->primitiveCount * 3;
 				//
-				if (dcVtxCount + m_vertexCount > m_indexBufferMemory.size()) {
+				if ( (dcVtxCount + m_vertexCount) > (uint32_t)m_indexBufferMemory.size()) {
 					return false;
 				}
 				uint16_t baseIndex = m_vertexCount;
@@ -257,12 +222,12 @@ namespace Nix {
 			}
 			// can merge the draw call
 			if ( m_vecCommands.size() && m_vecCommands.back().state == _drawData->drawState ) {
-				DrawCommand& cmd = m_vecCommands.back();
+				UIDrawBatch& cmd = m_vecCommands.back();
 				cmd.elementCount += dcIdxCount;
 			}
 			else
 			{
-				DrawCommand cmd;
+				UIDrawBatch cmd;
 				cmd.elementCount = dcIdxCount;
 				cmd.indexOffset = (m_indexCount - dcIdxCount);
 				cmd.vertexOffset = (m_vertexCount - dcVtxCount) * sizeof(UIVertex);
@@ -346,8 +311,8 @@ namespace Nix {
 		IArchieve*					m_archieve;
 		void*						m_packerLibrary;
 		PFN_CREATE_TEXTURE_PACKER	m_createPacker;
-		PrebuildBufferMemoryHeap	m_vertexMemoryHeap;
-		MemoryPool<PrebuildDrawData> 
+		DrawDataMemoryHeap	m_vertexMemoryHeap;
+		MemoryPool<UIDrawData> 
 									m_prebuilDrawDataPool;
 		FontTextureManager			m_fontTexManager;
 
@@ -373,15 +338,15 @@ namespace Nix {
 		//  build draw data
 		// ---------------------------------------------------------------------------------------------------
 
-		PrebuildDrawData* build( const TextDraw& _draw, PrebuildDrawData* _oldDrawData );
-		//PrebuildDrawData* build( const ImageDraw* _pImages, uint32_t _count );
-		//PrebuildDrawData* build( const ImageDraw* _pImages, uint32_t _count, const TextDraw& _draw );
+		UIDrawData* build( const TextDraw& _draw, UIDrawData* _oldDrawData );
+		//UIDrawData* build( const ImageDraw* _pImages, uint32_t _count );
+		//UIDrawData* build( const ImageDraw* _pImages, uint32_t _count, const TextDraw& _draw );
 
 		// ---------------------------------------------------------------------------------------------------
 		// runtime drawing
 		// ---------------------------------------------------------------------------------------------------
 		void beginBuild(uint32_t _flightIndex);
-		void buildDrawCall(const PrebuildDrawData * _drawData);
+		void buildDrawBatch(const UIDrawData * _drawData);
 		void endBuild();
 		//
 		void render(IRenderPass* _renderPass, float _width, float _height);
