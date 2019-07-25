@@ -85,11 +85,13 @@ namespace Nix {
 			shiftX, shiftY, // shift x, shift y 
 			_c.charCode);
 		//
+		int advGap = stbtt_GetCodepointKernAdvance(&fontHandle, _c.charCode, '.');
 		static CharactorInfo c;
 		c.bearingX = x0;
 		c.bearingY = -y0;
 		c.width = x1 - x0;
 		c.height = y1 - y0;
+		c.adv = (advGap + advance) * scale;
 		//
 		size_t pixelNum = (size_t)c.width * c.height;
 		//

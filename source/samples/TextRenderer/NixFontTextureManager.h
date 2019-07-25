@@ -21,6 +21,7 @@ namespace Nix {
 		int8_t		height;
 		int8_t		bearingX;
 		int8_t		bearingY;
+		int8_t		adv;
 		// offset x = bearingX
 		// offset y = height - bearingY;
 		uint8_t		layer; // layer number of the texture 2d array

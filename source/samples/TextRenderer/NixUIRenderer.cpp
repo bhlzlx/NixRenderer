@@ -130,7 +130,7 @@ namespace Nix {
 			vtx[0].layer = vtx[1].layer = vtx[2].layer = vtx[3].layer = charInfo.layer;
 			//
 			vtx += 4;
-			x += charInfo.bearingX + charInfo.width;
+			x += charInfo.adv;// charInfo.bearingX + charInfo.width;
 		}
 		drawData->drawState.alpha = _draw.alpha;
 		memcpy(&drawData->drawState.scissor, &_draw.scissor, sizeof(_draw.scissor));
