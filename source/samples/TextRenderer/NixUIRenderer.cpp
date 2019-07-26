@@ -7,6 +7,19 @@
 #include <NixRenderer.h>
 #include "NixUIRenderer.h"
 #include <nix/io/archieve.h>
+#include "TexturePacker/TexturePacker.h"
+
+#ifdef _WIN32
+#include <Windows.h>
+#define OpenLibrary( name ) (void*)::LoadLibraryA(name)
+#define CloseLibrary( library ) ::FreeLibrary((HMODULE)library)
+#define GetExportAddress( libray, function ) ::GetProcAddress( (HMODULE)libray, function )
+#else
+#include <dlfcn.h>
+#define OpenLibrary( name ) dlopen(name , RTLD_NOW | RTLD_LOCAL)
+#define CloseLibrary( library ) dlclose((void*)library)
+#define GetExportAddress( libray, function ) dlsym( (void*)libray, function )
+#endif
 
 namespace Nix {
 
@@ -24,10 +37,52 @@ namespace Nix {
 			return false;
 		}
 		m_context = _context;
-		Nix::TextReader mtlReader;
-		mtlReader.openFile(_archieve, "material/ui.json");
 		MaterialDescription mtl;
-		mtl.parse(mtlReader.getText());
+		strcpy(mtl.vertexShader, "ui/ui.vert");
+		strcpy(mtl.fragmentShader, "ui/ui.frag");
+		mtl.argumentCount = 1; {
+			mtl.argumentLayouts[0].descriptorCount = 1;
+			mtl.argumentLayouts[0].index = 0; {
+				mtl.argumentLayouts[0].descriptors[0].type = Nix::SDT_Sampler;
+				mtl.argumentLayouts[0].descriptors[0].binding = 0;
+				mtl.argumentLayouts[0].descriptors[0].shaderStage = Nix::FragmentShader;
+				strcpy(mtl.argumentLayouts[0].descriptors[0].name, "UiTexArray");
+			}			
+		}
+		mtl.pologonMode = Nix::PMFill; {
+			mtl.renderState.cullMode = Nix::CullNone;
+			mtl.renderState.blendState.enable = true;
+			mtl.renderState.blendState.srcFactor = SourceAlpha;
+			mtl.renderState.blendState.dstFactor = InvertSourceAlpha;
+			mtl.renderState.depthState.testable = false;
+			mtl.renderState.depthState.writable = false;
+			mtl.renderState.windingMode = Nix::CounterClockwise;
+			mtl.renderState.scissorEnable = true;
+			mtl.renderState.stencilState.enable = false;
+			mtl.renderState.writeMask = 0xff;
+		}
+		mtl.topologyMode = Nix::TMTriangleList;
+		//
+		mtl.vertexLayout.attributeCount = 3;
+		mtl.vertexLayout.bufferCount = 1;
+		mtl.vertexLayout.buffers[0].stride = sizeof(UIVertex);
+		mtl.vertexLayout.buffers[0].instanceMode = 0;
+		//
+		strcpy(mtl.vertexLayout.attributes[0].name, "position");
+		mtl.vertexLayout.attributes[0].offset = 0;
+		mtl.vertexLayout.attributes[0].bufferIndex = 0;
+		mtl.vertexLayout.attributes[0].type = Nix::VertexTypeFloat2;
+		
+		strcpy(mtl.vertexLayout.attributes[1].name, "uv");
+		mtl.vertexLayout.attributes[1].offset = 8;
+		mtl.vertexLayout.attributes[1].bufferIndex = 0;
+		mtl.vertexLayout.attributes[1].type = Nix::VertexTypeFloat3;
+		
+		strcpy(mtl.vertexLayout.attributes[2].name, "colorMask");
+		mtl.vertexLayout.attributes[2].offset = 20;
+		mtl.vertexLayout.attributes[2].bufferIndex = 0;
+		mtl.vertexLayout.attributes[2].type = Nix::VertexTypeUint;
+		
 		m_material = _context->createMaterial(mtl);
 		if (!m_material) {
 			return false;
@@ -72,9 +127,9 @@ namespace Nix {
 		return m_fontTexManager.addFont(_filepath);
 	}
 
-	PrebuildDrawData* UIRenderer::build(const TextDraw& _draw, PrebuildDrawData* _oldDrawData)
+	UIDrawData* UIRenderer::build(const TextDraw& _draw, UIDrawData* _oldDrawData)
 	{
-		PrebuildDrawData* drawData = nullptr;
+		UIDrawData* drawData = nullptr;
 		if (_oldDrawData) {
 			if (_oldDrawData->primitiveCount < _draw.length || _oldDrawData->type != UITopologyType::UIRectangle) {
 				m_vertexMemoryHeap.free(_oldDrawData->vertexBufferAllocation);
@@ -92,8 +147,8 @@ namespace Nix {
 		//
 		PrebuildBufferMemoryHeap::Allocation& allocation = drawData->vertexBufferAllocation;
 		//
-		int x = _draw.original.x;
-		int y = _draw.original.y;
+		int x = _draw.origin.x;
+		int y = _draw.origin.y;
 		//
 		UIVertex* vtx = (UIVertex*)allocation.ptr;
 		for (uint32_t charIdx = 0; charIdx < _draw.length; ++charIdx) {
@@ -129,11 +184,15 @@ namespace Nix {
 			// configure layer
 			vtx[0].layer = vtx[1].layer = vtx[2].layer = vtx[3].layer = charInfo.layer;
 			//
+			vtx[0].color = _draw.colorMask;
+			vtx[1].color = _draw.colorMask;
+			vtx[2].color = _draw.colorMask;
+			vtx[3].color = _draw.colorMask;
+			//
 			vtx += 4;
 			x += charInfo.adv;// charInfo.bearingX + charInfo.width;
 		}
-		drawData->drawState.alpha = _draw.alpha;
-		memcpy(&drawData->drawState.scissor, &_draw.scissor, sizeof(_draw.scissor));
+		memcpy(&drawData->drawState.scissor, &_draw.scissorRect, sizeof(_draw.scissorRect));
 		drawData->type = UIRectangle;
 		//
 		return drawData;
@@ -153,7 +212,7 @@ namespace Nix {
 		}
 	}
 
-	void UIRenderer::buildDrawCall( const PrebuildDrawData* _drawData )
+	void UIRenderer::buildDrawCall( const UIDrawData* _drawData )
 	{
 		auto& renderbles = m_renderables[m_flightIndex];
 		auto& meshBuffers = m_meshBuffers[m_flightIndex];

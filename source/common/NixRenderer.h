@@ -237,6 +237,7 @@ namespace Nix {
 		VertexTypeFloat2,
 		VertexTypeFloat3,
 		VertexTypeFloat4,
+		VertexTypeUint,
 		VertexTypeHalf2,
 		VertexTypeHalf4,
 		VertexTypeUByte4,

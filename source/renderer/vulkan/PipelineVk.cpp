@@ -71,7 +71,7 @@ namespace Nix {
 		colorBlendState.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 		colorBlendState.attachmentCount = _renderPass.colorCount;
 		colorBlendState.pAttachments = blendAttachmentState;
-		// Viewport state sets the number of viewports and scissor used in this pipeline
+		// Viewport state sets the number of viewports and scissorRect used in this pipeline
 		// Note: This is actually overriden by the dynamic states (see below) ���ﶯ̬������
 		VkPipelineViewportStateCreateInfo viewportState = {};
 		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -80,7 +80,7 @@ namespace Nix {
 		// Enable dynamic states
 		// Most states are baked into the pipeline, but there are still a few dynamic states that can be changed within a command buffer
 		// To be able to change these we need do specify which dynamic states will be changed using this pipeline. Their actual states are set later on in the command buffer.
-		// For this example we will set the viewport and scissor using dynamic states
+		// For this example we will set the viewport and scissorRect using dynamic states
 		std::vector<VkDynamicState> dynamicStateEnables;
 		dynamicStateEnables.push_back(VK_DYNAMIC_STATE_VIEWPORT);
 		dynamicStateEnables.push_back(VK_DYNAMIC_STATE_SCISSOR);

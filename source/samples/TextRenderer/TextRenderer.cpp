@@ -44,12 +44,13 @@ namespace Nix {
 		Nix::UIRenderer::TextDraw draw;
 		draw.fontId = 0;
 		draw.fontSize = 24;
-		draw.alpha = 1.0f;
+		// RGBA
+		draw.colorMask = 0xffff0088;
 		draw.length = 13;
 		draw.text = u"ÄãºÃ£¬ÊÀ½ç£¡phantom";
-		draw.original = { 32, 32 };
-		draw.scissor.origin = {0 , 0};
-		draw.scissor.size = {512, 512};
+		draw.origin = { 32, 32 };
+		draw.scissorRect.origin = {0 , 0};
+		draw.scissorRect.size = {512, 512};
 
 		m_drawData = m_uiRenderer.build(draw, nullptr);
 
