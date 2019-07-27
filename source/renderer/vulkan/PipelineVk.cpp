@@ -202,6 +202,7 @@ namespace Nix {
 
 	void PipelineVk::setDynamicalStates(VkCommandBuffer _commandBuffer)
 	{
+		//m_commandBuffer = _commandBuffer;
 		vkCmdSetBlendConstants(_commandBuffer, m_blendConstants);
 		// depthBiasClamp indicates whether depth bias clamping is supported.
 		// If this feature is not enabled 
@@ -210,26 +211,8 @@ namespace Nix {
 		// and the depthBiasClamp parameter to vkCmdSetDepthBias must be set to 0.0
 		vkCmdSetDepthBias(_commandBuffer, m_constantBias, 0.0f, m_slopeScaleBias);
 		vkCmdSetStencilReference(_commandBuffer, VK_STENCIL_FRONT_AND_BACK, m_stencilReference);
-		vkCmdSetViewport(_commandBuffer, 0, 1, &m_viewport);
-		vkCmdSetScissor(_commandBuffer, 0, 1, &m_scissor);
-	}
-
-	void PipelineVk::setViewport(const Viewport& _viewport)
-	{
-		m_viewport.width = _viewport.width;
-		m_viewport.height = _viewport.height;
-		m_viewport.x = _viewport.x;
-		m_viewport.y = _viewport.y;
-		m_viewport.maxDepth = _viewport.zFar;
-		m_viewport.minDepth = _viewport.zNear;
-	}
-
-	void PipelineVk::setScissor(const Scissor& _scissor)
-	{
-		m_scissor.extent.width = _scissor.size.width;
-		m_scissor.extent.height = _scissor.size.height;
-		m_scissor.offset.x = _scissor.origin.x;
-		m_scissor.offset.y = _scissor.origin.y;
+		//vkCmdSetViewport(_commandBuffer, 0, 1, &m_viewport);
+		//vkCmdSetScissor(_commandBuffer, 0, 1, &m_scissor);
 	}
 
 	void PipelineVk::setPolygonOffset(float _constantBias, float _slopeScaleBias)

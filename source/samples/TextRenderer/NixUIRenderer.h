@@ -31,7 +31,7 @@ namespace Nix {
 	class UIRenderer {
 	public:
 		struct TextDraw {
-			char16_t*				text;
+			const char16_t*			text;
 			uint32_t				length;
 			uint32_t				fontId;
 			uint16_t				fontSize; 
@@ -54,7 +54,11 @@ namespace Nix {
 		IMaterial*					m_material;
 		IPipeline*					m_pipeline;
 		IArgument*					m_argument;
-		ITexture*					m_uiTexArray;
+		ITexture*					m_textureArray;
+		//
+		int							m_width;
+		int							m_height;
+		UIDrawState					m_drawState;
 		// ---------------------------------------------------------------------------------------------------
 		// resources
 		// ---------------------------------------------------------------------------------------------------
@@ -82,6 +86,7 @@ namespace Nix {
 		// ---------------------------------------------------------------------------------------------------
 
 		bool initialize(IContext* _context, IArchieve* _archieve);
+		void setScreenSize( int _width, int _height );
 		uint32_t addFont( const char * _filepath );
 
 		// ---------------------------------------------------------------------------------------------------
@@ -96,7 +101,7 @@ namespace Nix {
 		// runtime drawing
 		// ---------------------------------------------------------------------------------------------------
 		void beginBuild(uint32_t _flightIndex);
-		void buildDrawCall(const UIDrawData * _drawData);
+		void buildDrawCall(const UIDrawData * _drawData, const UIDrawState& _state );
 		void endBuild();
 		//
 		void render(IRenderPass* _renderPass, float _width, float _height);

@@ -20,7 +20,7 @@ namespace Nix {
 		m_renderable->setIndexBuffer(m_indexBuffer, 0);
 	}
 
-	bool UIMeshBuffer::pushVertices(const UIDrawData* _drawData) {
+	bool UIMeshBuffer::pushVertices(const UIDrawData* _drawData, const UIDrawState& _drawState, const UIDrawState& _lastState) {
 
 		uint32_t dcVtxCount = 0;
 		uint32_t dcIdxCount = 0;
@@ -73,7 +73,7 @@ namespace Nix {
 			}
 		}
 		// can merge the draw call
-		if (m_vecCommands.size() && m_vecCommands.back().state == _drawData->drawState) {
+		if ( _drawState == _lastState ) {
 			UIDrawBatch& cmd = m_vecCommands.back();
 			cmd.elementCount += dcIdxCount;
 		}
@@ -83,7 +83,7 @@ namespace Nix {
 			cmd.elementCount = dcIdxCount;
 			cmd.indexOffset = (m_indexCount - dcIdxCount);
 			cmd.vertexOffset = (m_vertexCount - dcVtxCount) * sizeof(UIVertex);
-			cmd.state = _drawData->drawState;
+			cmd.state = _drawState;
 			m_vecCommands.push_back(cmd);
 		}
 		return true;
@@ -104,7 +104,7 @@ namespace Nix {
 		constants.screenHeight = _screenHeight;
 
 		for (auto& dc : this->m_vecCommands) {
-			_pipeline->setScissor(dc.state.scissor);
+			_renderPass->setScissor(dc.state.scissor);
 			_argument->setShaderCache(0, &constants, sizeof(constants));
 			_renderPass->bindArgument(_argument);
 			_renderPass->drawElements(m_renderable, dc.indexOffset, dc.elementCount);

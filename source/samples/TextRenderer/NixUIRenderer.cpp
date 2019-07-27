@@ -103,9 +103,9 @@ namespace Nix {
 		texDesc.width = texDesc.height = 512;
 		texDesc.mipmapLevel = 1;
 		texDesc.type = Texture2DArray;
-		m_uiTexArray = m_context->createTexture(texDesc);
+		m_textureArray = m_context->createTexture(texDesc);
 		m_argument = m_material->createArgument(0);
-		if (!m_argument || !m_uiTexArray) {
+		if (!m_argument || !m_textureArray) {
 			return false;
 		}
 		for (uint32_t i = 0; i<MaxFlightCount; ++i) {
@@ -113,13 +113,19 @@ namespace Nix {
 			m_meshBuffers[i].resize(1);
 			m_meshBuffers[i].back().initialize(_context, m_renderables[i][0], MaxVertexCount);
 		}
-		bool rst = m_fontTexManager.initialize(_context, _archieve, m_uiTexArray, m_createPacker, 2);
+		bool rst = m_fontTexManager.initialize(_context, _archieve, m_textureArray, m_createPacker, 2);
 		if (!rst) {
 			return false;
 		}
 		SamplerState ss;
-		m_argument->setSampler(0, ss, m_uiTexArray);
+		m_argument->setSampler(0, ss, m_textureArray);
 		return true;
+	}
+
+	void UIRenderer::setScreenSize(int _width, int _height)
+	{
+		m_width = _width;
+		m_height = _height;
 	}
 
 	uint32_t UIRenderer::addFont(const char * _filepath)
@@ -173,11 +179,11 @@ namespace Nix {
 			vtx[2].x = vtx[3].x;
 			vtx[2].y = vtx[1].y;
 			// configure [u,v]
-			vtx[0].u = (float)charInfo.x / (TexturePackerWidth - 1);
-			vtx[0].v = (float)charInfo.y / (TexturePackerHeight - 1);
+			vtx[0].u = (float)charInfo.x / TexturePackerWidth;
+			vtx[0].v = (float)charInfo.y / TexturePackerHeight;
 			vtx[1].u = vtx[0].u;
-			vtx[1].v = (float)(charInfo.y + charInfo.height) / (TexturePackerHeight - 1);
-			vtx[3].u = (float)(charInfo.x + charInfo.width) / (TexturePackerWidth - 1);
+			vtx[1].v = (float)(charInfo.y + charInfo.height) / TexturePackerHeight;
+			vtx[3].u = (float)(charInfo.x + charInfo.width) / TexturePackerWidth;
 			vtx[3].v = vtx[0].v;
 			vtx[2].u = vtx[3].u;
 			vtx[2].v = vtx[1].v;
@@ -192,7 +198,6 @@ namespace Nix {
 			vtx += 4;
 			x += charInfo.adv;// charInfo.bearingX + charInfo.width;
 		}
-		memcpy(&drawData->drawState.scissor, &_draw.scissorRect, sizeof(_draw.scissorRect));
 		drawData->type = UIRectangle;
 		//
 		return drawData;
@@ -210,15 +215,17 @@ namespace Nix {
 		for (auto& meshBuffer : meshBuffers) {
 			meshBuffer.clear();
 		}
+		m_drawState.scissor.origin = {0 , 0};
+		m_drawState.scissor.size = { m_width, m_height };
 	}
 
-	void UIRenderer::buildDrawCall( const UIDrawData* _drawData )
+	void UIRenderer::buildDrawCall( const UIDrawData* _drawData, const UIDrawState& _state)
 	{
 		auto& renderbles = m_renderables[m_flightIndex];
 		auto& meshBuffers = m_meshBuffers[m_flightIndex];
 		auto& meshBuffer = meshBuffers[m_meshBufferIndex];
 		//
-		if (!meshBuffer.pushVertices(_drawData)) {
+		if (!meshBuffer.pushVertices(_drawData, _state, m_drawState)) {
 			// create a new mesh buffer
 			meshBuffers.resize(meshBuffers.size() + 1);
 			meshBuffer = meshBuffers.back();
@@ -226,9 +233,11 @@ namespace Nix {
 			renderbles.push_back(renderable);
 			meshBuffer.initialize(m_context, renderable, MaxVertexCount);
 			//
-			bool rst = meshBuffer.pushVertices(_drawData);
+			bool rst = meshBuffer.pushVertices(_drawData, _state, m_drawState);
 			assert(rst);
 		}
+		// update current scissor state
+		m_drawState = _state;
 	}
 
 	void UIRenderer::endBuild()
@@ -247,11 +256,11 @@ namespace Nix {
 		vp.zNear = 0; vp.zFar = 1.0f;
 		vp.width = _width;
 		vp.height = _height;
-		m_pipeline->setViewport(vp);
+		_renderPass->setViewport(vp);
 		Nix::Scissor ss;
 		ss.origin = { 0, 0 };
-		ss.size = { 512, 512};
-		m_pipeline->setScissor(ss);
+		ss.size = { (int)_width, (int)_height };
+		_renderPass->setScissor(ss);
 		_renderPass->bindPipeline(m_pipeline);
 		_renderPass->bindArgument(m_argument);
 		//

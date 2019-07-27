@@ -22,9 +22,10 @@ namespace Nix {
 	};
 
 	struct UIDrawState {
-		// if inherit scissor is active don't need to
-		uint8_t					inheritScissor;
 		Nix::Scissor			scissor;
+		void setScissor(const Nix::Scissor& _scissor) {
+			scissor = _scissor;
+		}
 		bool operator == (const UIDrawState& _state) const {
 			if (memcmp(this, &_state, sizeof(*this)) == 0) {
 				return true;
@@ -38,14 +39,12 @@ namespace Nix {
 		UITopologyType							type;
 		uint32_t								primitiveCount;
 		uint32_t								primitiveCapacity;
-		//
-		UIDrawState								drawState;
 	};
 
 	struct UIDrawBatch {
-		uint32_t				vertexBufferIndex;	// vertex buffer index, should be zero currently
+		//uint32_t				vertexBufferIndex;	// vertex buffer index, should be zero currently
 		uint32_t				vertexOffset;		// vertex offset
-		uint32_t				indexBufferIndex;	// index buffer index
+		//uint32_t				indexBufferIndex;	// index buffer index
 		uint32_t				indexOffset;		// index buffer offset
 		uint16_t				elementCount;		// `element count` param of the `draw element` function
 		UIDrawState				state;

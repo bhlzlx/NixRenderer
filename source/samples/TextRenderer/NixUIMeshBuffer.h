@@ -40,7 +40,7 @@ namespace Nix {
 			m_vecCommands.clear();
 		}
 
-		bool pushVertices(const UIDrawData* _drawData);
+		bool pushVertices(const UIDrawData* _drawData, const UIDrawState& _drawState, const UIDrawState& _lastState );
 
 		void flushMeshBuffer();
 
