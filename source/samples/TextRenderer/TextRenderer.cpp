@@ -43,12 +43,13 @@ namespace Nix {
 		m_uiRenderer.addFont("font/font00.ttf");
 
 		char16_t text[] = u"Œƒ±æ∂‘∆Î≤‚ ‘ - powered by Vulkan!";
+		char16_t text2[] = u"≤√ºÙ≤‚ ‘";
 
 		Nix::UIRenderer::TextDraw draw;
 		draw.fontId = 0;
-		draw.fontSize = 24;
+		draw.fontSize = 32;
 		// RGBA
-		draw.colorMask = 0xff00ffff;
+		draw.colorMask = 0x770044ff;
 		draw.length = sizeof(text) / 2 - 1;
 		draw.text = &text[0];
 		draw.rect.origin = { 0, 0 };
@@ -58,13 +59,21 @@ namespace Nix {
 
 		m_drawData1 = m_uiRenderer.build(draw, nullptr);
 
-		m_drawData2 = m_uiRenderer.copyDrawData(m_drawData1);
-		m_uiRenderer.transformDrawData(m_drawData1, 0, -32, m_drawData2);
+		draw.colorMask = 0x007755ff;
+		draw.length = sizeof(text2) / 2 - 1;
+		draw.text = &text2[0];
+		draw.fontSize = 24;
+		draw.fontId = 1;
+		draw.halign = UIAlignLeft;
+		draw.valign = UIAlignBottom;
+
+		m_drawData2 = m_uiRenderer.build(draw, nullptr);
+		//m_uiRenderer.transformDrawData(m_drawData1, 0, -32, m_drawData2);
 		m_drawData3 = m_uiRenderer.copyDrawData(m_drawData2);
 
 		Nix::Scissor customScissor;
-		customScissor.origin = { 134,0 };
-		customScissor.size = { 72, 96 };
+		customScissor.origin = { 4,4 };
+		customScissor.size = { 96, 18 };
 		m_uiRenderer.scissorDrawData(m_drawData2, customScissor, m_drawData3);
 		//
 		//draw.fontId = 0;
