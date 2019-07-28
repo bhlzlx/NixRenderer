@@ -21,13 +21,6 @@ namespace Nix {
 	public:
 	};
 
-	enum VertexClipFlagBits {
-		AllClipped = 0,
-		PartClipped = 1,
-		NoneClipped = 2,
-	};
-	typedef uint8_t VertexClipFlags;
-
 	// UI 渲染器使用的 descriptor set 都是同一个！
 	// 即 字体纹理，普通UI的图像纹理都统统打包成 texture 2d array
 	// 字体使用  R8_UNORM texture 2d array
@@ -42,8 +35,11 @@ namespace Nix {
 			uint32_t				length;
 			uint32_t				fontId;
 			uint16_t				fontSize;
-			//
 			uint32_t				colorMask;
+			//
+			Nix::Rect<int16_t>		rect;
+			Nix::UIVertAlign		valign;
+			Nix::UIHoriAlign		halign;
 		};
 
 		struct ImageDraw {
@@ -72,7 +68,7 @@ namespace Nix {
 		PFN_CREATE_TEXTURE_PACKER	m_createPacker;
 		DrawDataMemoryHeap			m_vertexMemoryHeap;
 		MemoryPool<UIDrawData> 
-									m_prebuilDrawDataPool;
+									m_drawDataPool;
 		FontTextureManager			m_fontTexManager;
 
 		// ---------------------------------------------------------------------------------------------------
@@ -97,10 +93,44 @@ namespace Nix {
 		// ---------------------------------------------------------------------------------------------------
 		//  build draw data
 		// ---------------------------------------------------------------------------------------------------
-
+		
+		/**
+		* @brief 构建 draw data
+		*	但不执行裁剪
+		* @param[in] _draw  需要构建的文本描述
+		* @param[in] _oldDrawData 旧的draw data可被重用
+		* @return 返回构建结果
+		* @see
+		*/
 		UIDrawData* build( const TextDraw& _draw, UIDrawData* _oldDrawData );
+
+		/**
+		* @brief 复制一份 draw data，一般复制用来做渲染，主要是为了频繁更新位置的控件使用
+		*	原 draw data 一般作为一个备份存储用
+		* @param[in] _drawData  复制对象
+		* @return 返回复制结果
+		* @see
+		*/
+		UIDrawData* copyDrawData(UIDrawData* _drawData);
+		/**
+		* @brief 对一个  draw data 进行位置操作，如果 _to 参数为空，则原地执行变换
+		*	
+		* @param[in] _draw  操作对象
+		* @param[in] _offsetX  x位移
+		* @param[in] _offsetY  y位移
+		* @see
+		*/
+		void transformDrawData( UIDrawData* _draw, float _offsetX, float _offsetY, UIDrawData* _to);
+
+		/**
+		* @brief 对一个  draw data 进行裁剪操作，输出到 _output
+		*
+		* @param[in] _draw  操作对象
+		* @param[in] _scissor  裁剪矩阵
+		* @see
+		*/
+		void scissorDrawData(UIDrawData* _draw, const Nix::Scissor& _scissor, UIDrawData* _output );
 		//
-		UIDrawData* buildAdvanced( UIDrawData* _drawData, const Nix::Scissor& _scissor );
 		//UIDrawData* build( const ImageDraw* _pImages, uint32_t _count );
 		//UIDrawData* build( const ImageDraw* _pImages, uint32_t _count, const TextDraw& _draw );
 

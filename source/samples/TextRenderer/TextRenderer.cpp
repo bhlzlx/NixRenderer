@@ -42,7 +42,7 @@ namespace Nix {
 		m_uiRenderer.addFont("font/hwzhsong.ttf");
 		m_uiRenderer.addFont("font/font00.ttf");
 
-		char16_t text[] = u"文本测试,，《》？！15!@#&*(_+)_((*&*6 - powered by Vulkan!";
+		char16_t text[] = u"文本对齐测试 - powered by Vulkan!";
 
 		Nix::UIRenderer::TextDraw draw;
 		draw.fontId = 0;
@@ -51,23 +51,27 @@ namespace Nix {
 		draw.colorMask = 0xff00ffff;
 		draw.length = sizeof(text) / 2 - 1;
 		draw.text = &text[0];
-		draw.rectangle.origin = { 32, 32 };
-		draw.scissorRect.origin = {0 , 0};
-		draw.scissorRect.size = {512, 512};
+		draw.rect.origin = { 0, 0 };
+		draw.rect.size = {512, 256};
+		draw.halign = UIAlignHoriMid;
+		draw.valign = UIAlignVertMid;
 
 		m_drawData1 = m_uiRenderer.build(draw, nullptr);
 
-		draw.fontId = 1;
-		draw.colorMask = 0xff0000ff;
-		draw.rectangle.origin = { 32, 64 };
-		m_drawData2 = m_uiRenderer.build(draw, nullptr);
+		m_drawData2 = m_uiRenderer.copyDrawData(m_drawData1);
+		m_uiRenderer.transformDrawData(m_drawData1, 0, -32, m_drawData2);
+		m_drawData3 = m_uiRenderer.copyDrawData(m_drawData2);
 
-		draw.fontId = 0;
-		draw.fontSize = 32;
-		draw.colorMask = 0xff0000ff;
-		draw.rectangle.origin = { 32, 96 };
-		m_drawData3 = m_uiRenderer.build(draw, nullptr);
-
+		Nix::Scissor customScissor;
+		customScissor.origin = { 134,0 };
+		customScissor.size = { 72, 96 };
+		m_uiRenderer.scissorDrawData(m_drawData2, customScissor, m_drawData3);
+		//
+		//draw.fontId = 0;
+		//draw.fontSize = 32;
+		//draw.colorMask = 0xff0000ff;
+		//draw.rect.origin = { 32, 96 };
+		//m_drawData3 = m_uiRenderer.build(draw, nullptr);
 		return true;
 	}
 	inline void TextSample::resize(uint32_t _width, uint32_t _height) {
@@ -97,9 +101,9 @@ namespace Nix {
 			state.scissor = m_scissor;
 			m_uiRenderer.beginBuild(tickCounter%MaxFlightCount);
 			m_uiRenderer.buildDrawCall(m_drawData1, state );
-			m_uiRenderer.buildDrawCall(m_drawData2, state );
-			state.scissor.size = { 512, 512 };
-			m_uiRenderer.buildDrawCall(m_drawData3, state);
+			m_uiRenderer.buildDrawCall(m_drawData3, state );
+			//state.scissor.size = { 512, 512 };
+			//m_uiRenderer.buildDrawCall(m_drawData3, state);
 			m_uiRenderer.endBuild();
 
 			m_mainRenderPass->begin(m_primQueue); {

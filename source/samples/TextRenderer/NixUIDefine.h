@@ -4,8 +4,19 @@
 
 namespace Nix {
 
+	static const uint16_t TexturePackerWidth = 512;
+	static const uint16_t TexturePackerHeight = 512;
+	static const uint16_t TexturePackerDepth = 2;
+
 	static const uint32_t FontLayerCount = 4;
 
+	enum VertexClipFlagBits {
+		AllClipped = 0,
+		PartClipped = 1,
+		NoneClipped = 2,
+	};
+
+	typedef uint8_t VertexClipFlags;
 	enum UITopologyType {
 		UITriangle,
 		UIRectangle
@@ -31,7 +42,6 @@ namespace Nix {
 		float		v;			// texture coordinate( u, v )
 		float		layer;		// texture array layer
 		uint32_t	color;		// color mask
-		//
 	};
 
 	struct UIDrawState {
@@ -52,8 +62,6 @@ namespace Nix {
 		UITopologyType							type;
 		uint32_t								primitiveCount;
 		uint32_t								primitiveCapacity;
-		//
-		Nix::Rect<int>							area;
 	};
 
 	struct UIDrawBatch {

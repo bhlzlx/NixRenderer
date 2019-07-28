@@ -1,4 +1,5 @@
 #pragma once
+#include <NixRenderer.h>
 #include "NixUIDefine.h"
 
 namespace Nix {
@@ -42,11 +43,11 @@ namespace Nix {
 	*---------------------------------------------------*/
 
 	template< class T >
-	void alignVertical(T _height, T _top, T _bottom, UIVertAlign _align, T& _alignTop, T& _alignBottom) {
+	void alignVertical(T _height, T _top, T _bottom, UIVertAlign _align, T& _alignedTop, T& _alignedBottom) {
 		switch (_align) {
 		case UIAlignTop: {
 			_alignedTop = _top;
-			_alignedBottom = _right + _width;
+			_alignedBottom = _alignedTop - _height;
 			return;
 		}
 		case UIAlignBottom: {
@@ -89,4 +90,5 @@ namespace Nix {
 		return rc;
 	}
 
+	VertexClipFlags clipRect(UIVertex* _rc, const Nix::Scissor& _scissor, UIVertex* _output);
 }

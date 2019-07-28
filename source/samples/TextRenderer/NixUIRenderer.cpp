@@ -23,10 +23,6 @@
 
 namespace Nix {
 
-	static const uint16_t TexturePackerWidth = 512;
-	static const uint16_t TexturePackerHeight = 512;
-	static const uint16_t TexturePackerDepth = 2;
-
 	bool UIRenderer::initialize(IContext* _context, IArchieve* _archieve) {
 		m_packerLibrary = OpenLibrary("TexturePacker.dll");
 		if (!m_packerLibrary) {
@@ -128,86 +124,9 @@ namespace Nix {
 		m_height = _height;
 	}
 
-	uint32_t UIRenderer::addFont(const char * _filepath)
+	uint32_t UIRenderer::addFont(const char* _filepath)
 	{
 		return m_fontTexManager.addFont(_filepath);
-	}
-
-	UIDrawData* UIRenderer::build(const TextDraw& _draw, UIDrawData* _oldDrawData)
-	{
-		UIDrawData* drawData = nullptr;
-		if (_oldDrawData) {
-			if (_oldDrawData->primitiveCount < _draw.length || _oldDrawData->type != UITopologyType::UIRectangle) {
-				m_vertexMemoryHeap.free(_oldDrawData->vertexBufferAllocation);
-				_oldDrawData->vertexBufferAllocation = m_vertexMemoryHeap.allocateRects(_draw.length);
-				_oldDrawData->primitiveCapacity = _oldDrawData->primitiveCount = _draw.length;
-			}
-			drawData = _oldDrawData;
-			_oldDrawData->primitiveCount = _draw.length;
-		}
-		else {
-			drawData = m_prebuilDrawDataPool.newElement();
-			drawData->vertexBufferAllocation = m_vertexMemoryHeap.allocateRects(_draw.length);
-			drawData->primitiveCapacity = drawData->primitiveCount = _draw.length;
-		}
-		//
-		DrawDataMemoryHeap::Allocation& allocation = drawData->vertexBufferAllocation;
-		//
-		//float lineHeight = 0.0f;
-		//float baseLine = 0.0f;
-		//this->m_fontTexManager.getLineHeight(_draw.fontId, _draw.fontSize, lineHeight, baseLine);
-		int x = _draw.rectangle.origin.x;
-		int y = _draw.rectangle.origin.y;
-
-		float textWidth = 0;
-		float textHeight = 0;
-		//
-		UIVertex* vtx = (UIVertex*)allocation.ptr;
-		for (uint32_t charIdx = 0; charIdx < _draw.length; ++charIdx) {
-			Nix::CharKey c;
-			c.charCode = _draw.text[charIdx];
-			c.fontId = _draw.fontId;
-			c.size = _draw.fontSize;
-			auto& charInfo = m_fontTexManager.getCharactor(c);
-			/* ----------
-			*	0 -- 3
-			*	| \  | 
-			*	|  \ |
-			*	1 -- 2
-			* --------- */
-			// configure [x,y] positions
-			vtx[1].x = x + charInfo.bearingX;
-			vtx[1].y = y - (charInfo.height - charInfo.bearingY);
-			vtx[0].x = vtx[1].x;
-			vtx[0].y = vtx[1].y + charInfo.height;
-			vtx[3].x = vtx[0].x + charInfo.width;
-			vtx[3].y = vtx[0].y;
-			vtx[2].x = vtx[3].x;
-			vtx[2].y = vtx[1].y;
-			// configure [u,v]
-			vtx[0].u = (float)charInfo.x / TexturePackerWidth;
-			vtx[0].v = (float)charInfo.y / TexturePackerHeight;
-			vtx[1].u = vtx[0].u;
-			vtx[1].v = (float)(charInfo.y + charInfo.height) / TexturePackerHeight;
-			vtx[3].u = (float)(charInfo.x + charInfo.width) / TexturePackerWidth;
-			vtx[3].v = vtx[0].v;
-			vtx[2].u = vtx[3].u;
-			vtx[2].v = vtx[1].v;
-			// configure layer
-			vtx[0].layer = vtx[1].layer = vtx[2].layer = vtx[3].layer = charInfo.layer;
-			//
-			vtx[0].color = _draw.colorMask;
-			vtx[1].color = _draw.colorMask;
-			vtx[2].color = _draw.colorMask;
-			vtx[3].color = _draw.colorMask;
-			//
-
-			vtx += 4;
-			x += charInfo.adv;// charInfo.bearingX + charInfo.width;
-		}
-		drawData->type = UIRectangle;
-		//
-		return drawData;
 	}
 
 	// -------------------------------------------------------------------------------------

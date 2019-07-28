@@ -1,3 +1,4 @@
+#pragma once
 #include <NixRenderer.h>
 #include <stb_truetype.h>
 #include <vector>
