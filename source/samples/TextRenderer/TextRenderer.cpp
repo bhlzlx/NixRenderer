@@ -33,34 +33,25 @@ namespace Nix {
 		m_primQueue = m_context->getGraphicsQueue(0);
 
 		RpClear clear;
-		clear.colors[0] = { .2f, .2f, .2f, 1.0f };
+		clear.colors[0] = { .5f, .5f, .5f, 1.0f };
 		clear.depth = 1.0f;
 		clear.stencil = 1;
 		m_mainRenderPass->setClear(clear);
-		//
+
 		m_uiRenderer.initialize(m_context, _archieve);
 		m_uiRenderer.addFont("font/hwzhsong.ttf");
-		m_uiRenderer.addFont("font/font00.ttf");
-		m_uiRenderer.addFont("font/hwkaiti.ttf");
-		//
+
 		Nix::UIRenderer::TextDraw draw;
-		draw.fontId = 1;
-		draw.fontSize = 32;
+		draw.fontId = 0;
+		draw.fontSize = 24;
 		draw.alpha = 1.0f;
-		draw.length = 17;
-		draw.text = u"《OpenGL超级宝典（第七版）》";
+		draw.length = 13;
+		draw.text = u"你好，世界！phantom";
 		draw.original = { 32, 32 };
 		draw.scissor.origin = {0 , 0};
 		draw.scissor.size = {512, 512};
 
-		m_drawDataText1 = m_uiRenderer.build(draw, nullptr);
-		draw.fontId = 0;
-		draw.original = { 32, 64 };
-		m_drawDataText2 = m_uiRenderer.build(draw, nullptr);
-
-		draw.fontId = 2;
-		draw.original = { 32, 96 };
-		m_drawDataText3 = m_uiRenderer.build(draw, nullptr);
+		m_drawData = m_uiRenderer.build(draw, nullptr);
 
 		return true;
 	}
@@ -87,13 +78,11 @@ namespace Nix {
 		tickCounter++;
 
 		if (m_context->beginFrame()) {
-			//
+
 			m_uiRenderer.beginBuild(tickCounter%MaxFlightCount);
-			m_uiRenderer.buildDrawBatch(m_drawDataText1);
-			m_uiRenderer.buildDrawBatch(m_drawDataText2);
-			m_uiRenderer.buildDrawBatch(m_drawDataText3);
+			m_uiRenderer.buildDrawCall(m_drawData);
 			m_uiRenderer.endBuild();
-			//
+
 			m_mainRenderPass->begin(m_primQueue); {
 				m_uiRenderer.render(m_mainRenderPass, m_width, m_height);
 			}

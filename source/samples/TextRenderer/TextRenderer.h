@@ -31,10 +31,7 @@ namespace Nix {
 		IRenderPass*			m_mainRenderPass;
 		IGraphicsQueue*			m_primQueue;
 		Nix::UIRenderer			m_uiRenderer;
-		//
-		Nix::UIDrawData*		m_drawDataText1;
-		Nix::UIDrawData*		m_drawDataText2;
-		Nix::UIDrawData*		m_drawDataText3;
+		Nix::PrebuildDrawData*	m_drawData;
 
 		float					m_width;
 		float					m_height;

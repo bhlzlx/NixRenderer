@@ -72,9 +72,9 @@ namespace Nix {
 		return m_fontTexManager.addFont(_filepath);
 	}
 
-	UIDrawData* UIRenderer::build(const TextDraw& _draw, UIDrawData* _oldDrawData)
+	PrebuildDrawData* UIRenderer::build(const TextDraw& _draw, PrebuildDrawData* _oldDrawData)
 	{
-		UIDrawData* drawData = nullptr;
+		PrebuildDrawData* drawData = nullptr;
 		if (_oldDrawData) {
 			if (_oldDrawData->primitiveCount < _draw.length || _oldDrawData->type != UITopologyType::UIRectangle) {
 				m_vertexMemoryHeap.free(_oldDrawData->vertexBufferAllocation);
@@ -90,7 +90,7 @@ namespace Nix {
 			drawData->primitiveCapacity = drawData->primitiveCount = _draw.length;
 		}
 		//
-		DrawDataMemoryHeap::Allocation& allocation = drawData->vertexBufferAllocation;
+		PrebuildBufferMemoryHeap::Allocation& allocation = drawData->vertexBufferAllocation;
 		//
 		int x = _draw.original.x;
 		int y = _draw.original.y;
@@ -153,7 +153,7 @@ namespace Nix {
 		}
 	}
 
-	void UIRenderer::buildDrawBatch( const UIDrawData* _drawData )
+	void UIRenderer::buildDrawCall( const PrebuildDrawData* _drawData )
 	{
 		auto& renderbles = m_renderables[m_flightIndex];
 		auto& meshBuffers = m_meshBuffers[m_flightIndex];
