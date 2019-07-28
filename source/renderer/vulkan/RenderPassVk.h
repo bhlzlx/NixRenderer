@@ -38,6 +38,9 @@ namespace Nix {
 		RenderPassDescription		m_desc;
 		VkFramebuffer				m_framebuffer;
 		VkRenderPass				m_renderPass;
+
+		VkViewport					m_viewport;
+		VkRect2D					m_scissor;
 		//
 		AttachmentVk*				m_colorAttachments[MaxRenderTarget];
 		AttachmentVk*				m_depthStencil;
@@ -66,6 +69,8 @@ namespace Nix {
 		virtual void resize(uint32_t _width, uint32_t _height) override;
 		virtual void end() override; 
 		virtual void setClear( const RpClear& _clear ) override;
+		virtual void setViewport(const Viewport& _viewport) override;
+		virtual void setScissor(const Scissor& _scissor) override;
 		
 		virtual RenderPassType type() override {
 			return OffscreenRenderPass;
@@ -95,6 +100,9 @@ namespace Nix {
 	private:
 		ContextVk*						m_context;
 		VkRenderPass					m_renderPass;
+		VkViewport						m_viewport;
+		VkRect2D						m_scissor;
+
 		std::vector<VkImage>			m_vecImages;
 		std::vector<TextureVk*>			m_vecColors;
 		TextureVk*						m_depthStencil;
@@ -124,6 +132,9 @@ namespace Nix {
 		virtual bool begin( IGraphicsQueue* _queue ) override;
 		//
 		virtual void resize(uint32_t _width, uint32_t _height) override;
+
+		virtual void setViewport(const Viewport& _viewport) override;
+		virtual void setScissor(const Scissor& _scissor) override;
 
 		virtual void end() override;
 

@@ -2,15 +2,6 @@ project( VkShaderCompiler )
 
 add_definitions( "-DNIX_DYNAMIC_LINK" )
 
-if(MSVC)
-    set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
-    set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
-
-    set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MT")
-    set( CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MTd")
-    #include(ChooseMSVCCRT.cmake)
-endif(MSVC)
-
 set(CMAKE_DEBUG_POSTFIX "")
 
 include_directories(

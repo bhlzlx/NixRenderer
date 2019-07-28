@@ -45,6 +45,25 @@ namespace Nix {
 		return (uint32_t)m_vecFont.size() - 1;
 	}
 
+	void FontTextureManager::getLineHeight(uint8_t _fontId, uint8_t _fontSize, float& height_, float& baseLine_)
+	{
+		auto& font = m_vecFont[_fontId];
+		float scale = getFontScaling(_fontId, _fontSize);
+		height_ = (font.ascent - font.descent) * scale;
+		baseLine_ = -font.descent * scale;
+	}
+
+	float FontTextureManager::getFontScaling(uint8_t _fontId, uint8_t _fontSize)
+	{
+		auto it = m_vecFont[_fontId].scalingTable.find(_fontSize);
+		if (it == m_vecFont[_fontId].scalingTable.end()) {
+			float scale = stbtt_ScaleForPixelHeight(&m_vecFont[_fontId].handle, _fontSize);
+			m_vecFont[_fontId].scalingTable[_fontSize] = scale;
+			return scale;
+		}
+		return it->second;
+	}
+
 	const CharactorInfo& FontTextureManager::getCharactor(const CharKey& _c)
 	{
 		// TODO: 在此处插入 return 语句
@@ -68,7 +87,7 @@ namespace Nix {
 			scale = scalingIter->second;
 		}
 		//
-		int baseline = (int)(font.ascent * scale);
+		//int baseline = (int)(font.ascent * scale);
 		int advance, lsb, x0, y0, x1, y1;
 		//
 		float shiftX = 0.0f;
@@ -85,13 +104,13 @@ namespace Nix {
 			shiftX, shiftY, // shift x, shift y 
 			_c.charCode);
 		//
-		int advGap = stbtt_GetCodepointKernAdvance(&fontHandle, _c.charCode, '.');
+		//int advGap = stbtt_GetCodepointKernAdvance(&fontHandle, _c.charCode, '.');
 		static CharactorInfo c;
 		c.bearingX = x0;
 		c.bearingY = -y0;
 		c.width = x1 - x0;
 		c.height = y1 - y0;
-		c.adv = (advGap + advance) * scale;
+		c.adv = advance * scale;
 		//
 		size_t pixelNum = (size_t)c.width * c.height;
 		//

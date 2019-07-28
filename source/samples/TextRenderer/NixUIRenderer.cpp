@@ -7,6 +7,19 @@
 #include <NixRenderer.h>
 #include "NixUIRenderer.h"
 #include <nix/io/archieve.h>
+#include "TexturePacker/TexturePacker.h"
+
+#ifdef _WIN32
+#include <Windows.h>
+#define OpenLibrary( name ) (void*)::LoadLibraryA(name)
+#define CloseLibrary( library ) ::FreeLibrary((HMODULE)library)
+#define GetExportAddress( libray, function ) ::GetProcAddress( (HMODULE)libray, function )
+#else
+#include <dlfcn.h>
+#define OpenLibrary( name ) dlopen(name , RTLD_NOW | RTLD_LOCAL)
+#define CloseLibrary( library ) dlclose((void*)library)
+#define GetExportAddress( libray, function ) dlsym( (void*)libray, function )
+#endif
 
 namespace Nix {
 
@@ -24,10 +37,52 @@ namespace Nix {
 			return false;
 		}
 		m_context = _context;
-		Nix::TextReader mtlReader;
-		mtlReader.openFile(_archieve, "material/ui.json");
 		MaterialDescription mtl;
-		mtl.parse(mtlReader.getText());
+		strcpy(mtl.vertexShader, "ui/ui.vert");
+		strcpy(mtl.fragmentShader, "ui/ui.frag");
+		mtl.argumentCount = 1; {
+			mtl.argumentLayouts[0].descriptorCount = 1;
+			mtl.argumentLayouts[0].index = 0; {
+				mtl.argumentLayouts[0].descriptors[0].type = Nix::SDT_Sampler;
+				mtl.argumentLayouts[0].descriptors[0].binding = 0;
+				mtl.argumentLayouts[0].descriptors[0].shaderStage = Nix::FragmentShader;
+				strcpy(mtl.argumentLayouts[0].descriptors[0].name, "UiTexArray");
+			}			
+		}
+		mtl.pologonMode = Nix::PMFill; {
+			mtl.renderState.cullMode = Nix::CullNone;
+			mtl.renderState.blendState.enable = true;
+			mtl.renderState.blendState.srcFactor = SourceAlpha;
+			mtl.renderState.blendState.dstFactor = InvertSourceAlpha;
+			mtl.renderState.depthState.testable = false;
+			mtl.renderState.depthState.writable = false;
+			mtl.renderState.windingMode = Nix::CounterClockwise;
+			mtl.renderState.scissorEnable = true;
+			mtl.renderState.stencilState.enable = false;
+			mtl.renderState.writeMask = 0xff;
+		}
+		mtl.topologyMode = Nix::TMTriangleList;
+		//
+		mtl.vertexLayout.attributeCount = 3;
+		mtl.vertexLayout.bufferCount = 1;
+		mtl.vertexLayout.buffers[0].stride = sizeof(UIVertex);
+		mtl.vertexLayout.buffers[0].instanceMode = 0;
+		//
+		strcpy(mtl.vertexLayout.attributes[0].name, "position");
+		mtl.vertexLayout.attributes[0].offset = 0;
+		mtl.vertexLayout.attributes[0].bufferIndex = 0;
+		mtl.vertexLayout.attributes[0].type = Nix::VertexTypeFloat2;
+		
+		strcpy(mtl.vertexLayout.attributes[1].name, "uv");
+		mtl.vertexLayout.attributes[1].offset = 8;
+		mtl.vertexLayout.attributes[1].bufferIndex = 0;
+		mtl.vertexLayout.attributes[1].type = Nix::VertexTypeFloat3;
+		
+		strcpy(mtl.vertexLayout.attributes[2].name, "colorMask");
+		mtl.vertexLayout.attributes[2].offset = 20;
+		mtl.vertexLayout.attributes[2].bufferIndex = 0;
+		mtl.vertexLayout.attributes[2].type = Nix::VertexTypeUint;
+		
 		m_material = _context->createMaterial(mtl);
 		if (!m_material) {
 			return false;
@@ -48,9 +103,9 @@ namespace Nix {
 		texDesc.width = texDesc.height = 512;
 		texDesc.mipmapLevel = 1;
 		texDesc.type = Texture2DArray;
-		m_uiTexArray = m_context->createTexture(texDesc);
+		m_textureArray = m_context->createTexture(texDesc);
 		m_argument = m_material->createArgument(0);
-		if (!m_argument || !m_uiTexArray) {
+		if (!m_argument || !m_textureArray) {
 			return false;
 		}
 		for (uint32_t i = 0; i<MaxFlightCount; ++i) {
@@ -58,13 +113,19 @@ namespace Nix {
 			m_meshBuffers[i].resize(1);
 			m_meshBuffers[i].back().initialize(_context, m_renderables[i][0], MaxVertexCount);
 		}
-		bool rst = m_fontTexManager.initialize(_context, _archieve, m_uiTexArray, m_createPacker, 2);
+		bool rst = m_fontTexManager.initialize(_context, _archieve, m_textureArray, m_createPacker, 2);
 		if (!rst) {
 			return false;
 		}
 		SamplerState ss;
-		m_argument->setSampler(0, ss, m_uiTexArray);
+		m_argument->setSampler(0, ss, m_textureArray);
 		return true;
+	}
+
+	void UIRenderer::setScreenSize(int _width, int _height)
+	{
+		m_width = _width;
+		m_height = _height;
 	}
 
 	uint32_t UIRenderer::addFont(const char * _filepath)
@@ -72,9 +133,9 @@ namespace Nix {
 		return m_fontTexManager.addFont(_filepath);
 	}
 
-	PrebuildDrawData* UIRenderer::build(const TextDraw& _draw, PrebuildDrawData* _oldDrawData)
+	UIDrawData* UIRenderer::build(const TextDraw& _draw, UIDrawData* _oldDrawData)
 	{
-		PrebuildDrawData* drawData = nullptr;
+		UIDrawData* drawData = nullptr;
 		if (_oldDrawData) {
 			if (_oldDrawData->primitiveCount < _draw.length || _oldDrawData->type != UITopologyType::UIRectangle) {
 				m_vertexMemoryHeap.free(_oldDrawData->vertexBufferAllocation);
@@ -90,10 +151,16 @@ namespace Nix {
 			drawData->primitiveCapacity = drawData->primitiveCount = _draw.length;
 		}
 		//
-		PrebuildBufferMemoryHeap::Allocation& allocation = drawData->vertexBufferAllocation;
+		DrawDataMemoryHeap::Allocation& allocation = drawData->vertexBufferAllocation;
 		//
-		int x = _draw.original.x;
-		int y = _draw.original.y;
+		//float lineHeight = 0.0f;
+		//float baseLine = 0.0f;
+		//this->m_fontTexManager.getLineHeight(_draw.fontId, _draw.fontSize, lineHeight, baseLine);
+		int x = _draw.rectangle.origin.x;
+		int y = _draw.rectangle.origin.y;
+
+		float textWidth = 0;
+		float textHeight = 0;
 		//
 		UIVertex* vtx = (UIVertex*)allocation.ptr;
 		for (uint32_t charIdx = 0; charIdx < _draw.length; ++charIdx) {
@@ -118,22 +185,26 @@ namespace Nix {
 			vtx[2].x = vtx[3].x;
 			vtx[2].y = vtx[1].y;
 			// configure [u,v]
-			vtx[0].u = (float)charInfo.x / (TexturePackerWidth - 1);
-			vtx[0].v = (float)charInfo.y / (TexturePackerHeight - 1);
+			vtx[0].u = (float)charInfo.x / TexturePackerWidth;
+			vtx[0].v = (float)charInfo.y / TexturePackerHeight;
 			vtx[1].u = vtx[0].u;
-			vtx[1].v = (float)(charInfo.y + charInfo.height) / (TexturePackerHeight - 1);
-			vtx[3].u = (float)(charInfo.x + charInfo.width) / (TexturePackerWidth - 1);
+			vtx[1].v = (float)(charInfo.y + charInfo.height) / TexturePackerHeight;
+			vtx[3].u = (float)(charInfo.x + charInfo.width) / TexturePackerWidth;
 			vtx[3].v = vtx[0].v;
 			vtx[2].u = vtx[3].u;
 			vtx[2].v = vtx[1].v;
 			// configure layer
 			vtx[0].layer = vtx[1].layer = vtx[2].layer = vtx[3].layer = charInfo.layer;
 			//
+			vtx[0].color = _draw.colorMask;
+			vtx[1].color = _draw.colorMask;
+			vtx[2].color = _draw.colorMask;
+			vtx[3].color = _draw.colorMask;
+			//
+
 			vtx += 4;
 			x += charInfo.adv;// charInfo.bearingX + charInfo.width;
 		}
-		drawData->drawState.alpha = _draw.alpha;
-		memcpy(&drawData->drawState.scissor, &_draw.scissor, sizeof(_draw.scissor));
 		drawData->type = UIRectangle;
 		//
 		return drawData;
@@ -151,15 +222,17 @@ namespace Nix {
 		for (auto& meshBuffer : meshBuffers) {
 			meshBuffer.clear();
 		}
+		m_drawState.scissor.origin = {0 , 0};
+		m_drawState.scissor.size = { m_width, m_height };
 	}
 
-	void UIRenderer::buildDrawCall( const PrebuildDrawData* _drawData )
+	void UIRenderer::buildDrawCall( const UIDrawData* _drawData, const UIDrawState& _state)
 	{
 		auto& renderbles = m_renderables[m_flightIndex];
 		auto& meshBuffers = m_meshBuffers[m_flightIndex];
 		auto& meshBuffer = meshBuffers[m_meshBufferIndex];
 		//
-		if (!meshBuffer.pushVertices(_drawData)) {
+		if (!meshBuffer.pushVertices(_drawData, _state, m_drawState)) {
 			// create a new mesh buffer
 			meshBuffers.resize(meshBuffers.size() + 1);
 			meshBuffer = meshBuffers.back();
@@ -167,9 +240,11 @@ namespace Nix {
 			renderbles.push_back(renderable);
 			meshBuffer.initialize(m_context, renderable, MaxVertexCount);
 			//
-			bool rst = meshBuffer.pushVertices(_drawData);
+			bool rst = meshBuffer.pushVertices(_drawData, _state, m_drawState);
 			assert(rst);
 		}
+		// update current scissor state
+		m_drawState = _state;
 	}
 
 	void UIRenderer::endBuild()
@@ -188,11 +263,11 @@ namespace Nix {
 		vp.zNear = 0; vp.zFar = 1.0f;
 		vp.width = _width;
 		vp.height = _height;
-		m_pipeline->setViewport(vp);
+		_renderPass->setViewport(vp);
 		Nix::Scissor ss;
 		ss.origin = { 0, 0 };
-		ss.size = { 512, 512};
-		m_pipeline->setScissor(ss);
+		ss.size = { (int)_width, (int)_height };
+		_renderPass->setScissor(ss);
 		_renderPass->bindPipeline(m_pipeline);
 		_renderPass->bindArgument(m_argument);
 		//

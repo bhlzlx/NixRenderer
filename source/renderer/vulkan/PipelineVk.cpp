@@ -71,7 +71,7 @@ namespace Nix {
 		colorBlendState.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 		colorBlendState.attachmentCount = _renderPass.colorCount;
 		colorBlendState.pAttachments = blendAttachmentState;
-		// Viewport state sets the number of viewports and scissor used in this pipeline
+		// Viewport state sets the number of viewports and scissorRect used in this pipeline
 		// Note: This is actually overriden by the dynamic states (see below) ���ﶯ̬������
 		VkPipelineViewportStateCreateInfo viewportState = {};
 		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -80,7 +80,7 @@ namespace Nix {
 		// Enable dynamic states
 		// Most states are baked into the pipeline, but there are still a few dynamic states that can be changed within a command buffer
 		// To be able to change these we need do specify which dynamic states will be changed using this pipeline. Their actual states are set later on in the command buffer.
-		// For this example we will set the viewport and scissor using dynamic states
+		// For this example we will set the viewport and scissorRect using dynamic states
 		std::vector<VkDynamicState> dynamicStateEnables;
 		dynamicStateEnables.push_back(VK_DYNAMIC_STATE_VIEWPORT);
 		dynamicStateEnables.push_back(VK_DYNAMIC_STATE_SCISSOR);
@@ -202,6 +202,7 @@ namespace Nix {
 
 	void PipelineVk::setDynamicalStates(VkCommandBuffer _commandBuffer)
 	{
+		//m_commandBuffer = _commandBuffer;
 		vkCmdSetBlendConstants(_commandBuffer, m_blendConstants);
 		// depthBiasClamp indicates whether depth bias clamping is supported.
 		// If this feature is not enabled 
@@ -210,26 +211,8 @@ namespace Nix {
 		// and the depthBiasClamp parameter to vkCmdSetDepthBias must be set to 0.0
 		vkCmdSetDepthBias(_commandBuffer, m_constantBias, 0.0f, m_slopeScaleBias);
 		vkCmdSetStencilReference(_commandBuffer, VK_STENCIL_FRONT_AND_BACK, m_stencilReference);
-		vkCmdSetViewport(_commandBuffer, 0, 1, &m_viewport);
-		vkCmdSetScissor(_commandBuffer, 0, 1, &m_scissor);
-	}
-
-	void PipelineVk::setViewport(const Viewport& _viewport)
-	{
-		m_viewport.width = _viewport.width;
-		m_viewport.height = _viewport.height;
-		m_viewport.x = _viewport.x;
-		m_viewport.y = _viewport.y;
-		m_viewport.maxDepth = _viewport.zFar;
-		m_viewport.minDepth = _viewport.zNear;
-	}
-
-	void PipelineVk::setScissor(const Scissor& _scissor)
-	{
-		m_scissor.extent.width = _scissor.size.width;
-		m_scissor.extent.height = _scissor.size.height;
-		m_scissor.offset.x = _scissor.origin.x;
-		m_scissor.offset.y = _scissor.origin.y;
+		//vkCmdSetViewport(_commandBuffer, 0, 1, &m_viewport);
+		//vkCmdSetScissor(_commandBuffer, 0, 1, &m_scissor);
 	}
 
 	void PipelineVk::setPolygonOffset(float _constantBias, float _slopeScaleBias)
