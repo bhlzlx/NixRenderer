@@ -11,6 +11,18 @@ namespace Nix {
 		UIRectangle
 	};
 
+	enum UIHoriAlign {
+		UIAlignLeft = 0,
+		UIAlignRight = 1,
+		UIAlignHoriMid = 2		
+	};
+
+	enum UIVertAlign {
+		UIAlignTop = 0,
+		UIAlignBottom = 1,
+		UIAlignVertMid = 2
+	};
+
 	struct UIVertex {
 		float		x; 
 		float		y;			// screen space position( x, y )
@@ -19,6 +31,7 @@ namespace Nix {
 		float		v;			// texture coordinate( u, v )
 		float		layer;		// texture array layer
 		uint32_t	color;		// color mask
+		//
 	};
 
 	struct UIDrawState {
@@ -35,10 +48,12 @@ namespace Nix {
 	};
 
 	struct UIDrawData {
-		PrebuildBufferMemoryHeap::Allocation	vertexBufferAllocation;
+		DrawDataMemoryHeap::Allocation			vertexBufferAllocation;
 		UITopologyType							type;
 		uint32_t								primitiveCount;
 		uint32_t								primitiveCapacity;
+		//
+		Nix::Rect<int>							area;
 	};
 
 	struct UIDrawBatch {

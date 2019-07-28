@@ -4,7 +4,7 @@
 
 namespace Nix {
 
-	PrebuildBufferMemoryHeap::Allocation PrebuildBufferMemoryHeap::allocateRects(uint32_t _rectNum) {
+	DrawDataMemoryHeap::Allocation DrawDataMemoryHeap::allocateRects(uint32_t _rectNum) {
 		uint32_t loc = _rectNum < 16 ? 0 : 1;
 		std::vector< Heap >& heaps = m_heapCollection[loc];
 		//
@@ -13,7 +13,7 @@ namespace Nix {
 		for (auto& heap : heaps) {
 			bool allocRst = heap.allocator.allocate(_rectNum * sizeof(UIVertex) * 4, offset, allocateId);
 			if (allocRst) {
-				PrebuildBufferMemoryHeap::Allocation allocation;
+				DrawDataMemoryHeap::Allocation allocation;
 				allocation.allocateId = allocateId;
 				allocation.allocator = &heap.allocator;
 				allocation.size = _rectNum * sizeof(UIVertex) * 4;
@@ -38,7 +38,7 @@ namespace Nix {
 		heap.memory = new uint8_t[heapSizes[loc]];
 		bool allocRst = heap.allocator.allocate(_rectNum * sizeof(UIVertex) * 4, offset, allocateId);
 		assert(allocRst);
-		PrebuildBufferMemoryHeap::Allocation allocation;
+		DrawDataMemoryHeap::Allocation allocation;
 		allocation.allocateId = allocateId;
 		allocation.allocator = &heap.allocator;
 		allocation.size = _rectNum * sizeof(UIVertex) * 4;
@@ -46,7 +46,7 @@ namespace Nix {
 		return allocation;
 	}
 
-	void PrebuildBufferMemoryHeap::free(const Allocation& _allocation) {
+	void DrawDataMemoryHeap::free(const Allocation& _allocation) {
 		_allocation.allocator->free(_allocation.allocateId);
 	}
 }

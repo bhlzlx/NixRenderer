@@ -51,7 +51,7 @@ namespace Nix {
 		draw.colorMask = 0xff00ffff;
 		draw.length = sizeof(text) / 2 - 1;
 		draw.text = &text[0];
-		draw.origin = { 32, 32 };
+		draw.rectangle.origin = { 32, 32 };
 		draw.scissorRect.origin = {0 , 0};
 		draw.scissorRect.size = {512, 512};
 
@@ -59,13 +59,13 @@ namespace Nix {
 
 		draw.fontId = 1;
 		draw.colorMask = 0xff0000ff;
-		draw.origin = { 32, 64 };
+		draw.rectangle.origin = { 32, 64 };
 		m_drawData2 = m_uiRenderer.build(draw, nullptr);
 
 		draw.fontId = 0;
 		draw.fontSize = 32;
 		draw.colorMask = 0xff0000ff;
-		draw.origin = { 32, 96 };
+		draw.rectangle.origin = { 32, 96 };
 		m_drawData3 = m_uiRenderer.build(draw, nullptr);
 
 		return true;

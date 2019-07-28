@@ -21,6 +21,13 @@ namespace Nix {
 	public:
 	};
 
+	enum VertexClipFlagBits {
+		AllClipped = 0,
+		PartClipped = 1,
+		NoneClipped = 2,
+	};
+	typedef uint8_t VertexClipFlags;
+
 	// UI 渲染器使用的 descriptor set 都是同一个！
 	// 即 字体纹理，普通UI的图像纹理都统统打包成 texture 2d array
 	// 字体使用  R8_UNORM texture 2d array
@@ -34,10 +41,8 @@ namespace Nix {
 			const char16_t*			text;
 			uint32_t				length;
 			uint32_t				fontId;
-			uint16_t				fontSize; 
-			Nix::Point<int16_t>		origin;
-			uint8_t					scissorable;
-			Nix::Scissor			scissorRect;
+			uint16_t				fontSize;
+			//
 			uint32_t				colorMask;
 		};
 
@@ -65,7 +70,7 @@ namespace Nix {
 		IArchieve*					m_archieve;
 		void*						m_packerLibrary;
 		PFN_CREATE_TEXTURE_PACKER	m_createPacker;
-		PrebuildBufferMemoryHeap	m_vertexMemoryHeap;
+		DrawDataMemoryHeap			m_vertexMemoryHeap;
 		MemoryPool<UIDrawData> 
 									m_prebuilDrawDataPool;
 		FontTextureManager			m_fontTexManager;
@@ -94,6 +99,8 @@ namespace Nix {
 		// ---------------------------------------------------------------------------------------------------
 
 		UIDrawData* build( const TextDraw& _draw, UIDrawData* _oldDrawData );
+		//
+		UIDrawData* buildAdvanced( UIDrawData* _drawData, const Nix::Scissor& _scissor );
 		//UIDrawData* build( const ImageDraw* _pImages, uint32_t _count );
 		//UIDrawData* build( const ImageDraw* _pImages, uint32_t _count, const TextDraw& _draw );
 

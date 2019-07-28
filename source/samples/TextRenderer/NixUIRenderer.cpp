@@ -151,10 +151,16 @@ namespace Nix {
 			drawData->primitiveCapacity = drawData->primitiveCount = _draw.length;
 		}
 		//
-		PrebuildBufferMemoryHeap::Allocation& allocation = drawData->vertexBufferAllocation;
+		DrawDataMemoryHeap::Allocation& allocation = drawData->vertexBufferAllocation;
 		//
-		int x = _draw.origin.x;
-		int y = _draw.origin.y;
+		//float lineHeight = 0.0f;
+		//float baseLine = 0.0f;
+		//this->m_fontTexManager.getLineHeight(_draw.fontId, _draw.fontSize, lineHeight, baseLine);
+		int x = _draw.rectangle.origin.x;
+		int y = _draw.rectangle.origin.y;
+
+		float textWidth = 0;
+		float textHeight = 0;
 		//
 		UIVertex* vtx = (UIVertex*)allocation.ptr;
 		for (uint32_t charIdx = 0; charIdx < _draw.length; ++charIdx) {
@@ -195,6 +201,7 @@ namespace Nix {
 			vtx[2].color = _draw.colorMask;
 			vtx[3].color = _draw.colorMask;
 			//
+
 			vtx += 4;
 			x += charInfo.adv;// charInfo.bearingX + charInfo.width;
 		}

@@ -20,7 +20,7 @@
 
 namespace Nix
 {
-	class PrebuildBufferMemoryHeap {
+	class DrawDataMemoryHeap {
 	public:
 		struct Allocation {
 			BuddySystemAllocator* allocator;
@@ -35,7 +35,7 @@ namespace Nix
 		};
 		std::vector< Heap >			m_heapCollection[2];
 	public:
-		PrebuildBufferMemoryHeap() {
+		DrawDataMemoryHeap() {
 		}
 		
 		/************************************************
