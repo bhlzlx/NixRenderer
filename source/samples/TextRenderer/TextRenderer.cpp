@@ -42,8 +42,8 @@ namespace Nix {
 		m_uiRenderer.addFont("font/hwzhsong.ttf");
 		m_uiRenderer.addFont("font/font00.ttf");
 
-		char16_t text[] = u"ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - powered by Vulkan!";
-		char16_t text2[] = u"ï¿½Ã¼ï¿½ï¿½ï¿½ï¿½ï¿½";
+		char16_t text[] = u"ÎÄ×ÖäÖÈ¾²âÊÔ - powered by Vulkan!";
+		char16_t text2[] = u"²Ã¼ô²âÊÔ-OpenGL-Metal-Vulkan";
 
 		Nix::UIRenderer::TextDraw draw;
 		draw.fontId = 0;
@@ -53,7 +53,7 @@ namespace Nix {
 		draw.length = sizeof(text) / 2 - 1;
 		draw.text = &text[0];
 		draw.rect.origin = { 0, 0 };
-		draw.rect.size = {512, 256};
+		draw.rect.size = { 512, 256 };
 		draw.halign = UIAlignHoriMid;
 		draw.valign = UIAlignVertMid;
 
@@ -73,7 +73,7 @@ namespace Nix {
 
 		Nix::Scissor customScissor;
 		customScissor.origin = { 4,4 };
-		customScissor.size = { 96, 18 };
+		customScissor.size = { 256, 18 };
 		m_uiRenderer.scissorDrawData(m_drawData2, customScissor, m_drawData3);
 
 		Nix::UIRenderer::ImageDraw imgDraw;
@@ -123,9 +123,9 @@ namespace Nix {
 
 			UIDrawState state;
 			state.scissor = m_scissor;
-			m_uiRenderer.beginBuild(tickCounter%MaxFlightCount);
-			m_uiRenderer.buildDrawCall(m_drawData1, state );
-			m_uiRenderer.buildDrawCall(m_drawData3, state );
+			m_uiRenderer.beginBuild(tickCounter % MaxFlightCount);
+			m_uiRenderer.buildDrawCall(m_drawData1, state);
+			m_uiRenderer.buildDrawCall(m_drawData3, state);
 			m_uiRenderer.buildDrawCall(m_drawData4, state);
 			//state.scissor.size = { 512, 512 };
 			//m_uiRenderer.buildDrawCall(m_drawData3, state);
