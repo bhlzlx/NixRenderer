@@ -246,6 +246,10 @@ namespace Nix {
 		};
 		//
 		vkCmdBeginRenderPass( m_commandBuffer, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		vkCmdSetViewport(m_commandBuffer, 0, 1, &m_viewport);
+		vkCmdSetScissor(m_commandBuffer, 0, 1, &m_scissor);
+
 		return true;
 	}
 
@@ -286,9 +290,34 @@ namespace Nix {
 		m_clearValues[clearCount].depthStencil.stencil = _clear.stencil;
 	}
 
+	void RenderPassVk::setViewport(const Viewport& _viewport)
+	{
+		m_viewport.width = _viewport.width;
+		m_viewport.height = _viewport.height;
+		m_viewport.x = _viewport.x;
+		m_viewport.y = _viewport.y;
+		m_viewport.maxDepth = _viewport.zFar;
+		m_viewport.minDepth = _viewport.zNear;
+		//
+		if (m_commandBuffer)
+			vkCmdSetViewport(m_commandBuffer, 0, 1, &m_viewport);
+	}
+
+	void RenderPassVk::setScissor(const Scissor& _scissor)
+	{
+		m_scissor.extent.width = _scissor.size.width;
+		m_scissor.extent.height = _scissor.size.height;
+		m_scissor.offset.x = _scissor.origin.x;
+		m_scissor.offset.y = _scissor.origin.y;
+		//
+		if (m_commandBuffer)
+			vkCmdSetScissor(m_commandBuffer, 0, 1, &m_scissor);
+	}
+
 	void RenderPassVk::bindPipeline(IPipeline* _pipeline)
 	{
 		PipelineVk* pipeline = (PipelineVk*)_pipeline;
+		//this->m_pipeline = pipeline;
 		vkCmdBindPipeline( m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline );
 		pipeline->setDynamicalStates(m_commandBuffer);
 	}
@@ -619,12 +648,39 @@ namespace Nix {
 		//
 		vkCmdBeginRenderPass(m_commandBuffer, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
 		//
+		vkCmdSetViewport(m_commandBuffer, 0, 1, &m_viewport);
+		vkCmdSetScissor(m_commandBuffer, 0, 1, &m_scissor);
+		//
 		return true;
 	}
 
 	void RenderPassSwapchainVk::resize(uint32_t _width, uint32_t _height)
 	{
 		return;
+	}
+
+	void RenderPassSwapchainVk::setViewport(const Viewport& _viewport)
+	{
+		m_viewport.width = _viewport.width;
+		m_viewport.height = _viewport.height;
+		m_viewport.x = _viewport.x;
+		m_viewport.y = _viewport.y;
+		m_viewport.maxDepth = _viewport.zFar;
+		m_viewport.minDepth = _viewport.zNear;
+		//
+		if (m_commandBuffer)
+			vkCmdSetViewport(m_commandBuffer, 0, 1, &m_viewport);
+	}
+
+	void RenderPassSwapchainVk::setScissor(const Scissor& _scissor)
+	{
+		m_scissor.extent.width = _scissor.size.width;
+		m_scissor.extent.height = _scissor.size.height;
+		m_scissor.offset.x = _scissor.origin.x;
+		m_scissor.offset.y = _scissor.origin.y;
+		//
+		if (m_commandBuffer)
+			vkCmdSetScissor(m_commandBuffer, 0, 1, &m_scissor);
 	}
 
 	void RenderPassSwapchainVk::end()

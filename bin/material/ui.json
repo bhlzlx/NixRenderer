@@ -4,7 +4,7 @@
 	"topologyMode" : "TMTriangleList",
 	"pologonMode" : "PMFill",
     "vertexLayout": {
-        "attributeCount": 2,
+        "attributeCount": 3,
         "attributes": [{
             "name": "position",
             "bufferIndex": 0,
@@ -15,10 +15,15 @@
             "bufferIndex": 0,
             "offset": 8,
             "type": "VertexTypeFloat3"
+        },{
+            "name": "colorMask",
+            "bufferIndex": 0,
+            "offset": 8,
+            "type": "VertexTypeUint"
         }],
         "bufferCount": 1,
         "buffers": [{
-            "stride": 20,
+            "stride": 24,
             "instanceMode": 0,
             "rate": 1
         }]

@@ -237,6 +237,7 @@ namespace Nix {
 		VertexTypeFloat2,
 		VertexTypeFloat3,
 		VertexTypeFloat4,
+		VertexTypeUint,
 		VertexTypeHalf2,
 		VertexTypeHalf4,
 		VertexTypeUByte4,
@@ -567,6 +568,8 @@ namespace Nix {
     public:
         virtual bool begin( IGraphicsQueue* _queue = nullptr ) = 0;
         virtual void end() = 0;
+		virtual void setViewport(const Viewport& _viewport) = 0;
+		virtual void setScissor(const Scissor& _scissor) = 0;
 		virtual void release() = 0;
 		virtual void setClear( const RpClear& _clear ) = 0;
 		virtual void resize(uint32_t _width, uint32_t _height) = 0;
@@ -634,8 +637,8 @@ namespace Nix {
 
 	class NIX_API_DECL IPipeline {
 	public:
-        virtual void setViewport( const Viewport& _vp ) = 0;
-        virtual void setScissor( const Scissor& _scissor ) = 0;
+        //virtual void setViewport( const Viewport& _vp ) = 0;
+		//virtual void setScissor(const Scissor& _scissor) = 0;
         virtual void setPolygonOffset(float _constantBias, float _slopeScaleBias) = 0;
         virtual void release() = 0;
 	};

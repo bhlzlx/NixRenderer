@@ -21,8 +21,9 @@ namespace Nix {
 		ContextVk*		m_context;
 		VkPipeline		m_pipeline;
 		VkRenderPass	m_renderPass;
-		VkViewport		m_viewport;
-		VkRect2D		m_scissor;
+		//VkViewport		m_viewport;
+		//VkCommandBuffer m_commandBuffer;
+		//VkRect2D		m_scissor;
 		//
 		float			m_blendConstants[4];
 		float			m_constantBias;
@@ -31,8 +32,8 @@ namespace Nix {
 		//
 		//RenderPassVk*	m_renderPass;
 	public:
-		virtual void setViewport(const Viewport& _viewport) override;
-		virtual void setScissor(const Scissor& _scissor) override;
+		//virtual void setViewport(const Viewport& _viewport) override;
+		//virtual void setScissor(const Scissor& _scissor) override;
 		virtual void setPolygonOffset(float _constantBias, float _slopeScaleBias) override;
 		virtual void release() override;
 	public:

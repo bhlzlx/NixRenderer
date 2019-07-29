@@ -1,3 +1,4 @@
+#pragma once
 #include <NixRenderer.h>
 #include <stb_truetype.h>
 #include <vector>
@@ -64,6 +65,8 @@ namespace Nix {
 		//
 		uint32_t addFont( const char * _fontFile );
 		//
+		void getLineHeight( uint8_t _fontId, uint8_t _fontSize, float& height_, float& baseLine_ );
+		float getFontScaling( uint8_t _fontId, uint8_t _fontSize );
 		const CharactorInfo& getCharactor( const CharKey& _c );
 		//
 		void reset();
