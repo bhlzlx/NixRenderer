@@ -42,8 +42,8 @@ namespace Nix {
 		m_uiRenderer.addFont("font/hwzhsong.ttf");
 		m_uiRenderer.addFont("font/font00.ttf");
 
-		char16_t text[] = u"ÎÄ±¾¶ÔÆë²âÊÔ - powered by Vulkan!";
-		char16_t text2[] = u"²Ã¼ô²âÊÔ";
+		char16_t text[] = u"ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - powered by Vulkan!";
+		char16_t text2[] = u"ï¿½Ã¼ï¿½ï¿½ï¿½ï¿½ï¿½";
 
 		Nix::UIRenderer::TextDraw draw;
 		draw.fontId = 0;

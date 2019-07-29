@@ -13,5 +13,5 @@ layout ( location = 0 ) out vec4 outFragColor;
 void main()
 {
     outFragColor = texture(UiTexArray, frag_uv);
-	outFragColor = frag_colorMask * outFragColor;
+	outFragColor = outFragColor * frag_colorMask;
 }

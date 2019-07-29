@@ -21,12 +21,12 @@ namespace Nix {
 	public:
 	};
 
-	// UI äÖÈ¾Æ÷Ê¹ÓÃµÄ descriptor set ¶¼ÊÇÍ¬Ò»¸ö£¡
-	// ¼´ ×ÖÌåÎÆÀí£¬ÆÕÍ¨UIµÄÍ¼ÏñÎÆÀí¶¼Í³Í³´ò°ü³É texture 2d array
-	// ×ÖÌåÊ¹ÓÃ  R8_UNORM texture 2d array
-	// ÆÕÍ¨ÎÆÀíÊ¹ÓÃ RGBA8_UNORM texture2d array
-	// UI äÖÈ¾Æ÷Ê¹ÓÃµÄ vertex buffer object Ò²Ó¦¸ÃÊ¹ÓÃÒ»¸ö£¡
-	// ´´½¨×ã¹»´óµÄ vertex/index buffer allocator
+	// UI ï¿½ï¿½È¾ï¿½ï¿½Ê¹ï¿½Ãµï¿½ descriptor set ï¿½ï¿½ï¿½ï¿½Í¬Ò»ï¿½ï¿½ï¿½ï¿½
+	// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨UIï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³Í³ï¿½ï¿½ï¿½ï¿½ï¿½ texture 2d array
+	// ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½  R8_UNORM texture 2d array
+	// ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ RGBA8_UNORM texture2d array
+	// UI ï¿½ï¿½È¾ï¿½ï¿½Ê¹ï¿½Ãµï¿½ vertex buffer object Ò²Ó¦ï¿½ï¿½Ê¹ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ã¹»ï¿½ï¿½ï¿½ vertex/index buffer allocator
 
 	class UIRenderer {
 	public:
@@ -44,7 +44,7 @@ namespace Nix {
 
 		struct ImageDraw {
 			Nix::Rect<int16_t>				rect;
-			// ²»ÒªÓÃ rect<float> À´ÉèÖÃuv, ÒòÎªÍ¼¿ÉÄÜÊÇÐý×ª90¶ÈµÄ£¬ËùÒÔÒª´«4×éuv
+			// ï¿½ï¿½Òªï¿½ï¿½ rect<float> ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½uv, ï¿½ï¿½ÎªÍ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ª90ï¿½ÈµÄ£ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½4ï¿½ï¿½uv
 			Nix::Point<float>				uv[4];
 			float							layer;
 			uint32_t						color;
@@ -96,11 +96,11 @@ namespace Nix {
 		// ---------------------------------------------------------------------------------------------------
 		
 		/**
-		* @brief ¹¹½¨ draw data
-		*	µ«²»Ö´ÐÐ²Ã¼ô
-		* @param[in] _draw  ÐèÒª¹¹½¨µÄÎÄ±¾ÃèÊö
-		* @param[in] _oldDrawData ¾ÉµÄdraw data¿É±»ÖØÓÃ
-		* @return ·µ»Ø¹¹½¨½á¹û
+		* @brief ï¿½ï¿½ï¿½ï¿½ draw data
+		*	ï¿½ï¿½ï¿½ï¿½Ö´ï¿½Ð²Ã¼ï¿½
+		* @param[in] _draw  ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½
+		* @param[in] _oldDrawData ï¿½Éµï¿½draw dataï¿½É±ï¿½ï¿½ï¿½ï¿½ï¿½
+		* @return ï¿½ï¿½ï¿½Ø¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		* @see
 		*/
 		UIDrawData* build( const TextDraw& _draw, UIDrawData* _oldDrawData );
@@ -108,28 +108,28 @@ namespace Nix {
 		UIDrawData* build( const ImageDraw* _draws, uint32_t _count, UIDrawData* _oldDrawData );
 
 		/**
-		* @brief ¸´ÖÆÒ»·Ý draw data£¬Ò»°ã¸´ÖÆÓÃÀ´×öäÖÈ¾£¬Ö÷ÒªÊÇÎªÁËÆµ·±¸üÐÂÎ»ÖÃµÄ¿Ø¼þÊ¹ÓÃ
-		*	Ô­ draw data Ò»°ã×÷ÎªÒ»¸ö±¸·Ý´æ´¢ÓÃ
-		* @param[in] _drawData  ¸´ÖÆ¶ÔÏó
-		* @return ·µ»Ø¸´ÖÆ½á¹û
+		* @brief ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ draw dataï¿½ï¿½Ò»ï¿½ã¸´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½Îªï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ÃµÄ¿Ø¼ï¿½Ê¹ï¿½ï¿½
+		*	Ô­ draw data Ò»ï¿½ï¿½ï¿½ï¿½ÎªÒ»ï¿½ï¿½ï¿½ï¿½ï¿½Ý´æ´¢ï¿½ï¿½
+		* @param[in] _drawData  ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½
+		* @return ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½Æ½ï¿½ï¿½
 		* @see
 		*/
 		UIDrawData* copyDrawData(UIDrawData* _drawData);
 		/**
-		* @brief ¶ÔÒ»¸ö  draw data ½øÐÐÎ»ÖÃ²Ù×÷£¬Èç¹û _to ²ÎÊýÎª¿Õ£¬ÔòÔ­µØÖ´ÐÐ±ä»»
+		* @brief ï¿½ï¿½Ò»ï¿½ï¿½  draw data ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ _to ï¿½ï¿½ï¿½ï¿½Îªï¿½Õ£ï¿½ï¿½ï¿½Ô­ï¿½ï¿½Ö´ï¿½Ð±ä»»
 		*	
-		* @param[in] _draw  ²Ù×÷¶ÔÏó
-		* @param[in] _offsetX  xÎ»ÒÆ
-		* @param[in] _offsetY  yÎ»ÒÆ
+		* @param[in] _draw  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		* @param[in] _offsetX  xÎ»ï¿½ï¿½
+		* @param[in] _offsetY  yÎ»ï¿½ï¿½
 		* @see
 		*/
 		void transformDrawData( UIDrawData* _draw, float _offsetX, float _offsetY, UIDrawData* _to);
 
 		/**
-		* @brief ¶ÔÒ»¸ö  draw data ½øÐÐ²Ã¼ô²Ù×÷£¬Êä³öµ½ _output
+		* @brief ï¿½ï¿½Ò»ï¿½ï¿½  draw data ï¿½ï¿½ï¿½Ð²Ã¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ _output
 		*
-		* @param[in] _draw  ²Ù×÷¶ÔÏó
-		* @param[in] _scissor  ²Ã¼ô¾ØÕó
+		* @param[in] _draw  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		* @param[in] _scissor  ï¿½Ã¼ï¿½ï¿½ï¿½ï¿½ï¿½
 		* @see
 		*/
 		void scissorDrawData(UIDrawData* _draw, const Nix::Scissor& _scissor, UIDrawData* _output );
@@ -138,9 +138,9 @@ namespace Nix {
 		//UIDrawData* build( const ImageDraw* _pImages, uint32_t _count, const TextDraw& _draw );
 
 		/**
-		* @brief Ïú»ÙÒ»¸ö draw data
+		* @brief ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ draw data
 		*
-		* @param[in] _draw  Ïú»Ù¶ÔÏó
+		* @param[in] _draw  ï¿½ï¿½ï¿½Ù¶ï¿½ï¿½ï¿½
 		* @see
 		*/
 

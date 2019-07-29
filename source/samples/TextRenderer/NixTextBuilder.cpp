@@ -41,7 +41,7 @@ namespace Nix {
 		float baseX = 0;
 		float baseY = baseLine;
 		//
-		// ÒòÎªÎÒÃÇÉÔºò»¹»á×öÒ»´Î²¼¾Ö¶ÔÆë£¬ËùÒÔ¼ÆËãÎÄ±¾Õ¼ÓÃÇøÓòµÄÊ±ºò£¬Ô­µãÎÒÃÇÉèÎª£¨0£¬ 0£©
+		// ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½Ôºò»¹»ï¿½ï¿½ï¿½Ò»ï¿½Î²ï¿½ï¿½Ö¶ï¿½ï¿½ë£¬ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½Ä±ï¿½Õ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ô­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½0ï¿½ï¿½ 0ï¿½ï¿½
 		
 		UIVertex* vtxBegin;
 		//UIVertex* vtxEnd;
