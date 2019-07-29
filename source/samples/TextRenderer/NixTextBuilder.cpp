@@ -104,6 +104,53 @@ namespace Nix {
 		return drawData;
 	}
 
+	UIDrawData* UIRenderer::build(const ImageDraw* _draws, uint32_t _count, UIDrawData* _oldDrawData)
+	{
+		UIDrawData* drawData = nullptr;
+		if ( _oldDrawData ) {
+			if (_oldDrawData->type == UIRectangle && _oldDrawData->primitiveCapacity >= _count) {
+				drawData = _oldDrawData;
+				drawData->primitiveCount = _count;
+			}
+			this->destroyDrawData(_oldDrawData);
+		}
+		else {
+			drawData = m_drawDataPool.newElement();
+			drawData->primitiveCapacity = drawData->primitiveCount = _count;
+			drawData->type = UIRectangle;
+			drawData->vertexBufferAllocation = m_vertexMemoryHeap.allocateRects(_count);
+		}
+		//
+		UIVertex* vtx = (UIVertex*)drawData->vertexBufferAllocation.ptr;
+		for (uint32_t i = 0; i < _count; ++i) {
+			vtx[0].x = _draws->rect.origin.x;
+			vtx[0].y = _draws->rect.origin.y + _draws->rect.size.height;
+			vtx[0].u = _draws->uv[0].x;
+			vtx[0].v = _draws->uv[0].y;
+			
+			vtx[2].x = _draws->rect.origin.x + _draws->rect.size.width;
+			vtx[2].y = _draws->rect.origin.y;
+			vtx[2].u = _draws->uv[2].x;
+			vtx[2].v = _draws->uv[2].y;
+
+			vtx[1].x = vtx[0].x;
+			vtx[1].y = vtx[2].y;
+			vtx[1].u = _draws->uv[1].x;
+			vtx[1].v = _draws->uv[1].y;
+
+			vtx[3].x = vtx[2].x;
+			vtx[3].y = vtx[0].y;
+			vtx[3].u = _draws->uv[3].x;
+			vtx[3].v = _draws->uv[3].y;
+			//
+			vtx[0].color = vtx[1].color = vtx[2].color = vtx[3].color = _draws->color;
+			vtx[0].layer = vtx[1].layer = vtx[2].layer = vtx[3].layer = _draws->layer;
+			//
+			vtx += 4;
+		}
+		return drawData;
+	}
+
 	UIDrawData* UIRenderer::copyDrawData(UIDrawData* _drawData)
 	{
 		UIDrawData* drawData = m_drawDataPool.newElement();

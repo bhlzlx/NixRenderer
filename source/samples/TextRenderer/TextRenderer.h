@@ -34,6 +34,7 @@ namespace Nix {
 		Nix::UIDrawData*		m_drawData1;
 		Nix::UIDrawData*		m_drawData2;
 		Nix::UIDrawData*		m_drawData3;
+		Nix::UIDrawData*		m_drawData4;
 		Nix::Scissor			m_scissor;
 
 		float					m_width;

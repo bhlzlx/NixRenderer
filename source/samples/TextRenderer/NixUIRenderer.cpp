@@ -133,6 +133,12 @@ namespace Nix {
 	//	runtime drawing
 	// -------------------------------------------------------------------------------------
 
+	void UIRenderer::destroyDrawData(UIDrawData* _draw)
+	{
+		m_vertexMemoryHeap.free(_draw->vertexBufferAllocation);
+		m_drawDataPool.deleteElement(_draw);
+	}
+
 	void UIRenderer::beginBuild(uint32_t _flightIndex)
 	{
 		this->m_flightIndex = _flightIndex;

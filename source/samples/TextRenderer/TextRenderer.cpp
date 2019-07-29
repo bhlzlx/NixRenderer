@@ -75,6 +75,20 @@ namespace Nix {
 		customScissor.origin = { 4,4 };
 		customScissor.size = { 96, 18 };
 		m_uiRenderer.scissorDrawData(m_drawData2, customScissor, m_drawData3);
+
+		Nix::UIRenderer::ImageDraw imgDraw;
+		imgDraw.color = 0x878744ff;
+		imgDraw.layer = 0;
+		imgDraw.rect = {
+			{0, 0},
+			{ 512, 512 }
+		};
+		imgDraw.uv[0] = { 0, 0 };
+		imgDraw.uv[1] = { 0, 1.0f };
+		imgDraw.uv[2] = { 1.0f, 1.0f };
+		imgDraw.uv[3] = { 1.0f, 0.0f };
+
+		m_drawData4 = m_uiRenderer.build(&imgDraw, 1, nullptr);
 		//
 		//draw.fontId = 0;
 		//draw.fontSize = 32;
@@ -83,6 +97,7 @@ namespace Nix {
 		//m_drawData3 = m_uiRenderer.build(draw, nullptr);
 		return true;
 	}
+
 	inline void TextSample::resize(uint32_t _width, uint32_t _height) {
 		printf("resized!");
 		m_context->resize(_width, _height);
@@ -111,6 +126,7 @@ namespace Nix {
 			m_uiRenderer.beginBuild(tickCounter%MaxFlightCount);
 			m_uiRenderer.buildDrawCall(m_drawData1, state );
 			m_uiRenderer.buildDrawCall(m_drawData3, state );
+			m_uiRenderer.buildDrawCall(m_drawData4, state);
 			//state.scissor.size = { 512, 512 };
 			//m_uiRenderer.buildDrawCall(m_drawData3, state);
 			m_uiRenderer.endBuild();

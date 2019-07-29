@@ -43,10 +43,11 @@ namespace Nix {
 		};
 
 		struct ImageDraw {
-			UIVertex				vertices[4];
-			//
-			Nix::Scissor			scissor;
-			float					alpha;
+			Nix::Rect<int16_t>				rect;
+			// 不要用 rect<float> 来设置uv, 因为图可能是旋转90度的，所以要传4组uv
+			Nix::Point<float>				uv[4];
+			float							layer;
+			uint32_t						color;
 		};
 	private:
 		static const uint32_t MaxVertexCount = 2048 * 4;
@@ -104,6 +105,8 @@ namespace Nix {
 		*/
 		UIDrawData* build( const TextDraw& _draw, UIDrawData* _oldDrawData );
 
+		UIDrawData* build( const ImageDraw* _draws, uint32_t _count, UIDrawData* _oldDrawData );
+
 		/**
 		* @brief 复制一份 draw data，一般复制用来做渲染，主要是为了频繁更新位置的控件使用
 		*	原 draw data 一般作为一个备份存储用
@@ -133,6 +136,15 @@ namespace Nix {
 		//
 		//UIDrawData* build( const ImageDraw* _pImages, uint32_t _count );
 		//UIDrawData* build( const ImageDraw* _pImages, uint32_t _count, const TextDraw& _draw );
+
+		/**
+		* @brief 销毁一个 draw data
+		*
+		* @param[in] _draw  销毁对象
+		* @see
+		*/
+
+		void destroyDrawData( UIDrawData* _draw );
 
 		// ---------------------------------------------------------------------------------------------------
 		// runtime drawing
