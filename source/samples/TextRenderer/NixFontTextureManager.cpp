@@ -40,6 +40,10 @@ namespace Nix {
 		if (!error) {
 			return -1;
 		}
+
+		int x0, x1, y0,y1 ;
+		stbtt_GetFontBoundingBox(&font.handle, &x0, &y0, &x1, &y1);
+		font.maxHeight = y1 - y0;
 		stbtt_GetFontVMetrics(&font.handle, &font.ascent, &font.descent, &font.lineGap);
 		m_vecFont.push_back(font);
 		return (uint32_t)m_vecFont.size() - 1;
@@ -49,8 +53,8 @@ namespace Nix {
 	{
 		auto& font = m_vecFont[_fontId];
 		float scale = getFontScaling(_fontId, _fontSize);
-		height_ = (font.ascent - font.descent) * scale;
-		baseLine_ = -font.descent * scale;
+		height_ = roundf(font.maxHeight * scale);
+		baseLine_ = roundf((-font.descent * scale) + (font.maxHeight - font.ascent + font.descent)* scale * ((float)-font.descent/(float)(font.ascent - font.descent)));
 	}
 
 	float FontTextureManager::getFontScaling(uint8_t _fontId, uint8_t _fontSize)

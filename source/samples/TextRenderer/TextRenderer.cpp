@@ -73,7 +73,7 @@ namespace Nix {
 
 		Nix::Scissor customScissor;
 		customScissor.origin = { 4,4 };
-		customScissor.size = { 256, 18 };
+		customScissor.size = { 256, 24 };
 		m_uiRenderer.scissorDrawData(m_drawData2, customScissor, m_drawData3);
 
 		Nix::UIRenderer::ImageDraw imgDraw;
@@ -125,7 +125,7 @@ namespace Nix {
 			state.scissor = m_scissor;
 			m_uiRenderer.beginBuild(tickCounter % MaxFlightCount);
 			m_uiRenderer.buildDrawCall(m_drawData1, state);
-			m_uiRenderer.buildDrawCall(m_drawData3, state);
+			m_uiRenderer.buildDrawCall(m_drawData2, state);
 			m_uiRenderer.buildDrawCall(m_drawData4, state);
 			//state.scissor.size = { 512, 512 };
 			//m_uiRenderer.buildDrawCall(m_drawData3, state);

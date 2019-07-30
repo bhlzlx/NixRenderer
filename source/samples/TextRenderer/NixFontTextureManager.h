@@ -37,6 +37,7 @@ namespace Nix {
 		int										ascent;
 		int										descent;
 		int										lineGap;
+		int										maxHeight;
 		std::map< uint32_t, float >				scalingTable;
 		std::map< uint32_t, CharactorInfo >		charTable;
 	};

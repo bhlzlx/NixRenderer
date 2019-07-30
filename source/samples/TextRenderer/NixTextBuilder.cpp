@@ -98,7 +98,7 @@ namespace Nix {
 		Nix::Rect<int16_t> alignedRc = alignRect<int16_t>(textRect, _draw.rect, _draw.valign, _draw.halign);
 		for (uint32_t i = 0; i < _draw.length * 4; ++i) {
 			vtxBegin->x += alignedRc.origin.x;
-			vtxBegin->y += alignedRc.origin.y;
+			vtxBegin->y += alignedRc.origin.y + baseLine;
 			++vtxBegin;
 		}
 		return drawData;
