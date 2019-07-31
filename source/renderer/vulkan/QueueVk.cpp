@@ -782,6 +782,48 @@ namespace Nix {
 		m_uploadMutex.unlock();
 	}
 
+	void UploadQueueVk::tranformImageLayout(TextureVk* _texture, VkImageLayout _newLayout)
+	{
+		m_uploadMutex.lock();
+		if ( _texture->getImageLayout() == _newLayout) {
+			return;
+		}
+		VkAccessFlags dstAccessFlag;
+		VkPipelineStageFlags dstStageFlag;
+		vkhelper::getImageAcessFlagAndPipelineStage(_newLayout, dstAccessFlag, dstStageFlag);
+		// attentions !!!!
+		// for some `Android Platform`
+		// VK_REMAINING_MIP_LEVELS & VK_REMAINING_ARRAY_LAYERS will result in `Crash issues`!
+		VkImageMemoryBarrier barrier = {
+			VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER, // sType 
+			nullptr, // pNext
+			_texture->m_accessFlags,
+			dstAccessFlag,
+			_texture->m_imageLayout, // oldLayout
+			_newLayout, // newLayout 
+			VK_QUEUE_FAMILY_IGNORED, // srcQueueFamilyIndex 
+			VK_QUEUE_FAMILY_IGNORED, // dstQueueFamilyIndex 
+			_texture->m_image, // image 
+			{ // subresourceRange 
+				_texture->m_aspectFlags, // aspectMask 
+				0, // baseMipLevel 
+				_texture->m_descriptor.mipmapLevel,//,VK_REMAINING_MIP_LEVELS, // levelCount
+				0, // baseArrayLayer
+				_texture->m_descriptor.depth//VK_REMAINING_ARRAY_LAYERS // layerCount
+			}
+		};
+		vkCmdPipelineBarrier( m_commandBuffer, _texture->m_pipelineStages, dstStageFlag,
+			0, // VkDependencyFlags : it is out of an render pass!
+			0, nullptr,
+			0, nullptr,
+			1, &barrier
+		);
+		_texture->m_pipelineStages = dstStageFlag;
+		_texture->m_accessFlags = dstAccessFlag;
+		_texture->m_imageLayout = _newLayout;
+		m_uploadMutex.unlock();
+	}
+
 	UploadQueueVk::~UploadQueueVk()
 	{
 		vkDestroyCommandPool(m_context->getDevice(), m_uploadCommandPool, nullptr);

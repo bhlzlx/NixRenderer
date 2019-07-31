@@ -165,6 +165,7 @@ namespace Nix {
 		//
 		void uploadBuffer( BufferVk* _buffer, size_t _offset, size_t _size, const void * _data);
 		void uploadTexture(TextureVk* _texture, const BufferImageUpload& _upload );
+		void tranformImageLayout( TextureVk* _texture, VkImageLayout _newLayout );
 		~UploadQueueVk();
 	};
 }

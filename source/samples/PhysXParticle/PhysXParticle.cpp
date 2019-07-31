@@ -18,7 +18,7 @@
 
 #ifdef _WIN32
 #define LoadLibrary( name ) ::LoadLibraryA( name )
-#define GetLibraryAddress( libray, function ) ::GetProcAddress( libray, function )
+#define GetExportAddress( libray, function ) ::GetProcAddress( libray, function )
 #else
 #define LoadLibrary( name ) dlopen(name , RTLD_NOW | RTLD_LOCAL)
 #define GetLibraryAddress( libray, function ) dlsym( libray, function )
@@ -150,7 +150,7 @@ namespace Nix {
 		auto library = LoadLibrary(RenderderLibrary);
 		assert(library);
 		typedef IDriver*(*PFN_CREATE_DRIVER)();
-		PFN_CREATE_DRIVER createDriver = reinterpret_cast<PFN_CREATE_DRIVER>(GetLibraryAddress(library, "createDriver"));
+		PFN_CREATE_DRIVER createDriver = reinterpret_cast<PFN_CREATE_DRIVER>(GetExportAddress(library, "createDriver"));
 		// \ 1. create driver
 		m_driver = createDriver();
 		m_driver->initialize(_archieve, DeviceType::DiscreteGPU);

@@ -16,6 +16,7 @@ namespace Nix {
 		friend class RenderPassVk;
 		friend class CommandBufferVk;
 		friend class RenderPassSwapchainVk;
+		friend class UploadQueueVk;
 	private:
 		enum TexResOwnershipFlagBits {
 			OwnImage = 0x1,

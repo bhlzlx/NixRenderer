@@ -9,29 +9,9 @@
 #include <nix/io/archieve.h>
 #include "TexturePacker/TexturePacker.h"
 
-#ifdef _WIN32
-#include <Windows.h>
-#define OpenLibrary( name ) (void*)::LoadLibraryA(name)
-#define CloseLibrary( library ) ::FreeLibrary((HMODULE)library)
-#define GetExportAddress( libray, function ) ::GetProcAddress( (HMODULE)libray, function )
-#else
-#include <dlfcn.h>
-#define OpenLibrary( name ) dlopen(name , RTLD_NOW | RTLD_LOCAL)
-#define CloseLibrary( library ) dlclose((void*)library)
-#define GetExportAddress( libray, function ) dlsym( (void*)libray, function )
-#endif
-
 namespace Nix {
 
 	bool UIRenderer::initialize(IContext* _context, IArchieve* _archieve) {
-		m_packerLibrary = OpenLibrary("TexturePacker.dll");
-		if (!m_packerLibrary) {
-			return false;
-		}
-		m_createPacker = (PFN_CREATE_TEXTURE_PACKER)GetExportAddress(m_packerLibrary, "CreateTexturePacker");
-		if (!m_createPacker) {
-			return false;
-		}
 		m_context = _context;
 		MaterialDescription mtl;
 		strcpy(mtl.vertexShader, "ui/ui.vert");

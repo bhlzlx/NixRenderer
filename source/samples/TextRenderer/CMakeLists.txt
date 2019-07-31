@@ -9,6 +9,8 @@ set( PROJECT_SOURCE
 	
     ${CMAKE_CURRENT_SOURCE_DIR}/TextRenderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TextRenderer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/NixUITextureManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/NixUITextureManager.h
 	${CMAKE_CURRENT_SOURCE_DIR}/NixFonttextureManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/NixFonttextureManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/NixUIDrawDataHeap.h

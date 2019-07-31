@@ -25,19 +25,19 @@
 #define SHADER_COMPILER_LIBRARY_NAME "libVkShaderCompiler.so"
 #endif
 
-#ifdef _WIN32
-#define OpenLibrary( name ) ::LoadLibraryA( name )
-#define CloseLibrary( library ) ::FreeLibrary( (HMODULE) library)
-#define GetLibraryAddress( libray, function ) ::GetProcAddress( (HMODULE)libray, function )
-#else
-#define OpenLibrary( name ) dlopen(name , RTLD_NOW | RTLD_LOCAL)
-#define CloseLibrary( library ) dlclose((void*)library)
-#define GetLibraryAddress( libray, function ) dlsym( (void*)libray, function )
-#endif
+//#ifdef _WIN32
+//#define OpenLibrary( name ) ::LoadLibraryA( name )
+//#define CloseLibrary( library ) ::FreeLibrary( (HMODULE) library)
+//#define GetExportAddress( libray, function ) ::GetProcAddress( (HMODULE)libray, function )
+//#else
+//#define OpenLibrary( name ) dlopen(name , RTLD_NOW | RTLD_LOCAL)
+//#define CloseLibrary( library ) dlclose((void*)library)
+//#define GetLibraryAddress( libray, function ) dlsym( (void*)libray, function )
+//#endif
 
 #undef REGIST_VULKAN_FUNCTION
 #ifdef _WIN32
-#define REGIST_VULKAN_FUNCTION( FUNCTION ) FUNCTION = reinterpret_cast<PFN_##FUNCTION>(GetProcAddress( library, #FUNCTION ));
+#define REGIST_VULKAN_FUNCTION( FUNCTION ) FUNCTION = reinterpret_cast<PFN_##FUNCTION>(GetProcAddress( (HMODULE)library, #FUNCTION ));
 #elif defined __ANDROID__
 #define REGIST_VULKAN_FUNCTION( FUNCTION ) FUNCTION = reinterpret_cast<PFN_##FUNCTION>(dlsym( library, #FUNCTION ));
 #elif __linux__ 
@@ -99,9 +99,9 @@ namespace Nix {
 //////////////////////////////////////////////////////////////////////////
 		m_compilerLibrary = (void*)OpenLibrary(SHADER_COMPILER_LIBRARY_NAME);
 		if (m_compilerLibrary == NULL) return false;
-		m_initializeShaderCompiler = (PFN_INITIALIZE_SHADER_COMPILER)GetLibraryAddress(m_compilerLibrary, "InitializeShaderCompiler");
-		m_compileGLSL2SPV = (PFN_COMPILE_GLSL_2_SPV)GetLibraryAddress(m_compilerLibrary, "CompileGLSL2SPV");
-		m_finalizeShaderCompiler = (PFN_FINALIZE_SHADER_COMPILER)GetLibraryAddress(m_compilerLibrary, "FinalizeShaderCompiler");
+		m_initializeShaderCompiler = (PFN_INITIALIZE_SHADER_COMPILER)GetExportAddress(m_compilerLibrary, "InitializeShaderCompiler");
+		m_compileGLSL2SPV = (PFN_COMPILE_GLSL_2_SPV)GetExportAddress(m_compilerLibrary, "CompileGLSL2SPV");
+		m_finalizeShaderCompiler = (PFN_FINALIZE_SHADER_COMPILER)GetExportAddress(m_compilerLibrary, "FinalizeShaderCompiler");
 
 		if (m_initializeShaderCompiler && m_compileGLSL2SPV && m_finalizeShaderCompiler) {
 			m_initializeShaderCompiler();

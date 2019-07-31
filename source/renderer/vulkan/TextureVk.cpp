@@ -124,12 +124,12 @@ namespace Nix {
 				else {
 					_usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 				}
-				
+
 			}
 		}
 		TextureVk::TexResOwnershipFlags ownershipFlags = 0;
 		VmaAllocation allocation = nullptr;
-		if ( !_image )
+		if (!_image)
 		{
 			ownershipFlags |= TextureVk::TexResOwnershipFlagBits::OwnImage;
 			VkImageCreateFlags imageFlags = 0;
@@ -144,7 +144,7 @@ namespace Nix {
 			else if (_desc.type == Texture2D) {
 				imageType = VK_IMAGE_TYPE_2D;
 			}
-			
+
 			VkImageCreateInfo info; {
 				info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 				info.pNext = nullptr;
@@ -165,16 +165,16 @@ namespace Nix {
 				info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			}
 			info.arrayLayers = _desc.depth;
-			
+
 			VmaAllocationCreateInfo allocInfo = {}; {
 				allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 			};
-			VkResult rst = vmaCreateImage( _context->getVmaAllocator(), &info, &allocInfo, &_image, &allocation, nullptr);
-            if( rst != VK_SUCCESS ){
-                return nullptr;
-            }
+			VkResult rst = vmaCreateImage(_context->getVmaAllocator(), &info, &allocInfo, &_image, &allocation, nullptr);
+			if (rst != VK_SUCCESS) {
+				return nullptr;
+			}
 		}
-		
+
 		if (vkhelper::isDepthFormat(format))
 			aspectMask |= VK_IMAGE_ASPECT_DEPTH_BIT;
 		if (vkhelper::isStencilFormat(format))
@@ -234,6 +234,11 @@ namespace Nix {
 		texture->m_accessFlags = 0;
 		texture->m_pipelineStages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 		texture->m_imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		//
+		if (_usage & TextureUsageColorAttachment || _usage & TextureUsageDepthStencilAttachment) {
+			return texture;
+		}
+		_context->getUploadQueue()->tranformImageLayout( texture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		//
 		return texture;
 	}

@@ -65,8 +65,8 @@ namespace Nix {
 		// resources
 		// ---------------------------------------------------------------------------------------------------
 		IArchieve*					m_archieve;
-		void*						m_packerLibrary;
-		PFN_CREATE_TEXTURE_PACKER	m_createPacker;
+		//void*						m_packerLibrary;
+		//PFN_CREATE_TEXTURE_PACKER	m_createPacker;
 		DrawDataMemoryHeap			m_vertexMemoryHeap;
 		MemoryPool<UIDrawData> 
 									m_drawDataPool;
