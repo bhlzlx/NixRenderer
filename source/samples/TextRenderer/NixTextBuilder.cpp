@@ -36,7 +36,7 @@ namespace Nix {
 		//float textWidth;
 		float baseLine;
 		float textHeight = 0;
-		m_fontTexManager.getLineHeight(_draw.fontId, _draw.fontSize, textHeight,baseLine);
+		m_textureManager.getFontTextureManger()->getLineHeight(_draw.fontId, _draw.fontSize, textHeight,baseLine);
 
 		float baseX = 0;
 		float baseY = baseLine;
@@ -54,7 +54,7 @@ namespace Nix {
 			ck.charCode = _draw.text[charIdx];
 			ck.fontId = _draw.fontId;
 			ck.size = _draw.fontSize;
-			auto& charInfo = m_fontTexManager.getCharactor(ck);
+			auto& charInfo = m_textureManager.getFontTextureManger()->getCharactor(ck);
 			/* ----------
 			*	0 -- 3
 			*	| \  |

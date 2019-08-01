@@ -142,7 +142,7 @@ namespace Nix {
 				VmaAllocation vmaAllocation;
 				VkBuffer b = m_vkBufferCreator(m_context, _size, vmaAllocation);
 				uint8_t* raw;
-				if (m_type == UBO || m_type == CVBO) {
+				if (m_type == UBO || m_type == CVBO || m_type == STAGING) {
 					vmaMapMemory(m_context->getVmaAllocator(), vmaAllocation, (void**)&raw);
 				}
 				m_noneGroupedAllocation.push_back(vmaAllocation);
@@ -159,6 +159,7 @@ namespace Nix {
 				allocation.allocationId = -1;
 				allocation.offset = 0;
 				allocation.size = _size;
+				allocation.raw = raw;
 				return allocation;
 			}
 			assert(false);

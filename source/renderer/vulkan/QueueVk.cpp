@@ -788,6 +788,7 @@ namespace Nix {
 		if ( _texture->getImageLayout() == _newLayout) {
 			return;
 		}
+		m_commandBuffer.begin();
 		VkAccessFlags dstAccessFlag;
 		VkPipelineStageFlags dstStageFlag;
 		vkhelper::getImageAcessFlagAndPipelineStage(_newLayout, dstAccessFlag, dstStageFlag);
@@ -818,9 +819,22 @@ namespace Nix {
 			0, nullptr,
 			1, &barrier
 		);
+		m_commandBuffer.end();
 		_texture->m_pipelineStages = dstStageFlag;
 		_texture->m_accessFlags = dstAccessFlag;
 		_texture->m_imageLayout = _newLayout;
+
+		VkSubmitInfo submit;
+		submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submit.pNext = nullptr;
+		submit.pCommandBuffers = &(const VkCommandBuffer&)m_commandBuffer;
+		submit.commandBufferCount = 1;
+		submit.pWaitDstStageMask = 0;
+		submit.pWaitSemaphores = nullptr;
+		submit.waitSemaphoreCount = 0;
+		submit.signalSemaphoreCount = 0;
+		vkQueueSubmit(m_uploadQueue, 1, &submit, 0);
+		vkQueueWaitIdle(m_uploadQueue);
 		m_uploadMutex.unlock();
 	}
 

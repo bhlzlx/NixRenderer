@@ -607,6 +607,14 @@ namespace Nix {
 		m_size = {
 			_width, _height
 		};
+		m_viewport.x = m_viewport.y = 0;
+		m_viewport.minDepth = 0.0f;
+		m_viewport.maxDepth = 1.0f;
+		m_viewport.width = _width;
+		m_viewport.height = _height;
+		m_scissor.extent.width = _width;
+		m_scissor.extent.height = _height;
+		m_scissor.offset = { 0, 0 };
 	}
 
 	void RenderPassSwapchainVk::cleanup()

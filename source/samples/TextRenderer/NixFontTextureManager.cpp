@@ -4,7 +4,7 @@
 
 namespace Nix {
 
-	bool FontTextureManager::initialize(IContext* _context, IArchieve* _archieve, ITexture* _texture, PFN_CREATE_TEXTURE_PACKER _creator, uint32_t _packerNum)
+	bool FontTextureManager::initialize(IContext* _context, IArchieve* _archieve, ITexture* _texture, PFN_CREATE_TEXTURE_PACKER _creator, uint32_t _layerBegin, uint32_t _layerEnd)
 	{
 		const Nix::TextureDescription& desc = _texture->getDesc();
 		m_texture = _texture;
@@ -12,7 +12,7 @@ namespace Nix {
 			return false;
 		}
 		// initialize the texture packers
-		for (uint16_t i = 0; i < _packerNum ; ++i) {
+		for (uint16_t i = _layerBegin; i <= _layerEnd ; ++i) {
 			ITexturePacker * packer = _creator(m_texture, i);
 			assert(packer);
 			m_vecTexturePacker.push_back(packer);
@@ -22,6 +22,8 @@ namespace Nix {
 		m_fourChannelGlyph.resize(64 * 64);
 		//
 		m_archieve = _archieve;
+		m_layerRange[0] = _layerBegin;
+		m_layerRange[1] = _layerEnd;
 		return true;
 	}
 

@@ -50,6 +50,8 @@ namespace Nix {
 		uint32_t 						m_numImageLayer;
 		uint32_t						m_numFontLayer;
 		//
+		uint32_t						m_layerRange[2];
+		//
 		std::vector<ITexturePacker*>	m_vecTexturePacker;
 		std::vector<FontInfo>			m_vecFont;
 		//
@@ -62,7 +64,7 @@ namespace Nix {
 			return m_texture;
 		}
 		// _size indicate the texture2DArray's size : width/ height/ depth
-		bool initialize( IContext* _context, IArchieve* _archieve, ITexture* _texture, PFN_CREATE_TEXTURE_PACKER _creator, uint32_t _packerNum);
+		bool initialize( IContext* _context, IArchieve* _archieve, ITexture* _texture, PFN_CREATE_TEXTURE_PACKER _creator, uint32_t _layerBegin, uint32_t _layerEnd);
 		//
 		uint32_t addFont( const char * _fontFile );
 		//

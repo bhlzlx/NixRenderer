@@ -1,0 +1,6 @@
+{
+	"textures" : [{
+		"file" : "texture/pack/gui_pack.png",
+		"table"  : "texture/pack/gui_pack.json"
+	}]
+}

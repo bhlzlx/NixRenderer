@@ -56,6 +56,18 @@ PFN_vkCreateAndroidSurfaceKHR vkCreateAndroidSurfaceKHR;
 PFN_vkCreateXlibSurfaceKHR vkCreateXlibSurfaceKHR;
 #endif
 
+#ifdef _WIN32
+#include <Windows.h>
+#define OpenLibrary( name ) (void*)::LoadLibraryA(name)
+#define CloseLibrary( library ) ::FreeLibrary((HMODULE)library)
+#define GetExportAddress( libray, function ) ::GetProcAddress( (HMODULE)libray, function )
+#else
+#include <dlfcn.h>
+#define OpenLibrary( name ) dlopen(name , RTLD_NOW | RTLD_LOCAL)
+#define CloseLibrary( library ) dlclose((void*)library)
+#define GetExportAddress( libray, function ) dlsym( (void*)libray, function )
+#endif
+
 namespace Nix {
 
 	bool DriverVk::initialize( IArchieve* _arch, DeviceType _type) {

@@ -4,7 +4,7 @@
 #include <assert.h>
 
 #include "NixUIDefine.h"
-#include "NixFontTextureManager.h"
+#include "NixUITextureManager.h"
 #include "NixUIDrawDataHeap.h"
 #include "NixUIMeshBuffer.h"
 #include <MemoryPool/C-11/MemoryPool.h>
@@ -70,7 +70,7 @@ namespace Nix {
 		DrawDataMemoryHeap			m_vertexMemoryHeap;
 		MemoryPool<UIDrawData> 
 									m_drawDataPool;
-		FontTextureManager			m_fontTexManager;
+		UITextureManager			m_textureManager;
 
 		// ---------------------------------------------------------------------------------------------------
 		// runtime drawing

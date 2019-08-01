@@ -13,6 +13,7 @@ namespace Nix {
 
 	bool UIRenderer::initialize(IContext* _context, IArchieve* _archieve) {
 		m_context = _context;
+		m_archieve = _archieve;
 		MaterialDescription mtl;
 		strcpy(mtl.vertexShader, "ui/ui.vert");
 		strcpy(mtl.fragmentShader, "ui/ui.frag");
@@ -35,7 +36,7 @@ namespace Nix {
 			mtl.renderState.windingMode = Nix::CounterClockwise;
 			mtl.renderState.scissorEnable = true;
 			mtl.renderState.stencilState.enable = false;
-			mtl.renderState.writeMask = 0xff;
+			mtl.renderState.writeMask = 0x0f;
 		}
 		mtl.topologyMode = Nix::TMTriangleList;
 		//
@@ -84,14 +85,41 @@ namespace Nix {
 		if (!m_argument || !m_textureArray) {
 			return false;
 		}
+
+		// read texturepacker.json
+		/* like this
+		{
+			"textures" : [{
+				"file" : "texture/gui/packer0.png",
+				"table"  : "texture/gui/packer0.json"
+			}]
+		}
+		*/
+		Nix::TextReader packerJson;
+		if (!packerJson.openFile(_archieve, "texture/texturepacker.json")) {
+			assert("missing texture packer configure!" && false );
+			return false;
+		}
+		struct TPItem {
+			std::string file;
+			std::string table;
+			NIX_JSON( file, table )
+		};
+		struct TPConfig {
+			std::vector<TPItem> textures;
+			NIX_JSON(textures)
+		} tpconfig;
+		tpconfig.parse( packerJson.getText());
+		// read packed textures
+		m_textureManager.initialize( _context, _archieve, 2, tpconfig.textures.size(), 1 );
+		for (auto& item : tpconfig.textures) {
+			m_textureManager.addPackedImage(item.table.c_str(), item.file.c_str());
+		}
+		// create renderable objects / one renderable per frame
 		for (uint32_t i = 0; i<MaxFlightCount; ++i) {
 			m_renderables[i].push_back(m_material->createRenderable());
 			m_meshBuffers[i].resize(1);
 			m_meshBuffers[i].back().initialize(_context, m_renderables[i][0], MaxVertexCount);
-		}
-		bool rst = m_fontTexManager.initialize(_context, _archieve, m_textureArray, m_createPacker, 2);
-		if (!rst) {
-			return false;
 		}
 		SamplerState ss;
 		m_argument->setSampler(0, ss, m_textureArray);
@@ -106,7 +134,7 @@ namespace Nix {
 
 	uint32_t UIRenderer::addFont(const char* _filepath)
 	{
-		return m_fontTexManager.addFont(_filepath);
+		return m_textureManager.getFontTextureManger()->addFont(_filepath);
 	}
 
 	// -------------------------------------------------------------------------------------

@@ -71,9 +71,9 @@ namespace Nix {
 		
 		bool initialize( IContext* _context, IArchieve* _archieve, uint32_t _numFontLayer, uint32_t _numControlLayer, uint32_t _numNetworkLayer);
 
-		bool addPackedLayer( const char * _jsonTable, const char * _imageFile );
+		bool addPackedImage( const char * _jsonTable, const char * _imageFile );
 		
-		bool getTexture( const std::string& _filename, UITexture*const* _handle );
+		bool getTexture( const std::string& _filename, const UITexture** _handle );
 	};
 
 }
