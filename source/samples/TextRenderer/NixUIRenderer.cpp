@@ -74,18 +74,6 @@ namespace Nix {
 		if (!m_pipeline) {
 			return false;
 		}
-		Nix::TextureDescription texDesc;
-		texDesc.depth = 4;
-		texDesc.format = NixRGBA8888_UNORM;
-		texDesc.width = texDesc.height = 512;
-		texDesc.mipmapLevel = 1;
-		texDesc.type = Texture2DArray;
-		m_textureArray = m_context->createTexture(texDesc);
-		m_argument = m_material->createArgument(0);
-		if (!m_argument || !m_textureArray) {
-			return false;
-		}
-
 		// read texturepacker.json
 		/* like this
 		{
@@ -121,6 +109,13 @@ namespace Nix {
 			m_meshBuffers[i].resize(1);
 			m_meshBuffers[i].back().initialize(_context, m_renderables[i][0], MaxVertexCount);
 		}
+
+		m_textureArray = m_textureManager.getTexture();
+		m_argument = m_material->createArgument(0);
+		if (!m_argument || !m_textureArray) {
+			return false;
+		}
+
 		SamplerState ss;
 		m_argument->setSampler(0, ss, m_textureArray);
 		return true;

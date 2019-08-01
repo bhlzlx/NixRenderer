@@ -4,11 +4,7 @@
 
 namespace Nix {
 
-	static const uint16_t TexturePackerWidth = 512;
-	static const uint16_t TexturePackerHeight = 512;
-	static const uint16_t TexturePackerDepth = 2;
-
-	static const uint32_t FontLayerCount = 4;
+	static const uint16_t UITextureSize = 1024;
 
 	enum VertexClipFlagBits {
 		AllClipped = 0,

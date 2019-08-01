@@ -30,8 +30,8 @@ namespace Nix {
 		VkPhysicalDevice		m_physicalDevice;
 		VkDevice				m_logicalDevice;
 		// Queues
-		uint32_t				m_graphicQueueID;
-		uint32_t				m_transferQueueID;
+		//uint32_t				m_graphicQueueID;
+		//uint32_t				m_transferQueueID;
 		std::vector<uint32_t>	m_queueFamilies;
 		GraphicsQueueVk*		m_graphicsQueue;
 		UploadQueueVk*			m_uploadQueue;
@@ -45,7 +45,7 @@ namespace Nix {
 		IArchieve*				m_archieve;
 		//
 		uint64_t				m_frameCounter;
-		VkCommandBuffer			m_renderCommandBuffer;
+		//VkCommandBuffer			m_renderCommandBuffer;
 
 		IBufferAllocator*		m_VBOAllocator; // static vertex buffer
 		IBufferAllocator*		m_VBOAllocatorPM; // cached vertex buffer

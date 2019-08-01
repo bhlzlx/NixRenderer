@@ -159,9 +159,9 @@ namespace Nix {
 				info.samples = VK_SAMPLE_COUNT_1_BIT;
 				info.tiling = VK_IMAGE_TILING_OPTIMAL;
 				info.usage = _usage;
-				info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-				info.queueFamilyIndexCount = 0;
-				info.pQueueFamilyIndices = nullptr;
+				info.sharingMode = _context->getQueueFamilies().size() > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
+				info.queueFamilyIndexCount = _context->getQueueFamilies().size();
+				info.pQueueFamilyIndices = _context->getQueueFamilies().data();
 				info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			}
 			info.arrayLayers = _desc.depth;
@@ -234,12 +234,13 @@ namespace Nix {
 		texture->m_accessFlags = 0;
 		texture->m_pipelineStages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 		texture->m_imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		//
+		
 		if (_usage & TextureUsageColorAttachment || _usage & TextureUsageDepthStencilAttachment) {
-			return texture;
 		}
-		_context->getUploadQueue()->tranformImageLayout( texture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		//
+		else {
+			_context->getUploadQueue()->tranformImageLayout(texture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		}
+		
 		return texture;
 	}
 }

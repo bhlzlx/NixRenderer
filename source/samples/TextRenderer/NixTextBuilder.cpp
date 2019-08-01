@@ -71,11 +71,11 @@ namespace Nix {
 			vtx[2].x = vtx[3].x;
 			vtx[2].y = vtx[1].y;
 			// configure [u,v]
-			vtx[0].u = (float)charInfo.x / TexturePackerWidth;
-			vtx[0].v = (float)charInfo.y / TexturePackerHeight;
+			vtx[0].u = (float)charInfo.x / UITextureSize;
+			vtx[0].v = (float)charInfo.y / UITextureSize;
 			vtx[1].u = vtx[0].u;
-			vtx[1].v = (float)(charInfo.y + charInfo.height) / TexturePackerHeight;
-			vtx[3].u = (float)(charInfo.x + charInfo.width) / TexturePackerWidth;
+			vtx[1].v = (float)(charInfo.y + charInfo.height) / UITextureSize;
+			vtx[3].u = (float)(charInfo.x + charInfo.width) / UITextureSize;
 			vtx[3].v = vtx[0].v;
 			vtx[2].u = vtx[3].u;
 			vtx[2].v = vtx[1].v;

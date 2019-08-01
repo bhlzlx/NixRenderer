@@ -2,6 +2,7 @@
 #include <NixRenderer.h>
 #include <stb_truetype.h>
 #include <vector>
+#include "NixUIDefine.h"
 #include "NixFontTextureManager.h"
 
 namespace Nix {
@@ -67,6 +68,10 @@ namespace Nix {
 
 		inline FontTextureManager* getFontTextureManger() {
 			return &m_fontTexManager;
+		}
+
+		inline ITexture* getTexture() {
+			return m_texture;
 		}
 		
 		bool initialize( IContext* _context, IArchieve* _archieve, uint32_t _numFontLayer, uint32_t _numControlLayer, uint32_t _numNetworkLayer);
