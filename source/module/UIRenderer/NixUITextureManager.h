@@ -78,7 +78,7 @@ namespace Nix {
 
 		bool addPackedImage( const char * _jsonTable, const char * _imageFile );
 		
-		bool getTexture( const std::string& _filename, const UITexture** _handle );
+		bool getUITexture( const std::string& _filename, const UITexture** _handle );
 	};
 
 }

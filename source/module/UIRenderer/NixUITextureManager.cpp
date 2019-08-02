@@ -132,10 +132,10 @@ namespace Nix {
 			t.height = imageItem.frame.h;
 			t.width = imageItem.frame.w;
 			t.layer = m_freeControlLayer;
-			t.uv[0][0] = (float)x / (float)UITextureSize;
-			t.uv[0][1] = (float)y / (float)UITextureSize;
-			t.uv[2][0] = (float)(x + imageItem.frame.w) / (float)UITextureSize;
-			t.uv[2][1] = (float)(y + imageItem.frame.h) / (float)UITextureSize;
+			t.uv[0][0] = (float)imageItem.frame.x / (float)UITextureSize;
+			t.uv[0][1] = (float)imageItem.frame.y / (float)UITextureSize;
+			t.uv[2][0] = (float)(imageItem.frame.x + imageItem.frame.w) / (float)UITextureSize;
+			t.uv[2][1] = (float)(imageItem.frame.y + imageItem.frame.h) / (float)UITextureSize;
 			t.uv[1][0] = t.uv[0][0];
 			t.uv[1][1] = t.uv[2][1];
 			t.uv[3][0] = t.uv[2][0];
@@ -147,7 +147,7 @@ namespace Nix {
 		return true;
 	}
 
-	bool UITextureManager::getTexture(const std::string& _filename, const UITexture** _handle)
+	bool UITextureManager::getUITexture(const std::string& _filename, const UITexture** _handle)
 	{
 		for (auto& table : m_imageTables) {
 			auto it = table.find(_filename);

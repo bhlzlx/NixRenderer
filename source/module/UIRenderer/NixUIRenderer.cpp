@@ -99,7 +99,7 @@ namespace Nix {
 		} tpconfig;
 		tpconfig.parse( packerJson.getText());
 		// read packed textures
-		m_textureManager.initialize( _context, _archieve, 2, tpconfig.textures.size(), 1 );
+		m_textureManager.initialize( _context, _archieve, 2, (uint32_t)tpconfig.textures.size(), 1 );
 		for (auto& item : tpconfig.textures) {
 			m_textureManager.addPackedImage(item.table.c_str(), item.file.c_str());
 		}

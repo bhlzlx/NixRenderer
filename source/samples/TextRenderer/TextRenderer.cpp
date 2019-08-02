@@ -42,12 +42,32 @@ namespace Nix {
 		m_uiRenderer.addFont("font/hwzhsong.ttf");
 		m_uiRenderer.addFont("font/font00.ttf");
 
+		auto textureManager = m_uiRenderer.getUITextureManager();
+		const Nix::UITexture* uitex = nullptr;
+		if (!textureManager->getUITexture("button_00.png", &uitex)) {
+			return false;
+		}
 		char16_t text[] = u"ÎÄ×ÖäÖÈ¾²âÊÔ - powered by Vulkan!";
 		char16_t text2[] = u"²Ã¼ô²âÊÔ-OpenGL-Metal-Vulkan";
 
+		UIRenderer::ImageDraw imageDraw;
+		imageDraw.color = 0xffffffff;
+		imageDraw.layer = uitex->layer;
+		imageDraw.rect = {
+			{ 256, 256 },
+			{ 128, 128 }
+		};
+		imageDraw.uv[0] = { uitex->uv[0][0], uitex->uv[0][1] };
+		imageDraw.uv[1] = { uitex->uv[1][0], uitex->uv[1][1] };
+		imageDraw.uv[2] = { uitex->uv[2][0], uitex->uv[2][1] };
+		imageDraw.uv[3] = { uitex->uv[3][0], uitex->uv[3][1] };
+
+		m_drawData5 = m_uiRenderer.build( &imageDraw, 1, nullptr );
+		//m_uiRenderer.build()
+
 		Nix::UIRenderer::TextDraw draw;
 		draw.fontId = 0;
-		draw.fontSize = 32;
+		draw.fontSize = 14;
 		// RGBA
 		draw.colorMask = 0x770044ff;
 		draw.length = sizeof(text) / 2 - 1;
@@ -62,7 +82,7 @@ namespace Nix {
 		draw.colorMask = 0x007755ff;
 		draw.length = sizeof(text2) / 2 - 1;
 		draw.text = &text2[0];
-		draw.fontSize = 24;
+		draw.fontSize = 14;
 		draw.fontId = 1;
 		draw.halign = UIAlignLeft;
 		draw.valign = UIAlignBottom;
@@ -127,6 +147,7 @@ namespace Nix {
 			m_uiRenderer.buildDrawCall(m_drawData1, state);
 			m_uiRenderer.buildDrawCall(m_drawData2, state);
 			m_uiRenderer.buildDrawCall(m_drawData4, state);
+			m_uiRenderer.buildDrawCall(m_drawData5, state);
 			//state.scissor.size = { 512, 512 };
 			//m_uiRenderer.buildDrawCall(m_drawData3, state);
 			m_uiRenderer.endBuild();

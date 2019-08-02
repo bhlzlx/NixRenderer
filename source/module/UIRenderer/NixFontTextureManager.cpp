@@ -122,7 +122,7 @@ namespace Nix {
 		//
 		for (size_t pixelIndex = 0; pixelIndex < pixelNum; ++pixelIndex) {
 			uint32_t color = m_oneChannelGlyph[pixelIndex];
-			color = (color<<24) | (color << 16) | (color << 8) | (color);
+			color = 0xffffff | color<<24 ;
 			m_fourChannelGlyph[pixelIndex] = color;
 		}
 		Nix::Rect<uint16_t> rc;

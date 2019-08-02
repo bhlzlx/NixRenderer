@@ -89,6 +89,11 @@ namespace Nix {
 
 		bool initialize(IContext* _context, IArchieve* _archieve);
 		void setScreenSize( int _width, int _height );
+
+		inline UITextureManager* getUITextureManager() {
+			return &m_textureManager;
+		}
+
 		uint32_t addFont( const char * _filepath );
 
 		// ---------------------------------------------------------------------------------------------------
