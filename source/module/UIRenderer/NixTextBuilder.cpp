@@ -91,11 +91,11 @@ namespace Nix {
 		}
 		drawData->type = UIRectangle;
 		//
-		Nix::Rect<int16_t> textRect = {
+		Nix::Rect<float> textRect = {
 			{0 , 0},
-			{(int16_t)baseX, (int16_t)textHeight}
+			{baseX, textHeight}
 		};
-		Nix::Rect<int16_t> alignedRc = alignRect<int16_t>(textRect, _draw.rect, _draw.valign, _draw.halign);
+		Nix::Rect<float> alignedRc = alignRect<float>(textRect, _draw.rect, _draw.valign, _draw.halign);
 		for (uint32_t i = 0; i < _draw.length * 4; ++i) {
 			vtxBegin->x += alignedRc.origin.x;
 			vtxBegin->y += alignedRc.origin.y + baseLine;

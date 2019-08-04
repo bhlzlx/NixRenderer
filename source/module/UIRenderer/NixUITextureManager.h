@@ -27,10 +27,10 @@ namespace Nix {
 	=============================================================================*/
 
 	struct UITexture {
-		uint16_t	width;
-		uint16_t	height;
-		float		uv[4][2]; // 4 [u,v] pair
-		float		layer;
+		uint16_t			width;
+		uint16_t			height;
+		Nix::Point<float>	uv[4]; // 4 [u,v] pair
+		float				layer;
 	};
 
 	class UITextureManager {

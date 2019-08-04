@@ -132,14 +132,14 @@ namespace Nix {
 			t.height = imageItem.frame.h;
 			t.width = imageItem.frame.w;
 			t.layer = m_freeControlLayer;
-			t.uv[0][0] = (float)imageItem.frame.x / (float)UITextureSize;
-			t.uv[0][1] = (float)imageItem.frame.y / (float)UITextureSize;
-			t.uv[2][0] = (float)(imageItem.frame.x + imageItem.frame.w) / (float)UITextureSize;
-			t.uv[2][1] = (float)(imageItem.frame.y + imageItem.frame.h) / (float)UITextureSize;
-			t.uv[1][0] = t.uv[0][0];
-			t.uv[1][1] = t.uv[2][1];
-			t.uv[3][0] = t.uv[2][0];
-			t.uv[3][1] = t.uv[0][1];
+			t.uv[0].x = (float)imageItem.frame.x / (float)UITextureSize;
+			t.uv[0].y = (float)imageItem.frame.y / (float)UITextureSize;
+			t.uv[2].x = (float)(imageItem.frame.x + imageItem.frame.w) / (float)UITextureSize;
+			t.uv[2].y = (float)(imageItem.frame.y + imageItem.frame.h) / (float)UITextureSize;
+			t.uv[1].x = t.uv[0].x;
+			t.uv[1].y = t.uv[2].y;
+			t.uv[3].x = t.uv[2].x;
+			t.uv[3].y = t.uv[0].y;
 			table[imageItem.filename] = t;
 		}
 		++m_freeControlLayer;

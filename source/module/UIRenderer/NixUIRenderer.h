@@ -1,4 +1,5 @@
 #pragma once
+
 #include <NixRenderer.h>
 #include <nix/io/archieve.h>
 #include <assert.h>
@@ -14,19 +15,23 @@ namespace Nix {
 	class ITexturePacker;
 	typedef ITexturePacker* (*PFN_CREATE_TEXTURE_PACKER)(Nix::ITexture* _texture, uint32_t _layer);
 
+	struct UIRenderConfig {
+		struct UITextureConfig {
+			std::string file;
+			std::string	table;
+			NIX_JSON(file, table)
+		};
+		std::vector< std::string >		fonts;
+		std::vector< UITextureConfig >	textures;
+		NIX_JSON(fonts, textures)
+	};
+
 	class Widget {
 	private:
 		Widget*					m_parent;
 		Nix::Rect<int16_t>		m_rect;
 	public:
 	};
-
-	// UI ��Ⱦ��ʹ�õ� descriptor set ����ͬһ����
-	// �� ������������ͨUI��ͼ��������ͳͳ����� texture 2d array
-	// ����ʹ��  R8_UNORM texture 2d array
-	// ��ͨ����ʹ�� RGBA8_UNORM texture2d array
-	// UI ��Ⱦ��ʹ�õ� vertex buffer object ҲӦ��ʹ��һ����
-	// �����㹻��� vertex/index buffer allocator
 
 	class UIRenderer {
 	public:
@@ -37,14 +42,13 @@ namespace Nix {
 			uint16_t				fontSize;
 			uint32_t				colorMask;
 			//
-			Nix::Rect<int16_t>		rect;
+			Nix::Rect<float>		rect;
 			Nix::UIVertAlign		valign;
 			Nix::UIHoriAlign		halign;
 		};
 
 		struct ImageDraw {
-			Nix::Rect<int16_t>				rect;
-			// ��Ҫ�� rect<float> ������uv, ��Ϊͼ��������ת90�ȵģ�����Ҫ��4��uv
+			Nix::Rect<float>				rect;
 			Nix::Point<float>				uv[4];
 			float							layer;
 			uint32_t						color;
@@ -87,7 +91,7 @@ namespace Nix {
 		//  build draw data
 		// ---------------------------------------------------------------------------------------------------
 
-		bool initialize(IContext* _context, IArchieve* _archieve);
+		bool initialize(IContext* _context, IArchieve* _archieve, const UIRenderConfig& _config );
 		void setScreenSize( int _width, int _height );
 
 		inline UITextureManager* getUITextureManager() {

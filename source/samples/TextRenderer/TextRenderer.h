@@ -1,3 +1,5 @@
+#pragma once
+
 #include <NixApplication.h>
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
@@ -10,9 +12,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-#pragma once
-
-#include <NixUIRenderer.h>
+#include <NixUISystem.h>
 #include <nix/io/archieve.h>
 #include <cstdio>
 #include <cassert>
@@ -31,12 +31,15 @@ namespace Nix {
 		IContext*				m_context;
 		IRenderPass*			m_mainRenderPass;
 		IGraphicsQueue*			m_primQueue;
+		/*
 		Nix::UIRenderer			m_uiRenderer;
 		Nix::UIDrawData*		m_drawData1;
 		Nix::UIDrawData*		m_drawData2;
 		Nix::UIDrawData*		m_drawData3;
 		Nix::UIDrawData*		m_drawData4;
 		Nix::UIDrawData*		m_drawData5;
+		*/
+		Nix::UISystem*			m_uiSytem;
 		Nix::Scissor			m_scissor;
 
 		float					m_width;

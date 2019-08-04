@@ -38,83 +38,8 @@ namespace Nix {
 		clear.stencil = 1;
 		m_mainRenderPass->setClear(clear);
 
-		m_uiRenderer.initialize(m_context, _archieve);
-		m_uiRenderer.addFont("font/hwzhsong.ttf");
-		m_uiRenderer.addFont("font/font00.ttf");
+		m_uiSytem = UISystem::getInstance();
 
-		auto textureManager = m_uiRenderer.getUITextureManager();
-		const Nix::UITexture* uitex = nullptr;
-		if (!textureManager->getUITexture("button_00.png", &uitex)) {
-			return false;
-		}
-		char16_t text[] = u"ÎÄ×ÖäÖÈ¾²âÊÔ - powered by Vulkan!";
-		char16_t text2[] = u"²Ã¼ô²âÊÔ-OpenGL-Metal-Vulkan";
-
-		UIRenderer::ImageDraw imageDraw;
-		imageDraw.color = 0xffffffff;
-		imageDraw.layer = uitex->layer;
-		imageDraw.rect = {
-			{ 256, 256 },
-			{ 128, 128 }
-		};
-		imageDraw.uv[0] = { uitex->uv[0][0], uitex->uv[0][1] };
-		imageDraw.uv[1] = { uitex->uv[1][0], uitex->uv[1][1] };
-		imageDraw.uv[2] = { uitex->uv[2][0], uitex->uv[2][1] };
-		imageDraw.uv[3] = { uitex->uv[3][0], uitex->uv[3][1] };
-
-		m_drawData5 = m_uiRenderer.build( &imageDraw, 1, nullptr );
-		//m_uiRenderer.build()
-
-		Nix::UIRenderer::TextDraw draw;
-		draw.fontId = 0;
-		draw.fontSize = 14;
-		// RGBA
-		draw.colorMask = 0x770044ff;
-		draw.length = sizeof(text) / 2 - 1;
-		draw.text = &text[0];
-		draw.rect.origin = { 0, 0 };
-		draw.rect.size = { 512, 256 };
-		draw.halign = UIAlignHoriMid;
-		draw.valign = UIAlignVertMid;
-
-		m_drawData1 = m_uiRenderer.build(draw, nullptr);
-
-		draw.colorMask = 0x007755ff;
-		draw.length = sizeof(text2) / 2 - 1;
-		draw.text = &text2[0];
-		draw.fontSize = 14;
-		draw.fontId = 1;
-		draw.halign = UIAlignLeft;
-		draw.valign = UIAlignBottom;
-
-		m_drawData2 = m_uiRenderer.build(draw, nullptr);
-		//m_uiRenderer.transformDrawData(m_drawData1, 0, -32, m_drawData2);
-		m_drawData3 = m_uiRenderer.copyDrawData(m_drawData2);
-
-		Nix::Scissor customScissor;
-		customScissor.origin = { 4,4 };
-		customScissor.size = { 256, 24 };
-		m_uiRenderer.scissorDrawData(m_drawData2, customScissor, m_drawData3);
-
-		Nix::UIRenderer::ImageDraw imgDraw;
-		imgDraw.color = 0x878744ff;
-		imgDraw.layer = 0;
-		imgDraw.rect = {
-			{0, 0},
-			{ 512, 512 }
-		};
-		imgDraw.uv[0] = { 0, 0 };
-		imgDraw.uv[1] = { 0, 1.0f };
-		imgDraw.uv[2] = { 1.0f, 1.0f };
-		imgDraw.uv[3] = { 1.0f, 0.0f };
-
-		m_drawData4 = m_uiRenderer.build(&imgDraw, 1, nullptr);
-		//
-		//draw.fontId = 0;
-		//draw.fontSize = 32;
-		//draw.colorMask = 0xff0000ff;
-		//draw.rect.origin = { 32, 96 };
-		//m_drawData3 = m_uiRenderer.build(draw, nullptr);
 		return true;
 	}
 
@@ -141,19 +66,8 @@ namespace Nix {
 
 		if (m_context->beginFrame()) {
 
-			UIDrawState state;
-			state.scissor = m_scissor;
-			m_uiRenderer.beginBuild(tickCounter % MaxFlightCount);
-			m_uiRenderer.buildDrawCall(m_drawData1, state);
-			m_uiRenderer.buildDrawCall(m_drawData2, state);
-			m_uiRenderer.buildDrawCall(m_drawData4, state);
-			m_uiRenderer.buildDrawCall(m_drawData5, state);
-			//state.scissor.size = { 512, 512 };
-			//m_uiRenderer.buildDrawCall(m_drawData3, state);
-			m_uiRenderer.endBuild();
-
 			m_mainRenderPass->begin(m_primQueue); {
-				m_uiRenderer.render(m_mainRenderPass, m_width, m_height);
+
 			}
 			m_mainRenderPass->end();
 

@@ -11,7 +11,7 @@
 
 namespace Nix {
 
-	bool UIRenderer::initialize(IContext* _context, IArchieve* _archieve) {
+	bool UIRenderer::initialize(IContext* _context, IArchieve* _archieve, const UIRenderConfig& _config) {
 		m_context = _context;
 		m_archieve = _archieve;
 		MaterialDescription mtl;
@@ -83,24 +83,9 @@ namespace Nix {
 			}]
 		}
 		*/
-		Nix::TextReader packerJson;
-		if (!packerJson.openFile(_archieve, "texture/texturepacker.json")) {
-			assert("missing texture packer configure!" && false );
-			return false;
-		}
-		struct TPItem {
-			std::string file;
-			std::string table;
-			NIX_JSON( file, table )
-		};
-		struct TPConfig {
-			std::vector<TPItem> textures;
-			NIX_JSON(textures)
-		} tpconfig;
-		tpconfig.parse( packerJson.getText());
 		// read packed textures
-		m_textureManager.initialize( _context, _archieve, 2, (uint32_t)tpconfig.textures.size(), 1 );
-		for (auto& item : tpconfig.textures) {
+		m_textureManager.initialize( _context, _archieve, 2, (uint32_t)_config.textures.size(), 1 );
+		for (auto& item : _config.textures) {
 			m_textureManager.addPackedImage(item.table.c_str(), item.file.c_str());
 		}
 		// create renderable objects / one renderable per frame
@@ -109,13 +94,15 @@ namespace Nix {
 			m_meshBuffers[i].resize(1);
 			m_meshBuffers[i].back().initialize(_context, m_renderables[i][0], MaxVertexCount);
 		}
-
+		// add fonts
+		for (auto& font : _config.fonts) {
+			m_textureManager.getFontTextureManger()->addFont(font.c_str());
+		}
 		m_textureArray = m_textureManager.getTexture();
 		m_argument = m_material->createArgument(0);
 		if (!m_argument || !m_textureArray) {
 			return false;
 		}
-
 		SamplerState ss;
 		m_argument->setSampler(0, ss, m_textureArray);
 		return true;

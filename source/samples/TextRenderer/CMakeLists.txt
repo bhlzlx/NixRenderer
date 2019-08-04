@@ -2,7 +2,8 @@ project( TextRenderer )
 
 include_directories(
 	${CMAKE_SOURCE_DIR}/source/common
-	${CMAKE_SOURCE_DIR}/source/module/UIRenderer
+	#${CMAKE_SOURCE_DIR}/source/module/UIRenderer
+	${CMAKE_SOURCE_DIR}/source/module/TinyUI
 )
 
 set( PROJECT_SOURCE
@@ -18,6 +19,7 @@ add_executable( TextRenderer WIN32
 
 target_link_libraries(
     TextRenderer
+	TinyUI
 	UIRenderer
     nix
 )
