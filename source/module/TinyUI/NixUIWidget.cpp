@@ -26,6 +26,7 @@ namespace Nix {
 	UIWidget::UIWidget(bool _clipSubWidget) 
 		: m_super(nullptr)
 		, m_index(-1)
+		, m_widgetLevel(-1)
 		, m_align({UIAlignVertMid,UIAlignHoriMid})
 		, m_layout( UILayoutMode::UIRestrictRatio )
 		, m_sicssorSubWidgets( _clipSubWidget )
@@ -44,6 +45,14 @@ namespace Nix {
 		}
 	}
 
+	void UIWidget::setAlign(const UIAlign& _align)
+	{
+		m_align = _align;
+		if (m_super) {
+			NixUISystem->queueUpdate(this);
+		}
+	}
+
 	void UIWidget::addSubWidget(UIWidget * _widget)
 	{
 		// remove the _widget from it's super node
@@ -52,23 +61,29 @@ namespace Nix {
 		}
 		// add _widget to current sub widgets
 		_widget->m_index = (uint32_t)m_subWidgets.size();
+		_widget->m_widgetLevel = m_widgetLevel + 1;
+		_widget->m_super = this;
 		m_subWidgets.push_back(_widget);
 		// update the _widget's status
 		_widget->layoutChanged();
 		_widget->contentChanged();
+		//
+		NixUISystem->queueUpdate(_widget);
 	}
 
-	void UIWidget::removeSubWidget(uint32_t _index)
+	UIWidget* UIWidget::removeSubWidget(uint32_t _index)
 	{
 		// check the status
 		assert(_index < m_subWidgets.size());
 		// remove the widget
 		auto it = m_subWidgets.begin() + _index;
+		UIWidget* wgt = *it;
 		it = m_subWidgets.erase(it);
 		// update sub widgets's index
 		while (it != m_subWidgets.end()) {
 			--(*it)->m_index;
 		}
+		return wgt;
 	}
 
 	void UIWidget::update()
@@ -84,7 +99,13 @@ namespace Nix {
 	void UIWidget::updateLayout()
 	{
 		// update the layout
-		Nix::Rect<int16_t> realRc = alignRect<int16_t>(m_rect, m_super->m_rect, m_align.vert, m_align.hori);
+		Nix::Rect<int16_t> realRc;
+		if (this == NixUISystem->getRootWidget()) {
+			realRc = this->m_rect;
+		}
+		else {
+			realRc = alignRect<int16_t>(m_rect, m_super->m_rect, m_align.vert, m_align.hori);
+		}		
 		//
 		float scaleX = 1.0f;
 		float scaleY = 1.0f;
@@ -127,6 +148,9 @@ namespace Nix {
 
 	void UIWidget::draw( UIRenderer* _renderer )
 	{
-		// nothing to draw
+		// should skip invisible widgets
+		for (auto& widget : m_subWidgets) {
+			widget->draw(_renderer);
+		}
 	}
 }

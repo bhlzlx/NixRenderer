@@ -20,11 +20,13 @@ namespace Nix {
 	class UIRenderer;
 
 	class UIWidget {
+		friend class UISystem;
 	protected:
 		UIWidget*				m_super;
 		std::vector<UIWidget*>	m_subWidgets;
 		std::string				m_name;
 		uint32_t				m_index;
+		uint32_t				m_widgetLevel;
 		// the position & size set directly to the widget
 		UIAlign					m_align;				// 
 		UILayoutMode			m_layout;				//
@@ -40,9 +42,10 @@ namespace Nix {
 		UIWidget(bool _clipSubWidget = false);
 		//
 		virtual void setRect( const Rect<int16_t>& _rc );
+		virtual void setAlign( const UIAlign& _align );
 		// modify the widget tree
 		virtual void addSubWidget(UIWidget* _widget);
-		virtual void removeSubWidget(uint32_t _index);
+		virtual UIWidget* removeSubWidget(uint32_t _index);
 		// update widget content & layout information
 		virtual void update();
 		virtual void updateLayout();

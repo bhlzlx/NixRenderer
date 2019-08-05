@@ -2,7 +2,7 @@ project( TextRenderer )
 
 include_directories(
 	${CMAKE_SOURCE_DIR}/source/common
-	#${CMAKE_SOURCE_DIR}/source/module/UIRenderer
+	${CMAKE_SOURCE_DIR}/source/module/UIRenderer
 	${CMAKE_SOURCE_DIR}/source/module/TinyUI
 )
 

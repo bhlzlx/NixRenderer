@@ -5,7 +5,8 @@
 #define NIX_JP_IMPLEMENTATION
 #include <NixJpDecl.h>
 #include <NixRenderer.h>
-
+#include <NixUIRenderer.h>
+#include <NixUIImage.h>
 #include "TextRenderer.h"
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <stb_truetype.h>
@@ -42,19 +43,49 @@ namespace Nix {
 		m_primQueue = m_context->getGraphicsQueue(0);
 
 		RpClear clear;
-		clear.colors[0] = { 1.0f, 1.0f, 1.0f, 1.0f };
+		clear.colors[0] = { 0.5f, 0.4f, 0.4f, 1.0f };
 		clear.depth = 1.0f;
 		clear.stencil = 1;
 		m_mainRenderPass->setClear(clear);
 
 		m_uiSystem = UISystem::getInstance();
 		m_uiSystem->initialize( m_context, m_archieve );
+		m_uiRenderer = m_uiSystem->getRenderer();
+
+		{
+			UIImage* img = new UIImage();
+			img->setImage("button_00.png");
+			img->setRect({ 0, 0, 32, 32 });
+			img->setAlign({ UIAlignBottom, UIAlignLeft });
+			UIWidget* root = m_uiSystem->getRootWidget();
+			root->addSubWidget(img);
+		}
+
+		{
+			UIImage* img = new UIImage();
+			img->setImage("notfound.png");
+			img->setRect({ 16, 16, 64, 64 });
+			img->setAlign({ UIAlignBottom, UIAlignLeft });
+			UIWidget* root = m_uiSystem->getRootWidget();
+			root->addSubWidget(img);
+		}
+
+		{
+			UIImage* img = new UIImage();
+			img->setImage("button_00.png");
+			img->setRect({ 0, 48, 64, 64 });
+			img->setAlign({ UIAlignBottom, UIAlignLeft });
+			img->setColor( 0xff000088 );
+			UIWidget* root = m_uiSystem->getRootWidget();
+			root->addSubWidget(img);
+		}
+		
 		//
 		return true;
 	}
 
 	inline void TextSample::resize(uint32_t _width, uint32_t _height) {
-		printf("resized!");
+		//
 		m_context->resize(_width, _height);
 		Viewport vp = {
 			0.0f, 0.0f, (float)_width, (float)_height, 0.0f, 1.0f
@@ -74,13 +105,13 @@ namespace Nix {
 		static uint64_t tickCounter = 0;
 		tickCounter++;
 
+		m_uiSystem->onTick();
+
 		if (m_context->beginFrame()) {
-
 			m_mainRenderPass->begin(m_primQueue); {
-
+				m_uiRenderer->render(m_mainRenderPass, m_width, m_height);
 			}
 			m_mainRenderPass->end();
-
 			m_context->endFrame();
 		}
 	}

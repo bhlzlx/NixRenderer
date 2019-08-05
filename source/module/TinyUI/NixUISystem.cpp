@@ -34,7 +34,7 @@ namespace Nix {
 		return handle;
 	}
 
-	bool UISystem::initialize(IContext* _context, IArchieve* _archieve )
+	bool UISystem::initialize(IContext* _context, IArchieve* _archieve)
 	{
 		assert(_context && _archieve);
 		UIRenderer* renderer = new UIRenderer();
@@ -48,11 +48,17 @@ namespace Nix {
 		renderer->initialize(_context, _archieve, config);
 		m_textureManager = m_renderer->getUITextureManager();
 		//
-		m_rootWidget = new UIWidget();
+		m_rootWidget = new UIWidget(true);
+		m_rootWidget->setRect( {
+				{ 0, 0 },
+				{ 1334, 750 }
+			}
+		);
+		m_rootWidget->m_index = 0;
+		this->queueUpdate(m_rootWidget);
 		//
 		return true;
 	}
-
 	//
 	void UISystem::refresh(){
 		m_rootWidget->update();
@@ -62,11 +68,18 @@ namespace Nix {
 	{
 		if (m_updateSet.find(_widget) == m_updateSet.end()) {
 			m_vecUpdates.push_back(_widget);
+			m_updateSet.insert(_widget);
 		}
 	}
 
 	void UISystem::onTick(){
 		updateUIChanges();
+		m_renderer->beginBuild(m_flightIndex);
+		m_rootWidget->draw(m_renderer);
+		m_renderer->endBuild();
+		//
+		++m_flightIndex;
+		m_flightIndex %= MaxFlightCount;
 	}
 
 	void UISystem::onResize(int _width, int _height){

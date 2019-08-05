@@ -15,9 +15,9 @@ namespace Nix {
 		UIWidget::addSubWidget(_widget);
 	}
 
-	void UIImage::removeSubWidget(uint32_t _index)
+	UIWidget* UIImage::removeSubWidget(uint32_t _index)
 	{
-		UIWidget::removeSubWidget(_index);
+		return UIWidget::removeSubWidget(_index);
 	}
 
 	void UIImage::updateLayout()
@@ -35,7 +35,7 @@ namespace Nix {
 		draw.uv[2] = m_texture->uv[2];
 		draw.uv[3] = m_texture->uv[3];
 		draw.rect = this->m_rectRendering;
-		draw.color = 0xffffffff;
+		draw.color = m_colorMask;
 		m_drawData = renderer->build( &draw, 1, m_drawData);
 	}
 
@@ -51,6 +51,7 @@ namespace Nix {
 			state.setScissor(scissor);
 			_renderer->buildDrawCall(m_drawData, state);
 		}
+		UIWidget::draw(_renderer);
 	}
 
 	void UIImage::setImage( const std::string& _image)
@@ -59,5 +60,9 @@ namespace Nix {
 		m_contentChanged = true;
 		//
 		NixUISystem->queueUpdate(this);
+	}
+	void UIImage::setColor(uint32_t _color)
+	{
+		m_colorMask = _color;
 	}
 }

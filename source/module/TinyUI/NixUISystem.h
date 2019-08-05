@@ -1,6 +1,7 @@
 #pragma once
 #include <set>
 #include <vector>
+#include <map>
 
 namespace Nix {
 
@@ -17,6 +18,16 @@ namespace Nix {
 	enum UITouchEvent {
 	};
 
+	//class WidgetUpdateManager {
+	//private:
+	//	std::map< uint32_t, std::vector<UIWidget*> > m_levelOfUpdates;
+	//public:
+	//	WidgetUpdateManager() {
+
+	//	}
+	//	void 
+	//};
+
     class UIWidget;
     class UISystem {
 	public:
@@ -25,6 +36,7 @@ namespace Nix {
 		//
 		uint32_t				m_screenWidth;
 		uint32_t				m_screenHeight;
+		uint32_t				m_flightIndex;
 		Nix::Point<float>		m_scale;
 		float					m_standardScale;
     private:
@@ -32,6 +44,7 @@ namespace Nix {
 		IArchieve*				m_archieve;
         UIRenderer*				m_renderer;
 		UITextureManager*		m_textureManager;
+		UIWidget*				m_dummyRoot;
 		UIWidget*				m_rootWidget;
 		std::vector<UIWidget*>  m_vecUpdates;
 		std::set<UIWidget*>		m_updateSet;
@@ -39,6 +52,7 @@ namespace Nix {
         UISystem() 
 		: m_screenWidth(STANDARD_SCREEN_WIDTH)
 		, m_screenHeight(STANDARD_SCREEN_HEIGHT)
+		, m_flightIndex( 0 )
 		, m_scale({ 1.0f, 1.0f })
 		, m_standardScale(1.0f)
 		, m_archieve( nullptr)
@@ -58,6 +72,9 @@ namespace Nix {
 		UIRenderer* getRenderer() {
 			return m_renderer;
 		}
+		UIWidget* getRootWidget() {
+			return m_rootWidget;
+		}
 		const UITexture* getTexture( const std::string& _name );
 		//
 		bool initialize( IContext* _context, IArchieve* _archieve);
@@ -66,7 +83,7 @@ namespace Nix {
 		void queueUpdate( UIWidget* _widget );
 		// system event driven handlers
 		//void onTouch();
-		void onTick();
+		void onTick(); // update control & rebuild draw batch
 		void onResize( int _width, int _height );
 	private:
 		void updateUIChanges();

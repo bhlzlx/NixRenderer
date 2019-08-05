@@ -25,6 +25,8 @@
 
 namespace Nix {
 
+	class UIRenderer;
+
 	class TextSample : public NixApplication {
 	private:
 		IDriver*				m_driver;
@@ -34,6 +36,7 @@ namespace Nix {
 		IGraphicsQueue*			m_primQueue;
 		//
 		Nix::UISystem*			m_uiSystem;
+		Nix::UIRenderer*		m_uiRenderer;
 		Nix::Scissor			m_scissor;
 
 		float					m_width;
