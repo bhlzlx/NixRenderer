@@ -407,7 +407,10 @@ namespace Nix {
 			// load SPV from disk!
 			auto arch = _context->getDriver()->getArchieve();
 			Nix::IFile * file = arch->open(VULKAN_SHADER_PATH(_shader));
-			if (!file) { assert(false); return nullptr; }
+			if (!file) { 
+                assert(false); 
+                return VK_NULL_HANDLE; 
+            }
 			Nix::IFile* mem = CreateMemoryBuffer(file->size() + 1);
 			mem->seek(SeekEnd, -1);
 			char endle = 0;

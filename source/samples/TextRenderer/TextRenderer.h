@@ -29,17 +29,11 @@ namespace Nix {
 	private:
 		IDriver*				m_driver;
 		IContext*				m_context;
+		IArchieve*				m_archieve;
 		IRenderPass*			m_mainRenderPass;
 		IGraphicsQueue*			m_primQueue;
-		/*
-		Nix::UIRenderer			m_uiRenderer;
-		Nix::UIDrawData*		m_drawData1;
-		Nix::UIDrawData*		m_drawData2;
-		Nix::UIDrawData*		m_drawData3;
-		Nix::UIDrawData*		m_drawData4;
-		Nix::UIDrawData*		m_drawData5;
-		*/
-		Nix::UISystem*			m_uiSytem;
+		//
+		Nix::UISystem*			m_uiSystem;
 		Nix::Scissor			m_scissor;
 
 		float					m_width;

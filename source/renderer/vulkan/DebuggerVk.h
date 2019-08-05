@@ -13,7 +13,7 @@ namespace Nix {
 		VkDebugReportCallbackEXT m_debugReportCallback;
 	public:
 		DebugReporterVk()
-		: m_debugReportCallback(nullptr){
+		: m_debugReportCallback((VkDebugReportCallbackEXT)nullptr){
 		}
 		bool setupDebugReport( VkInstance _inst );
 		bool uninstallDebugReport(VkInstance _inst);

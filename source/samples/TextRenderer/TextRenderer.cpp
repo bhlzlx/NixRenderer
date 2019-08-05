@@ -1,3 +1,11 @@
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
+#define NIX_JP_IMPLEMENTATION
+#include <NixJpDecl.h>
+#include <NixRenderer.h>
+
 #include "TextRenderer.h"
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <stb_truetype.h>
@@ -28,6 +36,7 @@ namespace Nix {
 		m_driver->initialize(_archieve, DeviceType::DiscreteGPU);
 		// \ 2. create context
 		m_context = m_driver->createContext(_wnd);
+		m_archieve = _archieve;
 
 		m_mainRenderPass = m_context->getRenderPass();
 		m_primQueue = m_context->getGraphicsQueue(0);
@@ -38,8 +47,9 @@ namespace Nix {
 		clear.stencil = 1;
 		m_mainRenderPass->setClear(clear);
 
-		m_uiSytem = UISystem::getInstance();
-
+		m_uiSystem = UISystem::getInstance();
+		m_uiSystem->initialize( m_context, m_archieve );
+		//
 		return true;
 	}
 
@@ -52,8 +62,8 @@ namespace Nix {
 		m_scissor.origin = { 0, 0 };
 		m_scissor.size = { (int)_width, (int)_height };
 		//
-		m_width = _width;
-		m_height = _height;
+		m_width = (float)_width;
+		m_height = (float)_height;
 	}
 	inline void TextSample::release() {
 		printf("destroyed");

@@ -2,7 +2,6 @@
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
-#define NIX_JP_IMPLEMENTATION
 #include <NixJpDecl.h>
 #include <NixRenderer.h>
 #include "NixUIRenderer.h"
@@ -84,7 +83,12 @@ namespace Nix {
 		}
 		*/
 		// read packed textures
-		m_textureManager.initialize( _context, _archieve, 2, (uint32_t)_config.textures.size(), 1 );
+        {
+            bool rst = m_textureManager.initialize( _context, _archieve, 2, (uint32_t)_config.textures.size(), 1 );
+            if( rst == false ) {
+                return false;
+            }
+        }
 		for (auto& item : _config.textures) {
 			m_textureManager.addPackedImage(item.table.c_str(), item.file.c_str());
 		}
@@ -96,7 +100,10 @@ namespace Nix {
 		}
 		// add fonts
 		for (auto& font : _config.fonts) {
-			m_textureManager.getFontTextureManger()->addFont(font.c_str());
+            uint32_t code = m_textureManager.getFontTextureManger()->addFont(font.c_str());
+            if( -1 == code ) {
+                break;
+            }
 		}
 		m_textureArray = m_textureManager.getTexture();
 		m_argument = m_material->createArgument(0);

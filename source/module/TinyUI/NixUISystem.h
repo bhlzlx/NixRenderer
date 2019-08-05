@@ -6,7 +6,7 @@ namespace Nix {
 
 	class UIRenderer;
 	class UITextureManager;
-	class UITexture;
+	struct UITexture;
 	
 	enum UIPlatformTouchEvent {
 		UITouchDown = 0,

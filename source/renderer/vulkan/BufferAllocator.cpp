@@ -226,7 +226,7 @@ namespace Nix {
 		std::vector<SubAllocator>	m_vecAllocatorCollection[2];
 		uint32_t					m_uniformAlignment;
 		// 256KB -> 1KB
-		// 16KB -> 64×Ö½Ú | Ð¡ÓÚ1K
+		// 16KB -> 64ï¿½Ö½ï¿½ | Ð¡ï¿½ï¿½1K
 	public:
 		void initialize(ContextVk* _context) {
 			DriverVk* driver = (DriverVk*)_context->getDriver();
@@ -236,7 +236,7 @@ namespace Nix {
 				m_uniformAlignment = 64;
 			}
 		}
-		// Í¨¹ý IBufferAllocator ¼Ì³Ð
+		// Í¨ï¿½ï¿½ IBufferAllocator ï¿½Ì³ï¿½
 		virtual BufferAllocation allocate(size_t _size) override
 		{
 			_size = (_size + m_uniformAlignment - 1) & ~((size_t)m_uniformAlignment - 1);
@@ -486,13 +486,13 @@ namespace Nix {
 			m_allocator.initialize(_heapSize, _minSize);
 			return true;
 		}
-		// Í¨¹ý IBufferAllocator ¼Ì³Ð
+		// Í¨ï¿½ï¿½ IBufferAllocator ï¿½Ì³ï¿½
 		virtual BufferAllocation allocate(size_t _size) override
 		{
 			BufferAllocation allocation;
 			bool rst = m_allocator.allocate(_size, allocation.offset, allocation.allocationId);
 			if (rst) {
-				allocation.buffer = reinterpret_cast<uint64_t>(m_buffer);
+				allocation.buffer = (uint64_t)(m_buffer);
 				allocation.raw = m_raw + allocation.offset;
 			}
 			else {
