@@ -135,6 +135,7 @@ namespace Nix {
 		} else {
 			if ( m_updatingFencesActived[m_flightIndex] ) {
 				vkWaitForFences(m_device, 1, &m_updatingFences[m_flightIndex], VK_TRUE, uint64_t(-1));
+				vkResetFences(m_device, 1, &m_updatingFences[m_flightIndex]);
 				m_updatingFencesActived[m_flightIndex] = VK_FALSE;
 			}
 		}
@@ -204,6 +205,9 @@ namespace Nix {
 
 		m_renderFencesActived[m_flightIndex] = true;
 		//
+		++m_flightIndex;
+		m_flightIndex %= MaxFlightCount;
+		//
 		m_readyForRendering = VK_FALSE;
 	}
 
@@ -211,14 +215,18 @@ namespace Nix {
 		if (!m_readyForRendering) 
 		{
 			auto& cmdbuff = m_updatingBuffers[m_flightIndex];
+
+			if (m_updatingFencesActived[m_flightIndex]) {
+				vkWaitForFences(m_device, 1, &m_updatingFences[m_flightIndex], VK_TRUE, uint64_t(-1));
+				vkResetFences(m_device, 1, &m_updatingFences[m_flightIndex]);
+				m_updatingFencesActived[m_flightIndex] = VK_FALSE;
+			}
+
 			if (!m_updatingBuffersActived[m_flightIndex]) {
 				cmdbuff.begin();
 				m_updatingBuffersActived[m_flightIndex] = VK_TRUE;
 			}
-			if (m_updatingFencesActived[m_flightIndex]) {
-				vkWaitForFences(m_device, 1, &m_updatingFences[m_flightIndex], VK_TRUE, uint64_t(-1));
-				m_updatingFencesActived[m_flightIndex] = VK_FALSE;
-			}
+
 			cmdbuff.updateBuffer(_buffer, _offset, _length, _data);
 		}
 		else

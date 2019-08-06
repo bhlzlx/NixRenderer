@@ -43,11 +43,22 @@ namespace Nix {
 		if (m_super) {
 			NixUISystem->queueUpdate(this);
 		}
+		layoutChanged();
+		contentChanged();
 	}
 
 	void UIWidget::setAlign(const UIAlign& _align)
 	{
 		m_align = _align;
+		if (m_super) {
+			NixUISystem->queueUpdate(this);
+		}
+	}
+
+	void UIWidget::setLayout(UILayoutMode _layout)
+	{
+		m_layout = _layout;
+		//
 		if (m_super) {
 			NixUISystem->queueUpdate(this);
 		}
@@ -117,6 +128,10 @@ namespace Nix {
 		case UILayoutMode::UIStretch: {
 			scaleX = NixUISystem->m_scale.x;
 			scaleY = NixUISystem->m_scale.y;
+			break;
+		}
+		case UILayoutMode::UIAbsulote: {
+			scaleX = scaleY = 1.0f;
 			break;
 		}
 		}

@@ -112,9 +112,11 @@ namespace Nix {
 				drawData = _oldDrawData;
 				drawData->primitiveCount = _count;
 			}
-			this->destroyDrawData(_oldDrawData);
+			else {
+				this->destroyDrawData(_oldDrawData);
+			}
 		}
-		else {
+		if (!drawData) {
 			drawData = m_drawDataPool.newElement();
 			drawData->primitiveCapacity = drawData->primitiveCount = _count;
 			drawData->type = UIRectangle;

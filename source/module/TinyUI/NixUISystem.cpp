@@ -49,6 +49,7 @@ namespace Nix {
 		m_textureManager = m_renderer->getUITextureManager();
 		//
 		m_rootWidget = new UIWidget(true);
+		m_rootWidget->setLayout( UILayoutMode::UIAbsulote );
 		m_rootWidget->setRect( {
 				{ 0, 0 },
 				{ 1334, 750 }
@@ -83,6 +84,13 @@ namespace Nix {
 	}
 
 	void UISystem::onResize(int _width, int _height){
+		m_screenWidth = _width;
+		m_screenHeight = _height;
+		m_scale = {
+			(float)_width / (float)STANDARD_SCREEN_WIDTH,
+			(float)_height / (float)STANDARD_SCREEN_HEIGHT,
+		};
+		m_standardScale = m_scale.x > m_scale.y ? m_scale.y : m_scale.x;
 		Nix::Rect<int16_t> rc;
 		rc.origin = { 0, 0 };
 		rc.size = { (int16_t)_width, (int16_t)_height };

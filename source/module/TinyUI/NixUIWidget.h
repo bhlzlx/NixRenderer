@@ -15,6 +15,7 @@ namespace Nix {
 	enum UILayoutMode {
 		UIRestrictRatio = 0,
 		UIStretch		= 1,
+		UIAbsulote		= 2,
 	};
 
 	class UIRenderer;
@@ -43,6 +44,7 @@ namespace Nix {
 		//
 		virtual void setRect( const Rect<int16_t>& _rc );
 		virtual void setAlign( const UIAlign& _align );
+		virtual void setLayout(UILayoutMode _layout);
 		// modify the widget tree
 		virtual void addSubWidget(UIWidget* _widget);
 		virtual UIWidget* removeSubWidget(uint32_t _index);

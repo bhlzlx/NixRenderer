@@ -7,6 +7,11 @@
 
 #define MAX_LOADSTRING 100
 
+static int captionHeight;
+static int systemMenuHeight;
+static int frameThicknessX;
+static int frameThicknessY;
+
 HINSTANCE hInst;                                
 WCHAR szTitle[MAX_LOADSTRING];                  
 WCHAR szWindowClass[MAX_LOADSTRING];            
@@ -93,6 +98,12 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
 	hInst = hInstance;
+
+	captionHeight = GetSystemMetrics(SM_CYCAPTION);
+	systemMenuHeight = GetSystemMetrics(SM_CYMENU);
+	frameThicknessX = GetSystemMetrics(SM_CXSIZEFRAME);
+	frameThicknessY = GetSystemMetrics(SM_CYSIZEFRAME);
+
 	HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, 0, 512, 512, nullptr, nullptr, hInstance, nullptr);
 
@@ -167,6 +178,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		UINT cx = LOWORD(lParam);
 		UINT cy = HIWORD(lParam);
+		//::GetClientRect();
 		object->resize(cx, cy);
 		break;
 	}

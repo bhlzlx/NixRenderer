@@ -95,6 +95,8 @@ namespace Nix {
 		//
 		m_width = (float)_width;
 		m_height = (float)_height;
+		//
+		m_uiSystem->onResize(_width, _height);
 	}
 	inline void TextSample::release() {
 		printf("destroyed");
