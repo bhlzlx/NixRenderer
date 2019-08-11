@@ -59,10 +59,10 @@ namespace Nix {
 		m_draw.valign = UIVertAlign::UIAlignVertMid;
 		m_draw.rect = { {0, 0},{512, 512} };
 		m_draw.vecChar = {
-			{ 0, u'±‡', 32, 0x880000ff },
-			{ 1, u'“Î', 32, 0x888800ff },
-			{ 2, u'‘≠', 48, 0x008800ff },
-			{ 1, u'¿Ì', 24, 0x800664ff },
+			{ 0, u'Áºñ', 32, 0x880000ff },
+			{ 1, u'ËØë', 32, 0x888800ff },
+			{ 2, u'Âéü', 48, 0x008800ff },
+			{ 1, u'ÁêÜ', 24, 0x800664ff },
 			{ 2, u'p', 32, 0xf00f00ff },
 			{ 1, u'f', 36, 0xff8800ff },
 		};
