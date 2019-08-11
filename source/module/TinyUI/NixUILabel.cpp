@@ -3,4 +3,7 @@
 #include <utility>
 
 namespace Nix {
+	void UILabel::setRect(const Rect<int16_t>& _rc)
+	{
+	}
 }

@@ -35,13 +35,27 @@ namespace Nix {
 
 	class UIRenderer {
 	public:
-		struct TextDraw {
+		struct PlainTextDraw {
 			const char16_t*			text;
 			uint32_t				length;
 			uint32_t				fontId;
 			uint16_t				fontSize;
 			uint32_t				colorMask;
 			//
+			Nix::Rect<float>		rect;
+			Nix::UIVertAlign		valign;
+			Nix::UIHoriAlign		halign;
+		};
+
+		struct RichChar {
+			uint16_t font;
+			uint16_t code;
+			uint16_t size;
+			uint32_t color;
+		};
+
+		struct RichTextDraw {
+			std::vector<RichChar>	vecChar;
 			Nix::Rect<float>		rect;
 			Nix::UIVertAlign		valign;
 			Nix::UIHoriAlign		halign;
@@ -112,7 +126,9 @@ namespace Nix {
 		* @return ���ع������
 		* @see
 		*/
-		UIDrawData* build( const TextDraw& _draw, UIDrawData* _oldDrawData );
+		UIDrawData* build( const PlainTextDraw& _draw, UIDrawData* _oldDrawData, Nix::Rect<float>& _rc );
+
+		UIDrawData* build(const RichTextDraw& _draw, bool _autoWrap, UIDrawData* _oldDrawData, Nix::Rect<float>& _rc);
 
 		UIDrawData* build( const ImageDraw* _draws, uint32_t _count, UIDrawData* _oldDrawData );
 
@@ -144,7 +160,7 @@ namespace Nix {
 		void scissorDrawData(UIDrawData* _draw, const Nix::Scissor& _scissor, UIDrawData* _output );
 		//
 		//UIDrawData* build( const ImageDraw* _pImages, uint32_t _count );
-		//UIDrawData* build( const ImageDraw* _pImages, uint32_t _count, const TextDraw& _draw );
+		//UIDrawData* build( const ImageDraw* _pImages, uint32_t _count, const PlainTextDraw& _draw );
 
 		/**
 		* @brief ����һ�� draw data

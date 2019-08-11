@@ -84,7 +84,7 @@ namespace Nix {
 
 	UIWidget* UIWidget::removeSubWidget(uint32_t _index)
 	{
-		// check the status
+		// check the statuse
 		assert(_index < m_subWidgets.size());
 		// remove the widget
 		auto it = m_subWidgets.begin() + _index;
