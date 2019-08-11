@@ -43,7 +43,7 @@ namespace Nix {
 		m_primQueue = m_context->getGraphicsQueue(0);
 
 		RpClear clear;
-		clear.colors[0] = { 0.5f, 0.4f, 0.4f, 1.0f };
+		clear.colors[0] = { 1.0f, 1.0f, 1.0f, 1.0f };
 		clear.depth = 1.0f;
 		clear.stencil = 1;
 		m_mainRenderPass->setClear(clear);
@@ -59,12 +59,12 @@ namespace Nix {
 		m_draw.valign = UIVertAlign::UIAlignVertMid;
 		m_draw.rect = { {0, 0},{512, 512} };
 		m_draw.vecChar = {
-			{ 1, u'±‡', 32, 0xffff00ff },
-			{ 1, u'p', 32, 0xff0000ff },
-			{ 1, u'“Î', 18, 0xffff00ff },
-			{ 1, u'“Î', 14, 0xf00fffff },
-			{ 1, u'p', 32, 0xf00f00ff },
-			{ 1, u'p', 12, 0xffff00ff },
+			{ 0, u'±‡', 32, 0x880000ff },
+			{ 1, u'“Î', 32, 0x888800ff },
+			{ 2, u'‘≠', 48, 0x008800ff },
+			{ 1, u'¿Ì', 24, 0x800664ff },
+			{ 2, u'p', 32, 0xf00f00ff },
+			{ 1, u'f', 36, 0xff8800ff },
 		};
 		Nix::Rect<float> rc;
 		m_drawData = m_uiRenderer->build(m_draw,true, nullptr, rc);
