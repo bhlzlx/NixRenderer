@@ -1,4 +1,4 @@
-#include <rapidjson/rapidjson.h>
+﻿#include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
@@ -56,16 +56,21 @@ namespace Nix {
 		m_uiRenderer->initialize(m_context, m_archieve, uiconfig);
 
 		m_draw.halign = UIHoriAlign::UIAlignHoriMid;
-		m_draw.valign = UIVertAlign::UIAlignVertMid;
+		m_draw.valign = UIVertAlign::UIAlignTop;
+		m_draw.calign = UIVertAlign::UIAlignBottom;
 		m_draw.rect = { {0, 0},{512, 512} };
-		m_draw.vecChar = {
-			{ 0, u'编', 32, 0x880000ff },
-			{ 1, u'译', 32, 0x888800ff },
-			{ 2, u'原', 48, 0x008800ff },
-			{ 1, u'理', 24, 0x800664ff },
-			{ 2, u'p', 32, 0xf00f00ff },
-			{ 1, u'f', 36, 0xff8800ff },
-		};
+
+		char16_t richtext[] = u"中国智造，慧及全球。phantom lancer : kusugawa sasara";
+
+		m_draw.vecChar;
+		for (uint32_t i = 0; i < sizeof(richtext) / sizeof(char16_t) - 1; ++i) {
+			UIRenderer::RichChar rc;
+			rc.code = richtext[i];
+			rc.color = 0x884477ff;
+			rc.font = 0;
+			rc.size = 32;
+			m_draw.vecChar.push_back(rc);
+		}
 		Nix::Rect<float> rc;
 		m_drawData = m_uiRenderer->build(m_draw,true, nullptr, rc);
 		//

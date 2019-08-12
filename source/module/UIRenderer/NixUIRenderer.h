@@ -57,8 +57,9 @@ namespace Nix {
 		struct RichTextDraw {
 			std::vector<RichChar>	vecChar;
 			Nix::Rect<float>		rect;
-			Nix::UIVertAlign		valign;
-			Nix::UIHoriAlign		halign;
+			Nix::UIVertAlign		valign; // line alignment
+			Nix::UIHoriAlign		halign; // line alignment
+			Nix::UIVertAlign		calign; // text content alignment
 		};
 
 		struct ImageDraw {

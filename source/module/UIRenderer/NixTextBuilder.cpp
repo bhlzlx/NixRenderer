@@ -71,11 +71,11 @@ namespace Nix {
 			vtx[2].x = vtx[3].x;
 			vtx[2].y = vtx[1].y;
 			// configure [u,v]
-			vtx[0].u = (float)charInfo.x / UITextureSize;
-			vtx[0].v = (float)charInfo.y / UITextureSize;
+			vtx[0].u = (float)charInfo.x / (UITextureSize-1);
+			vtx[0].v = (float)charInfo.y / (UITextureSize - 1);
 			vtx[1].u = vtx[0].u;
-			vtx[1].v = (float)(charInfo.y + charInfo.height) / UITextureSize;
-			vtx[3].u = (float)(charInfo.x + charInfo.width) / UITextureSize;
+			vtx[1].v = (float)(charInfo.y + charInfo.height) / (UITextureSize - 1);
+			vtx[3].u = (float)(charInfo.x + charInfo.width) / (UITextureSize - 1);
 			vtx[3].v = vtx[0].v;
 			vtx[2].u = vtx[3].u;
 			vtx[2].v = vtx[1].v;
@@ -167,17 +167,22 @@ namespace Nix {
 				vertexCount = 0;
 			}
 		};
+
+		Nix::Rect<float> contentRect;
+		contentRect.origin = { 0, 0 };
+		contentRect.size = { _draw.rect.size.width, 0 };
+
 		std::vector<Line> lines;
 		//
-		float currentLineWidth = 0;
+		//float currentLineWidth = 0;
 		float currentLineHeight = 0;
 		//
 		lines.resize(lines.size() + 1);
-		Line& line = lines[0];
-		line.vertices = vtx;
+		Line* line = &lines[0];
+		line->vertices = vtx;
 		for (auto& ch : _draw.vecChar) {
 			//
-			float xPos = line.rc.size.width;
+			float xPos = line->rc.size.width;
 			//
 			Nix::CharKey ck;
 			ck.charCode = ch.code;
@@ -185,22 +190,30 @@ namespace Nix {
 			ck.size = ch.size;
 			auto& charInfo = m_textureManager.getFontTextureManger()->getCharactor(ck);
 			// ====================== update line information ======================
-			if (currentLineWidth + charInfo.adv > _draw.rect.size.width ) {
+			if (line->rc.size.width + charInfo.adv > _draw.rect.size.width ) {
 				// new line
-				auto& prevLine = lines.back();
+				size_t index = lines.size() - 1;
 				lines.resize(lines.size() + 1);
-				line = lines.back();
-				line.vertices = vtx;
-				line.rc.origin.y = prevLine.rc.origin.y + prevLine.rc.size.height;
+				auto& prevLine = lines[index];
+				contentRect.size.height += prevLine.rc.size.height;
+				++index;
+				auto& currentLine = lines[index];
+				line = &currentLine;
+				line->vertices = vtx;
+				line->rc.origin.x = 0;
+				line->rc.origin.y = prevLine.rc.origin.y + prevLine.rc.size.height;
+				line->baseLine = 0;
+				line->rc.size = { 0, 0 };
+				xPos = 0.0f;
 			}
-			line.rc.size.width += charInfo.adv;
+			line->rc.size.width += charInfo.adv;
 			float bl;// baseline
 			float lh; // line height
 			lineHGetter.getLineH(&m_textureManager, ck.fontId, ck.size, bl, lh);
-			if (lh > line.rc.size.height)
-				line.rc.size.height = lh;
-			if (bl > line.baseLine)
-				line.baseLine = bl;
+			if (lh > line->rc.size.height)
+				line->rc.size.height = lh;
+			if (bl > line->baseLine)
+				line->baseLine = bl;
 			// ====================== update vertices information ======================
 			/* ----------
 			*	0 -- 3
@@ -210,12 +223,12 @@ namespace Nix {
 			* --------- */
 			// configure [x,y] positions
 			vtx[1].x = xPos + charInfo.bearingX;
-			if (ch.code > 256) {
-				vtx[1].y = -2;
-			}
-			else {
+			//if (ch.code > 256) {
+//				vtx[1].y = -2;
+	//		}
+		//	else {
 				vtx[1].y = -(charInfo.height - charInfo.bearingY);
-			}
+			//}
 			vtx[0].x = vtx[1].x;
 			vtx[0].y = vtx[1].y + charInfo.height;
 			vtx[3].x = vtx[0].x + charInfo.width;
@@ -223,11 +236,11 @@ namespace Nix {
 			vtx[2].x = vtx[3].x;
 			vtx[2].y = vtx[1].y;
 			// configure [u,v]
-			vtx[0].u = (float)charInfo.x / UITextureSize;
-			vtx[0].v = (float)charInfo.y / UITextureSize;
+			vtx[0].u = (float)charInfo.x / (UITextureSize - 1);
+			vtx[0].v = (float)charInfo.y / (UITextureSize - 1);
 			vtx[1].u = vtx[0].u;
-			vtx[1].v = (float)(charInfo.y + charInfo.height) / UITextureSize;
-			vtx[3].u = (float)(charInfo.x + charInfo.width) / UITextureSize;
+			vtx[1].v = (float)(charInfo.y + charInfo.height) / (UITextureSize - 1);
+			vtx[3].u = (float)(charInfo.x + charInfo.width) / (UITextureSize - 1);
 			vtx[3].v = vtx[0].v;
 			vtx[2].u = vtx[3].u;
 			vtx[2].v = vtx[1].v;
@@ -239,11 +252,14 @@ namespace Nix {
 			vtx[2].color = ch.color;
 			vtx[3].color = ch.color;
 			vtx += 4;
-			line.vertexCount += 4;
+			line->vertexCount += 4;
 		}
+		contentRect.size.height += line->rc.size.height;
+		//
+		auto alignedContentRc = Nix::alignRect<float>( contentRect, _draw.rect, _draw.calign, UIHoriAlign::UIAlignHoriMid );
 		// do the alignment
 		for (auto& line : lines) {
-			auto alignedRc = Nix::alignRect<float>(line.rc, _draw.rect, _draw.valign, _draw.halign);
+			auto alignedRc = Nix::alignRect<float>(line.rc, alignedContentRc, _draw.valign, _draw.halign);
 			float offsetx = alignedRc.origin.x;
 			float offsety = alignedRc.origin.y + line.baseLine;
 			// apply the aligned x/y to vertices
@@ -254,6 +270,7 @@ namespace Nix {
 			}
 		}
 		drawData->type = UITopologyType::UIRectangle;
+		_rc = alignedContentRc;
 		return drawData;
 	}
 
