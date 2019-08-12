@@ -7,6 +7,7 @@
 #include <NixRenderer.h>
 #include <NixUIRenderer.h>
 #include <NixUIImage.h>
+#include <NixUILabel.h>
 #include "TextRenderer.h"
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <stb_truetype.h>
@@ -48,6 +49,7 @@ namespace Nix {
 		clear.stencil = 1;
 		m_mainRenderPass->setClear(clear);
 
+		UISystem::StandardScreenWidth = UISystem::StandardScreenHeight = 512;
 		m_uiSystem = UISystem::getInstance();
 		m_uiSystem->initialize( m_context, m_archieve );
 		m_uiRenderer = m_uiSystem->getRenderer();
@@ -76,6 +78,12 @@ namespace Nix {
 			img->setRect({ 0, 48, 64, 64 });
 			img->setAlign({ UIAlignBottom, UIAlignLeft });
 			img->setColor( 0xff000088 );
+
+			UILabel* lbl = new UILabel();
+			lbl->setRect({ 0, 0, 64, 64 });
+			lbl->setColor(0xffff00ff);
+			img->addSubWidget(lbl);
+
 			UIWidget* root = m_uiSystem->getRootWidget();
 			root->addSubWidget(img);
 		}

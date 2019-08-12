@@ -10,6 +10,7 @@
 #include <stb_truetype.h>
 #include "TextAPITest.h"
 #include <NixUIRenderer.h>
+#include <random>
 
 namespace Nix {
 
@@ -60,15 +61,24 @@ namespace Nix {
 		m_draw.calign = UIVertAlign::UIAlignBottom;
 		m_draw.rect = { {0, 0},{512, 512} };
 
-		char16_t richtext[] = u"中国智造，慧及全球。phantom lancer : kusugawa sasara";
+		//
+
+		char16_t richtext[] = u"人的生命是有限的，但是为人民服务却是无限的，我要把有限的生命投入到无限的为人民服务当中去，顺便拍点照片。";
 
 		m_draw.vecChar;
+
+
+		static std::default_random_engine random(time(NULL));
+		std::uniform_int_distribution<int> fontDis(0,2);
+		std::uniform_int_distribution<int> colorDis(0x0, 0xee);
+		std::uniform_int_distribution<int> sizeDis(18, 32);
+
 		for (uint32_t i = 0; i < sizeof(richtext) / sizeof(char16_t) - 1; ++i) {
 			UIRenderer::RichChar rc;
 			rc.code = richtext[i];
-			rc.color = 0x884477ff;
-			rc.font = 0;
-			rc.size = 32;
+			rc.color = colorDis(random)<<24 | colorDis(random) << 16 | colorDis(random) <<8 | 0xff;
+			rc.font = fontDis(random);
+			rc.size = sizeDis(random);
 			m_draw.vecChar.push_back(rc);
 		}
 		Nix::Rect<float> rc;

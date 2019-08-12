@@ -10,6 +10,9 @@
 
 namespace Nix {
 
+	uint32_t UISystem::StandardScreenWidth = 1334;
+	uint32_t UISystem::StandardScreenHeight = 750;
+
 	UISystem* NixUISystem = nullptr;
 
 	UISystem* UISystem::getInstance()
@@ -87,8 +90,8 @@ namespace Nix {
 		m_screenWidth = _width;
 		m_screenHeight = _height;
 		m_scale = {
-			(float)_width / (float)STANDARD_SCREEN_WIDTH,
-			(float)_height / (float)STANDARD_SCREEN_HEIGHT,
+			(float)_width / (float)StandardScreenWidth,
+			(float)_height / (float)StandardScreenHeight,
 		};
 		m_standardScale = m_scale.x > m_scale.y ? m_scale.y : m_scale.x;
 		Nix::Rect<int16_t> rc;

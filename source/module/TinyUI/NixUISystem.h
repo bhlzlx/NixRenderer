@@ -31,8 +31,8 @@ namespace Nix {
     class UIWidget;
     class UISystem {
 	public:
-		const static uint32_t STANDARD_SCREEN_WIDTH = 1334;
-		const static uint32_t STANDARD_SCREEN_HEIGHT = 750;
+		static uint32_t StandardScreenWidth;
+		static uint32_t StandardScreenHeight;
 		//
 		uint32_t				m_screenWidth;
 		uint32_t				m_screenHeight;
@@ -50,8 +50,8 @@ namespace Nix {
 		std::set<UIWidget*>		m_updateSet;
     public:
         UISystem() 
-		: m_screenWidth(STANDARD_SCREEN_WIDTH)
-		, m_screenHeight(STANDARD_SCREEN_HEIGHT)
+		: m_screenWidth(StandardScreenWidth)
+		, m_screenHeight(StandardScreenHeight)
 		, m_flightIndex( 0 )
 		, m_scale({ 1.0f, 1.0f })
 		, m_standardScale(1.0f)
