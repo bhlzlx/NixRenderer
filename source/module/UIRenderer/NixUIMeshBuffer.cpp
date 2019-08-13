@@ -93,15 +93,15 @@ namespace Nix {
 		m_vertexBufferPM->setData(m_vertexBufferMemory.data(), m_vertexCount * sizeof(UIVertex), 0);
 		m_indexBuffer->setData(m_indexBufferMemory.data(), m_indexCount * sizeof(uint16_t), 0);
 	}
-
+	 
 	void UIMeshBuffer::draw(IRenderPass* _renderPass, IArgument* _argument, IPipeline* _pipeline, float _screenWidth, float _screenHeight) {
 		struct Constants {
 			float screenWidth;
 			float screenHeight;
 		} constants;
 
-		constants.screenWidth = _screenWidth;
-		constants.screenHeight = _screenHeight;
+		constants.screenWidth = _screenWidth - 1;
+		constants.screenHeight = _screenHeight - 1;
 
 		for (auto& dc : this->m_vecCommands) {
 			_renderPass->setScissor(dc.state.scissor);

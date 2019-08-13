@@ -63,22 +63,22 @@ namespace Nix {
 
 		//
 
-		char16_t richtext[] = u"人的生命是有限的，但是为人民服务却是无限的，我要把有限的生命投入到无限的为人民服务当中去，顺便拍点照片。";
+		char16_t richtext[] = u"　抬头看窗外车走走停停，人来人往，记起的，忘了的，都已成为过去。很多时候我们都希望自己可以在坚强中遗忘，于是任时间慢慢地腐蚀我们的心灵，可以看见一些枯竭了的事情在我们的脑海慢慢消失。年轻的我们很在乎，很在乎我们的每一点进步，才发现一些变化是在不经意间的。";
 
 		m_draw.vecChar;
 
 
 		static std::default_random_engine random(time(NULL));
-		std::uniform_int_distribution<int> fontDis(0,2);
-		std::uniform_int_distribution<int> colorDis(0x0, 0xee);
-		std::uniform_int_distribution<int> sizeDis(18, 32);
+		std::uniform_int_distribution<int> fontDis(0,4);
+		std::uniform_int_distribution<int> colorDis(0x0, 0x77);
+		std::uniform_int_distribution<int> sizeDis(24, 48);
 
 		for (uint32_t i = 0; i < sizeof(richtext) / sizeof(char16_t) - 1; ++i) {
 			UIRenderer::RichChar rc;
 			rc.code = richtext[i];
-			rc.color = colorDis(random)<<24 | colorDis(random) << 16 | colorDis(random) <<8 | 0xff;
+			rc.color = colorDis(random) << 24 | colorDis(random) << 16 | colorDis(random) << 8 | 0xff;
 			rc.font = fontDis(random);
-			rc.size = sizeDis(random);
+			rc.size = sizeDis(random)& (~1);
 			m_draw.vecChar.push_back(rc);
 		}
 		Nix::Rect<float> rc;
