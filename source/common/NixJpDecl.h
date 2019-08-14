@@ -8,6 +8,10 @@
 
 #pragma once
 
+
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
 #include <map>
 #include <vector>
 #include <cstdint>
@@ -16,6 +20,10 @@
 #include <typeindex>
 
 //#define NIX_JP_IMPLEMENTATION
+
+//#ifdef GetObject
+#undef GetObject
+//#endif
 
 #ifdef NIX_JSON
 #undef NIX_JSON

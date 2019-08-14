@@ -1,5 +1,4 @@
 #pragma once
-
 #include <NixRenderer.h>
 #include <nix/io/archieve.h>
 #include <assert.h>

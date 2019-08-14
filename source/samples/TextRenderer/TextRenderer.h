@@ -1,10 +1,6 @@
 #pragma once
 
 #include <NixApplication.h>
-#include <rapidjson/rapidjson.h>
-#include <rapidjson/document.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
 #include <NixJpDecl.h>
 #include <NixRenderer.h>
 #include <TexturePacker/TexturePacker.h>

@@ -1,7 +1,3 @@
-#include <rapidjson/rapidjson.h>
-#include <rapidjson/document.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
 #define NIX_JP_IMPLEMENTATION
 #include <NixJpDecl.h>
 #include <NixRenderer.h>

@@ -1,0 +1,20 @@
+{
+	"segments" : [
+		{
+			"font":1,"size":24,"color":"447788ff",
+			"text":"Fate / Stay Night - Heaven's Feel!"
+		},
+		{
+			"font":0,"size":32,"color":"aa2288ff",
+			"text":"命运之夜，宛若天堂！"
+		},
+		{
+			"font":2,"size":18,"color":"008822ff",
+			"text":"恶兆之花 迷失之蝶 春之歌"
+		},
+		{
+			"font":2,"size":40,"color":"008822ff",
+			"text":"フェイト/ステイナイト"
+		}
+	]
+}
