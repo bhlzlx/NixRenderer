@@ -4,6 +4,8 @@
 
 namespace Nix {
 
+	static const float DPI = 96.0f;
+
 	bool FontTextureManager::initialize(IContext* _context, IArchieve* _archieve, ITexture* _texture, PFN_CREATE_TEXTURE_PACKER _creator, uint32_t _layerBegin, uint32_t _layerEnd)
 	{
 		const Nix::TextureDescription& desc = _texture->getDesc();
@@ -61,9 +63,10 @@ namespace Nix {
 
 	float FontTextureManager::getFontScaling(uint8_t _fontId, uint8_t _fontSize)
 	{
+		float fontSize = _fontSize * DPI / 72.0f;
 		auto it = m_vecFont[_fontId].scalingTable.find(_fontSize);
 		if (it == m_vecFont[_fontId].scalingTable.end()) {
-			float scale = stbtt_ScaleForPixelHeight(&m_vecFont[_fontId].handle, _fontSize);
+			float scale = stbtt_ScaleForPixelHeight(&m_vecFont[_fontId].handle, fontSize);
 			m_vecFont[_fontId].scalingTable[_fontSize] = scale;
 			return scale;
 		}
@@ -84,9 +87,10 @@ namespace Nix {
 		}
 		//float xpos = 2; // leave a little padding in case the character extends left
 		float scale = 1.0f;
+		float fontSize = _c.size * DPI / 72.0f;
 		auto scalingIter = font.scalingTable.find(_c.size);
 		if (scalingIter == font.scalingTable.end()) {
-			scale = stbtt_ScaleForPixelHeight(&fontHandle, _c.size);
+			scale = stbtt_ScaleForPixelHeight(&fontHandle, fontSize);
 			font.scalingTable[_c.size] = scale;
 		}
 		else {

@@ -69,7 +69,7 @@ namespace Nix {
 
 
 		static std::default_random_engine random(time(NULL));
-		std::uniform_int_distribution<int> fontDis(0,4);
+		std::uniform_int_distribution<int> fontDis(0,3);
 		std::uniform_int_distribution<int> colorDis(0x0, 0x77);
 		std::uniform_int_distribution<int> sizeDis(24, 48);
 
@@ -77,8 +77,8 @@ namespace Nix {
 			UIRenderer::RichChar rc;
 			rc.code = richtext[i];
 			rc.color = colorDis(random) << 24 | colorDis(random) << 16 | colorDis(random) << 8 | 0xff;
-			rc.font = fontDis(random);
-			rc.size = sizeDis(random)& (~1);
+			rc.font = 0;// fontDis(random);
+			rc.size = 12;// sizeDis(random)& (~1);
 			m_draw.vecChar.push_back(rc);
 		}
 		Nix::Rect<float> rc;

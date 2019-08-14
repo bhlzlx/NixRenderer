@@ -54,12 +54,37 @@ namespace Nix {
 			uint32_t color;
 		};
 
+		struct RichItem {
+			enum Type {
+				Charactor,
+				Image,
+			};
+			uint8_t type;
+			union {
+				struct {
+					uint16_t font;
+					uint16_t code;
+					uint16_t size;
+					uint32_t color;
+				};
+				struct {
+					const char *	image;
+					uint8_t			width;
+					uint8_t			height;
+				};
+			};
+		};
+
 		struct RichTextDraw {
 			std::vector<RichChar>	vecChar;
 			Nix::Rect<float>		rect;
 			Nix::UIVertAlign		valign; // line alignment
 			Nix::UIHoriAlign		halign; // line alignment
 			Nix::UIVertAlign		calign; // text content alignment
+		};
+
+		struct RichDraw {
+
 		};
 
 		struct ImageDraw {
