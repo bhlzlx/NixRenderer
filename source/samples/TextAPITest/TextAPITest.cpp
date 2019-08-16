@@ -94,32 +94,12 @@ namespace Nix {
 		uiconfig.parse(uiConfigReader.getText());
 		m_uiRenderer->initialize(m_context, m_archieve, uiconfig);
 
-		
-
 		m_draw = richTextDrawFromFile("text/sampleText.json", m_archieve);
 		m_draw.halign = UIHoriAlign::UIAlignHoriMid;
 		m_draw.valign = UIVertAlign::UIAlignTop;
 		m_draw.calign = UIVertAlign::UIAlignBottom;
 		m_draw.rect = { {0, 0},{512, 512} };
 
-		//char16_t richtext[] = u"　抬头看窗外车走走停停，人来人往，记起的，忘了的，都已成为过去。很多时候我们都希望自己可以在坚强中遗忘，于是任时间慢慢地腐蚀我们的心灵，可以看见一些枯竭了的事情在我们的脑海慢慢消失。年轻的我们很在乎，很在乎我们的每一点进步，才发现一些变化是在不经意间的。";
-
-		//m_draw.vecChar;
-
-
-		//static std::default_random_engine random(time(NULL));
-		//std::uniform_int_distribution<int> fontDis(0,2);
-		//std::uniform_int_distribution<int> colorDis(0x0, 0x77);
-		//std::uniform_int_distribution<int> sizeDis(24, 48);
-		//
-		//for (uint32_t i = 0; i < sizeof(richtext) / sizeof(char16_t) - 1; ++i) {
-		//	UIRenderer::RichChar rc;
-		//	rc.code = richtext[i];
-		//	rc.color = colorDis(random) << 24 | colorDis(random) << 16 | colorDis(random) << 8 | 0xff;
-		//	rc.font = fontDis(random);
-		//	rc.size = 12;// sizeDis(random)& (~1);
-		//	m_draw.vecChar.push_back(rc);
-		//}
 		Nix::Rect<float> rc;
 		m_drawData = m_uiRenderer->build(m_draw,true, nullptr, rc);
 		//
