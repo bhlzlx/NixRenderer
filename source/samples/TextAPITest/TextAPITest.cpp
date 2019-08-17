@@ -100,8 +100,20 @@ namespace Nix {
 		m_draw.calign = UIVertAlign::UIAlignBottom;
 		m_draw.rect = { {0, 0},{512, 512} };
 
+		m_plainDraw.colorMask = 0xff0000ff;
+		m_plainDraw.fontId = 1;
+		m_plainDraw.fontSize = 48;
+		m_plainDraw.halign = UIHoriAlign::UIAlignLeft;
+		m_plainDraw.valign = UIVertAlign::UIAlignTop;
+		m_plainDraw.length = 12;
+		m_plainDraw.text = u"Hello,World!";
+		m_plainDraw.rect = {
+			{0,0},{256, 256}
+		};
+
 		Nix::Rect<float> rc;
 		m_drawData = m_uiRenderer->build(m_draw,true, nullptr, rc);
+		m_plainDrawData = m_uiRenderer->build(m_plainDraw, nullptr, rc);
 		//
 		return true;
 	}
@@ -134,6 +146,7 @@ namespace Nix {
 			drawState.setScissor(m_scissor);
 			m_uiRenderer->beginBuild(tickCounter);
 			m_uiRenderer->buildDrawCall(m_drawData,drawState);
+			m_uiRenderer->buildDrawCall(m_plainDrawData,drawState);
 			m_uiRenderer->endBuild();
 
 			m_mainRenderPass->begin(m_primQueue); {

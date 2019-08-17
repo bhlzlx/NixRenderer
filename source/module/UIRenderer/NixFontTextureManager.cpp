@@ -4,7 +4,7 @@
 
 namespace Nix {
 
-	static const float DPI = 96.0f;
+	static const float DPI = 128.0f;
 
 	bool FontTextureManager::initialize(IContext* _context, IArchieve* _archieve, ITexture* _texture, PFN_CREATE_TEXTURE_PACKER _creator, uint32_t _layerBegin, uint32_t _layerEnd)
 	{

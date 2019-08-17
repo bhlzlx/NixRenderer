@@ -55,14 +55,19 @@ namespace Nix {
 	void alignVertical(T _height, T _offset, T _top, T _bottom, UIVertAlign _align, T& _alignedTop, T& _alignedBottom) {
 		switch (_align) {
 		case UIAlignTop: {
+			_alignedBottom = _bottom;
+			_alignedTop = _bottom + _height;
+			// offset
+			_alignedTop += _offset;
+			_alignedBottom += _offset;
+			return;
+		}
+		case UIAlignBottom: {
 			_alignedTop = _top;
 			_alignedBottom = _alignedTop - _height;
 			// offset
 			_alignedTop -= _offset;
 			_alignedBottom -= _offset;
-			return;
-		}
-		case UIAlignBottom: {
 			_alignedBottom = _bottom;
 			_alignedTop = _bottom + _height;
 			// offset

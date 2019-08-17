@@ -41,7 +41,6 @@ namespace Nix {
 		float baseX = 0;
 		float baseY = baseLine;
 		//
-		// ��Ϊ�����Ժ򻹻���һ�β��ֶ��룬���Լ����ı�ռ�������ʱ��ԭ��������Ϊ��0�� 0��
 		
 		UIVertex* vtxBegin;
 		//UIVertex* vtxEnd;
@@ -63,9 +62,10 @@ namespace Nix {
 			* --------- */
 			// configure [x,y] positions
 			vtx[1].x = baseX + charInfo.bearingX;
-			vtx[1].y = baseY - (charInfo.height - charInfo.bearingY);
+			vtx[1].y = charInfo.height - charInfo.bearingY;
+
 			vtx[0].x = vtx[1].x;
-			vtx[0].y = vtx[1].y + charInfo.height;
+			vtx[0].y = charInfo.height - charInfo.bearingY - charInfo.height;
 			vtx[3].x = vtx[0].x + charInfo.width;
 			vtx[3].y = vtx[0].y;
 			vtx[2].x = vtx[3].x;
@@ -96,9 +96,10 @@ namespace Nix {
 			{baseX, textHeight}
 		};
 		Nix::Rect<float> alignedRc = alignRect<float>(textRect, _draw.rect, _draw.valign, _draw.halign);
+		float offsety = alignedRc.origin.y + textHeight - baseLine;
 		for (uint32_t i = 0; i < _draw.length * 4; ++i) {
 			vtxBegin->x += alignedRc.origin.x;
-			vtxBegin->y += alignedRc.origin.y + baseLine;
+			vtxBegin->y += offsety;
 			++vtxBegin;
 		}
 		_rc = alignedRc;
@@ -223,14 +224,10 @@ namespace Nix {
 			* --------- */
 			// configure [x,y] positions
 			vtx[1].x = xPos + charInfo.bearingX;
-			//if (ch.code > 256) {
-//				vtx[1].y = -2;
-	//		}
-		//	else {
-				vtx[1].y = -(charInfo.height - charInfo.bearingY);
-			//}
+			vtx[1].y = charInfo.height - charInfo.bearingY;
+
 			vtx[0].x = vtx[1].x;
-			vtx[0].y = vtx[1].y + charInfo.height;
+			vtx[0].y = charInfo.height - charInfo.bearingY - charInfo.height;
 			vtx[3].x = vtx[0].x + charInfo.width;
 			vtx[3].y = vtx[0].y;
 			vtx[2].x = vtx[3].x;
@@ -261,7 +258,7 @@ namespace Nix {
 		for (auto& line : lines) {
 			auto alignedRc = Nix::alignRect<float>(line.rc, alignedContentRc, _draw.valign, _draw.halign);
 			float offsetx = alignedRc.origin.x;
-			float offsety = alignedRc.origin.y + line.baseLine;
+			float offsety = alignedRc.origin.y + line.rc.size.height - line.baseLine;
 			// apply the aligned x/y to vertices
 			for (uint32_t i = 0; i < line.vertexCount; ++i) {
 				auto& vertex = line.vertices[i];
@@ -296,12 +293,12 @@ namespace Nix {
 		UIVertex* vtx = (UIVertex*)drawData->vertexBufferAllocation.ptr;
 		for (uint32_t i = 0; i < _count; ++i) {
 			vtx[0].x = _draws->rect.origin.x;
-			vtx[0].y = _draws->rect.origin.y + _draws->rect.size.height;
+			vtx[0].y = _draws->rect.origin.y;
 			vtx[0].u = _draws->uv[0].x;
 			vtx[0].v = _draws->uv[0].y;
 			
 			vtx[2].x = _draws->rect.origin.x + _draws->rect.size.width;
-			vtx[2].y = _draws->rect.origin.y;
+			vtx[2].y = _draws->rect.origin.y + _draws->rect.size.height;
 			vtx[2].u = _draws->uv[2].x;
 			vtx[2].v = _draws->uv[2].y;
 

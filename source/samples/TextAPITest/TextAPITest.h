@@ -120,6 +120,9 @@ namespace Nix {
 		UIRenderer::RichTextDraw m_draw;
 		Nix::UIDrawData*		m_drawData; //
 
+		UIRenderer::PlainTextDraw m_plainDraw;
+		Nix::UIDrawData*		m_plainDrawData;
+
 
 		float					m_width;
 		float					m_height;

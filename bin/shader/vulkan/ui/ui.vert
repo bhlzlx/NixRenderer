@@ -22,7 +22,7 @@ layout(push_constant) uniform UIArgument {
 void main() 
 {
 	gl_Position.x = (position.x / screenWidth) * 2 - 1.0f;
-	gl_Position.y = -((position.y / screenHeight) * 2 - 1.0f);
+	gl_Position.y = (position.y / screenHeight) * 2 - 1.0f;
 	gl_Position.z = 0.0f;
 	gl_Position.w = 1.0f;
 	// -----------------------------------------------------------
