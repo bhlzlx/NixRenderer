@@ -146,7 +146,7 @@ namespace Nix {
 			drawState.setScissor(m_scissor);
 			m_uiRenderer->beginBuild(tickCounter);
 			m_uiRenderer->buildDrawCall(m_drawData,drawState);
-			m_uiRenderer->buildDrawCall(m_plainDrawData,drawState);
+		//	m_uiRenderer->buildDrawCall(m_plainDrawData,drawState);
 			m_uiRenderer->endBuild();
 
 			m_mainRenderPass->begin(m_primQueue); {
@@ -158,7 +158,7 @@ namespace Nix {
 		}
 	}
 	inline const char* TextAPITest::title() {
-		return "Text Rendering( texture packer test )";
+		return "GDI API Test";
 	}
 	inline uint32_t TextAPITest::rendererType() {
 		return 0;

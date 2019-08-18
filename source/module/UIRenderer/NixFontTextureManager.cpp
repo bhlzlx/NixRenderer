@@ -4,7 +4,7 @@
 
 namespace Nix {
 
-	static const float DPI = 128.0f;
+	static const float DPI = 96;
 
 	bool FontTextureManager::initialize(IContext* _context, IArchieve* _archieve, ITexture* _texture, PFN_CREATE_TEXTURE_PACKER _creator, uint32_t _layerBegin, uint32_t _layerEnd)
 	{
@@ -90,7 +90,8 @@ namespace Nix {
 		float fontSize = _c.size * DPI / 72.0f;
 		auto scalingIter = font.scalingTable.find(_c.size);
 		if (scalingIter == font.scalingTable.end()) {
-			scale = stbtt_ScaleForPixelHeight(&fontHandle, fontSize);
+			//scale = stbtt_ScaleForPixelHeight(&fontHandle, fontSize);
+			scale = stbtt_ScaleForMappingEmToPixels(&fontHandle, fontSize);
 			font.scalingTable[_c.size] = scale;
 		}
 		else {
