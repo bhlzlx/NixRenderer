@@ -47,11 +47,12 @@ namespace Nix {
 		uint64_t				m_frameCounter;
 		//VkCommandBuffer			m_renderCommandBuffer;
 
-		IBufferAllocator*		m_VBOAllocator; // static vertex buffer
-		IBufferAllocator*		m_VBOAllocatorPM; // cached vertex buffer
-		IBufferAllocator*		m_IBOAllocator; // index buffer
+		IBufferAllocator*		m_vtxStaticDrawAllocator; // static vertex buffer
+		IBufferAllocator*		m_vtxStreamDrawAllocator; // stream vertex buffer
+		IBufferAllocator*		m_idxStaticDrawAllocator; // index buffer
+		IBufferAllocator*		m_idxStreamDrawAllocator; // index buffer
 		IBufferAllocator*		m_stagingBufferAllocator; // staging buffer
-		IBufferAllocator*		m_uniformAllocator;
+		IBufferAllocator*		m_uniformAllocator;		  // uniform buffer
 	private:
 		VkPipelineCache			m_pipelineCache;
 		std::map< SamplerState, VkSampler > m_samplerMapping;
@@ -71,10 +72,12 @@ namespace Nix {
 		virtual IBufferAllocator* createVertexBufferAllocator(size_t _heapSize, size_t _minSize) override;
 		virtual IBufferAllocator* createVertexBufferAllocatorPM(size_t _heapSize, size_t _minSize) override;
 		virtual IBufferAllocator* createIndexBufferAllocator(size_t _heapSize, size_t _minSize) override;
+		virtual IBufferAllocator* createIndexBufferAllocatorPM(size_t _heapSize, size_t _minSize) override;
 
 		virtual IBuffer* createVertexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator = nullptr) override;
-		virtual IBuffer* createDynamicVertexBuffer( size_t _size, IBufferAllocator* _allocator = nullptr) override;
+		virtual IBuffer* createVertexBufferPM( size_t _size, IBufferAllocator* _allocator = nullptr) override;
 		virtual IBuffer* createIndexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator = nullptr) override;
+		virtual IBuffer* createIndexBufferPM(size_t _size, IBufferAllocator* _allocator = nullptr) override;
 
 		virtual ITexture* createTexture(const TextureDescription& _desc, TextureUsageFlags _usage = TextureUsageNone) override;
 		virtual ITexture* createTextureDDS(const void* _data, size_t _length) override;
@@ -105,13 +108,13 @@ namespace Nix {
 			return m_uniformAllocator;
 		}
 		IBufferAllocator* vertexBufferAllocator() {
-			return m_VBOAllocator;
+			return m_vtxStaticDrawAllocator;
 		}
 		IBufferAllocator* vertexBufferAllocatorPM() {
-			return m_VBOAllocatorPM;
+			return m_vtxStreamDrawAllocator;
 		}
 		IBufferAllocator* indexBufferAllocator() {
-			return m_IBOAllocator;
+			return m_idxStaticDrawAllocator;
 		}
 		IBufferAllocator* stagingBufferAllocator() {
 			return m_stagingBufferAllocator;
@@ -134,6 +137,7 @@ namespace Nix {
 		virtual IGraphicsQueue* getGraphicsQueue(uint32_t _index) override;
 		virtual inline IRenderPass* getRenderPass() override { return m_swapchain.renderPass(); }
 		virtual void release() override;
+		virtual uint32_t getMaxFlightCount() override { return MaxFlightCount; }
 		// for android platform
 		virtual bool resume(void* _wnd, uint32_t _width, uint32_t _height) override;
 		virtual bool suspend() override;

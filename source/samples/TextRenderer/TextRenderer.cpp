@@ -1,4 +1,4 @@
-#define NIX_JP_IMPLEMENTATION
+﻿#define NIX_JP_IMPLEMENTATION
 #include <NixJpDecl.h>
 #include <NixRenderer.h>
 #include <NixUIRenderer.h>
@@ -78,6 +78,8 @@ namespace Nix {
 			UILabel* lbl = new UILabel();
 			lbl->setRect({ 0, 0, 64, 64 });
 			lbl->setColor(0xffff00ff);
+			lbl->setFont(1);
+			lbl->setText({u'一',u'个',u'按',u'钮' });
 			img->addSubWidget(lbl);
 
 			UIWidget* root = m_uiSystem->getRootWidget();

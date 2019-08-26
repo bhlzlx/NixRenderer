@@ -272,14 +272,15 @@ namespace Nix {
 		AOU_Present,
 	};
 
-	enum BufferType :uint8_t {
-		SVBO, // stable vertex buffer object
-		CVBO, // cached vertex buffer object
-		IBO, // index buffer object
-		UBO, // uniform buffer object
-		SSBO, // shader storage buffer objects
-		TBO, // Texel buffer object
-		STAGING // staging buffer
+	enum class BufferType : uint8_t {
+		VertexDraw,
+		VertexStreamDraw,
+		IndexDraw,
+		IndexStreamDraw,
+		UniformStreamDraw,
+		ShaderStorageBuffer,
+		TexelBuffer,
+		StagingBuffer,
 	};
 
 	enum MultiSampleType {
@@ -704,10 +705,12 @@ namespace Nix {
 		virtual IBufferAllocator* createVertexBufferAllocator( size_t _heapSize, size_t _minSize ) = 0;
 		virtual IBufferAllocator* createVertexBufferAllocatorPM(size_t _heapSize, size_t _minSize) = 0;
 		virtual IBufferAllocator* createIndexBufferAllocator(size_t _heapSize, size_t _minSize) = 0;
+		virtual IBufferAllocator* createIndexBufferAllocatorPM(size_t _heapSize, size_t _minSize) = 0;
 		//
 		virtual IBuffer* createVertexBuffer( const void * _data, size_t _size, IBufferAllocator* _allocator = nullptr ) = 0;
-		virtual IBuffer* createDynamicVertexBuffer(  size_t _size, IBufferAllocator* _allocator = nullptr) = 0;
+		virtual IBuffer* createVertexBufferPM(  size_t _size, IBufferAllocator* _allocator = nullptr) = 0;
 		virtual IBuffer* createIndexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator = nullptr ) = 0;
+		virtual IBuffer* createIndexBufferPM(size_t _size, IBufferAllocator* _allocator = nullptr) = 0;
 
 		//virtual IUniformBuffer* createUniformBuffer(size_t _size) = 0;
         virtual ITexture* createTexture(const TextureDescription& _desc, TextureUsageFlags _usage = TextureUsageNone ) = 0;
@@ -727,6 +730,7 @@ namespace Nix {
 		virtual IGraphicsQueue* getGraphicsQueue( uint32_t index = 0) = 0;
 		virtual IRenderPass* getRenderPass() = 0;
 		virtual IDriver* getDriver() = 0;
+		virtual uint32_t getMaxFlightCount() = 0;
 		virtual void release() = 0;
         virtual ~IContext() { }
     };

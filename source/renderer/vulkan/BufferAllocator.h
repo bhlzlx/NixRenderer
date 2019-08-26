@@ -21,10 +21,12 @@ namespace Nix {
 	IBufferAllocator* createVertexBufferGeneralAllocator(IContext* _context );
 	IBufferAllocator* createVertexBufferGeneralAllocatorPM(IContext* _context);
 	IBufferAllocator* createIndexBufferGeneralAllocator(IContext* _context);
+	IBufferAllocator* createIndexBufferGeneralAllocatorPM(IContext* _context);
 	IBufferAllocator* createStagingBufferGeneralAllocator(IContext* _context);
 	IBufferAllocator* createUniformBufferGeneralAllocator(IContext* _context);
 
 	IBufferAllocator* createVertexBufferAllocator(IContext* _context, size_t _heapSize, size_t _minSize );
 	IBufferAllocator* createVertexBufferAllocatorPM(IContext* _context, size_t _heapSize, size_t _minSize);
 	IBufferAllocator* createIndexBufferAllocator(IContext* _context, size_t _heapSize, size_t _minSize);
+	IBufferAllocator* createIndexBufferAllocatorPM(IContext* _context, size_t _heapSize, size_t _minSize);
 }

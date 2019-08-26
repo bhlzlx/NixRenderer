@@ -130,6 +130,22 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 		return FALSE;
 	}
 	//
+	HDC hdcScreen = GetDC(NULL);
+	int iX = GetDeviceCaps(hdcScreen, HORZRES);    // pixel
+	int iY = GetDeviceCaps(hdcScreen, VERTRES);    // pixel
+	int iPhsX = GetDeviceCaps(hdcScreen, HORZSIZE);    // mm
+	int iPhsY = GetDeviceCaps(hdcScreen, VERTSIZE);    // mm
+	if (NULL != hdcScreen){
+		DeleteDC(hdcScreen);
+	}
+#define INCH 0.03937
+	float iTemp = iPhsX * iPhsX + iPhsY * iPhsY;
+	float fInch = sqrt(iTemp) * INCH;
+	iTemp = iX * iX + iY * iY;
+	float fPixel = sqrt(iTemp);
+
+	float iDPI = fPixel / fInch;    // dpi pixel/inch
+	//
 	SetWindowTextA(hWnd, object->title());
 	//
 	ShowWindow(hWnd, nCmdShow);

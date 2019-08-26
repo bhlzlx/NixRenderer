@@ -115,7 +115,10 @@ namespace Nix {
 				};
 				p.buffer = m_vkBufferCreator(m_context, HeapSizes[loc], p.allocation);
 				// does not support uniform buffer at all!
-				if (/*m_type == UBO ||*/ m_type == CVBO || m_type == STAGING) {
+				if ( 
+					m_type == BufferType::VertexStreamDraw || 
+					m_type == BufferType::StagingBuffer ||
+					m_type == BufferType::IndexStreamDraw) {
 					vmaMapMemory(m_context->getVmaAllocator(), p.allocation, (void**)&p.raw);
 				}
 				p.allocator.initialize(HeapSizes[loc], HeapSizes[loc] / 256);
@@ -142,7 +145,11 @@ namespace Nix {
 				VmaAllocation vmaAllocation;
 				VkBuffer b = m_vkBufferCreator(m_context, _size, vmaAllocation);
 				uint8_t* raw;
-				if (m_type == UBO || m_type == CVBO || m_type == STAGING) {
+				if (
+					m_type == BufferType::UniformStreamDraw || 
+					m_type == BufferType::VertexStreamDraw || 
+					m_type == BufferType::StagingBuffer ||
+					m_type == BufferType::IndexStreamDraw ) {
 					vmaMapMemory(m_context->getVmaAllocator(), vmaAllocation, (void**)&raw);
 				}
 				m_noneGroupedAllocation.push_back(vmaAllocation);
@@ -195,7 +202,11 @@ namespace Nix {
 						auto vmaAllocator = m_context->getVmaAllocator();
 						vmaDestroyBuffer(vmaAllocator, cvt.b, m_noneGroupedAllocation[i]);
 						//
-						if (m_type == CVBO || m_type == UBO) {
+						if ( 
+							m_type == BufferType::IndexStreamDraw || 
+							m_type == BufferType::VertexStreamDraw || 
+							m_type == BufferType::UniformStreamDraw 
+							) {
 							vmaUnmapMemory(vmaAllocator, m_noneGroupedAllocation[i]);
 						}
 						m_noneGroupedAllocation.erase(m_noneGroupedAllocation.begin() + i);
@@ -311,7 +322,7 @@ namespace Nix {
 
 		virtual BufferType type() override
 		{
-			return BufferType::UBO;
+			return BufferType::UniformStreamDraw;
 		}
 	};
 
@@ -319,7 +330,7 @@ namespace Nix {
 	{
 		GeneralMultiLevelBufferAllocator * allocator = new GeneralMultiLevelBufferAllocator();
 		ContextVk* context = (ContextVk*)_context;
-		allocator->initialize(context, BufferType::SVBO, 
+		allocator->initialize(context, BufferType::VertexStreamDraw, 
 		[](ContextVk * _context, size_t _size, VmaAllocation& _allocation)->VkBuffer {
 			VmaAllocationCreateInfo allocInfo = {}; {
 				allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
@@ -346,7 +357,7 @@ namespace Nix {
 	{
 		GeneralMultiLevelBufferAllocator * allocator = new GeneralMultiLevelBufferAllocator();
 		ContextVk* context = (ContextVk*)_context;
-		allocator->initialize(context, BufferType::CVBO,
+		allocator->initialize(context, BufferType::VertexStreamDraw,
 			[](ContextVk * _context, size_t _size, VmaAllocation& _allocation)->VkBuffer {
 			VmaAllocationCreateInfo allocInfo = {}; {
 				allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
@@ -374,7 +385,7 @@ namespace Nix {
 	{
 		GeneralMultiLevelBufferAllocator * allocator = new GeneralMultiLevelBufferAllocator();
 		ContextVk* context = (ContextVk*)_context;
-		allocator->initialize(context, BufferType::IBO,
+		allocator->initialize(context, BufferType::IndexDraw,
 			[](ContextVk * _context, size_t _size, VmaAllocation& _allocation)->VkBuffer {
 			VmaAllocationCreateInfo allocInfo = {}; {
 				allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
@@ -397,11 +408,38 @@ namespace Nix {
 		return allocator;
 	}
 
+	Nix::IBufferAllocator* createIndexBufferGeneralAllocatorPM(IContext* _context)
+	{
+		GeneralMultiLevelBufferAllocator* allocator = new GeneralMultiLevelBufferAllocator();
+		ContextVk* context = (ContextVk*)_context;
+		allocator->initialize(context, BufferType::IndexStreamDraw,
+			[](ContextVk* _context, size_t _size, VmaAllocation& _allocation)->VkBuffer {
+				VmaAllocationCreateInfo allocInfo = {}; {
+					allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+				}
+				VkBufferCreateInfo bufferInfo = {}; {
+					bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+					bufferInfo.pNext = nullptr;
+					bufferInfo.flags = 0;
+					bufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+					bufferInfo.sharingMode = _context->getQueueFamilies().size() > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
+					bufferInfo.queueFamilyIndexCount = static_cast<uint32_t>(_context->getQueueFamilies().size());
+					bufferInfo.pQueueFamilyIndices = _context->getQueueFamilies().data();
+					bufferInfo.size = _size;
+				}
+				VkBuffer buffer = VK_NULL_HANDLE;
+				VkResult rst = vmaCreateBuffer(_context->getVmaAllocator(), &bufferInfo, &allocInfo, &buffer, &_allocation, nullptr);
+				assert(rst == VK_SUCCESS);
+				return buffer;
+			});
+		return allocator;
+	}
+
 	IBufferAllocator* createStagingBufferGeneralAllocator(IContext* _context)
 	{
 		GeneralMultiLevelBufferAllocator* allocator = new GeneralMultiLevelBufferAllocator();
 		ContextVk* context = (ContextVk*)_context;
-		allocator->initialize(context, BufferType::STAGING,
+		allocator->initialize(context, BufferType::StagingBuffer,
 			[](ContextVk* _context, size_t _size, VmaAllocation& _allocation)->VkBuffer {
 				VmaAllocationCreateInfo allocInfo = {}; {
 					allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
@@ -460,19 +498,24 @@ namespace Nix {
 			}
 
 			switch (_type) {
-			case BufferType::IBO: {
+			case BufferType::IndexDraw: {
 				allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 				bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 				break;
 			}
-			case BufferType::CVBO: {
+			case BufferType::VertexStreamDraw: {
 				allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
 				bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 				break;
 			}
-			case BufferType::SVBO : {
+			case BufferType::VertexDraw : {
 				allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 				bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+				break;
+			}
+			case BufferType::IndexStreamDraw: {
+				allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+				bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 				break;
 			}
 			default: return false;
@@ -515,20 +558,24 @@ namespace Nix {
 
 	IBufferAllocator* createVertexBufferAllocator(IContext* _context, size_t _heapSize, size_t _minSize) {
 		BufferAllocator* allocator = new BufferAllocator();
-		allocator->initialize( (ContextVk*)_context, _heapSize, _minSize, BufferType::SVBO);
+		allocator->initialize( (ContextVk*)_context, _heapSize, _minSize, BufferType::VertexDraw);
 		return allocator;
 	}
 	IBufferAllocator* createVertexBufferAllocatorPM(IContext* _context, size_t _heapSize, size_t _minSize) {
 		BufferAllocator* allocator = new BufferAllocator();
-		allocator->initialize((ContextVk*)_context, _heapSize, _minSize, BufferType::CVBO);
+		allocator->initialize((ContextVk*)_context, _heapSize, _minSize, BufferType::VertexStreamDraw);
 		return allocator;
 	}
 	IBufferAllocator* createIndexBufferAllocator(IContext* _context, size_t _heapSize, size_t _minSize) {
 		BufferAllocator* allocator = new BufferAllocator();
-		allocator->initialize((ContextVk*)_context, _heapSize, _minSize, BufferType::IBO);
+		allocator->initialize((ContextVk*)_context, _heapSize, _minSize, BufferType::IndexDraw);
 		return allocator;
 	}
-
+	IBufferAllocator* createIndexBufferAllocatorPM(IContext* _context, size_t _heapSize, size_t _minSize) {
+		BufferAllocator* allocator = new BufferAllocator();
+		allocator->initialize((ContextVk*)_context, _heapSize, _minSize, BufferType::IndexStreamDraw);
+		return allocator;
+	}
 }
 
 

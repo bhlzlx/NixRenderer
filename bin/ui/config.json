@@ -1,8 +1,8 @@
 {
 	"fonts" : [
 		"font/msyahei.ttf",
-		"font/msheiti.ttf",
-		"font/hwzhsong.ttf"
+		"font/hwzhsong.ttf",
+		"font/msfanli.ttf"
 	],
 	"textures" : [{
 		"file" : "texture/pack/gui_pack.png",

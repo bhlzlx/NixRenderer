@@ -42,22 +42,18 @@ namespace Nix {
 		auto type = _buffer->getType();
 		switch (type)
 		{
-		case Nix::SVBO: {
+		case Nix::BufferType::VertexDraw: {
 			VertexBuffer* vertexBuffer = (VertexBuffer*)_buffer;
 			buffer = *vertexBuffer;
 			offset = vertexBuffer->getOffset();
 			break;
 		}
-		case Nix::CVBO: {
-			CachedVertexBuffer* vertexBuffer = (CachedVertexBuffer*)_buffer;
+		case Nix::BufferType::VertexStreamDraw: {
+			VertexBufferPM* vertexBuffer = (VertexBufferPM*)_buffer;
 			buffer = *vertexBuffer;
 			offset = vertexBuffer->getOffset();
 			break;
 		}
-		case Nix::IBO:
-		case Nix::UBO:
-		case Nix::SSBO:
-		case Nix::TBO:
 		default:
 			assert(false);
 			break;
@@ -73,22 +69,18 @@ namespace Nix {
 		auto type = _buffer->getType();
 		switch (type)
 		{
-		case Nix::IBO: {
+		case Nix::BufferType::IndexDraw:
+		case Nix::BufferType::IndexStreamDraw: {
 			IndexBuffer* indexBuffer = (IndexBuffer*)_buffer;
 			buffer = *indexBuffer;
 			offset = indexBuffer->getOffset();
 			break;
 		}
-		case Nix::SVBO:
-		case Nix::CVBO:
-		case Nix::UBO:
-		case Nix::SSBO:
-		case Nix::TBO:
 		default:
 			assert(false);
 			break;
 		}
-		m_indexBuffer = buffer;
+		m_indexBufferPM = buffer;
 		m_indexBufferOffset = offset + _offset;
 	}
 
@@ -108,7 +100,7 @@ namespace Nix {
 		if (m_vecBuffer.size()) {
 			vkCmdBindVertexBuffers(_commandBuffer, 0, (uint32_t)m_vecBuffer.size(), m_vecBuffer.data(), m_vecBufferOffset.data());
 		}
-		vkCmdBindIndexBuffer(_commandBuffer, m_indexBuffer, m_indexBufferOffset, VK_INDEX_TYPE_UINT16);
+		vkCmdBindIndexBuffer(_commandBuffer, m_indexBufferPM, m_indexBufferOffset, VK_INDEX_TYPE_UINT16);
 		vkCmdDrawIndexed(_commandBuffer, _indexCount, 1, _indexOffset, 0, 0);
 	}
 
@@ -123,7 +115,7 @@ namespace Nix {
 		if (m_vecBuffer.size()) {
 			vkCmdBindVertexBuffers(_commandBuffer, 0, (uint32_t)m_vecBuffer.size(), m_vecBuffer.data(), m_vecBufferOffset.data());
 		}
-		vkCmdBindIndexBuffer(_commandBuffer, m_indexBuffer, m_indexBufferOffset, VK_INDEX_TYPE_UINT16);
+		vkCmdBindIndexBuffer(_commandBuffer, m_indexBufferPM, m_indexBufferOffset, VK_INDEX_TYPE_UINT16);
 		vkCmdDrawIndexed(_commandBuffer, _indexCount, _instanceCount, _indexOffset, 0, _baseInstance);
 	}
 

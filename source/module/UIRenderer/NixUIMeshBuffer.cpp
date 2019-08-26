@@ -4,20 +4,18 @@
 namespace Nix {
 
 	void UIMeshBuffer::initialize(IContext* _context, IRenderable* _renderable, uint32_t _vertexCount) {
-		auto allocator = _context->createVertexBufferAllocatorPM(0, 0);
-		m_vertexBufferPM = _context->createVertexBuffer(nullptr, _vertexCount * sizeof(UIVertex), allocator);
-		allocator = _context->createIndexBufferAllocator(0, 0);
-		m_indexBuffer = _context->createIndexBuffer(nullptr, _vertexCount * 3 / 2, allocator);
+		m_vertexBufferPM = _context->createVertexBufferPM(_vertexCount * sizeof(UIVertex), nullptr);
+		m_indexBufferPM = _context->createIndexBufferPM(_vertexCount * sizeof(uint16_t), nullptr);
 		//
 		m_vertexBufferMemory.resize(_vertexCount);
-		m_indexBufferMemory.resize(_vertexCount * 3 / 2);
+		m_indexBufferMemory.resize(_vertexCount);
 		//
 		m_vertexCount = 0;
 		m_indexCount = 0;
 		//
 		m_renderable = _renderable;
 		m_renderable->setVertexBuffer(m_vertexBufferPM, 0, 0);
-		m_renderable->setIndexBuffer(m_indexBuffer, 0);
+		m_renderable->setIndexBuffer(m_indexBufferPM, 0);
 	}
 
 	bool UIMeshBuffer::pushVertices(const UIDrawData* _drawData, const UIDrawState& _drawState, const UIDrawState& _lastState) {
@@ -91,7 +89,7 @@ namespace Nix {
 
 	void UIMeshBuffer::flushMeshBuffer() {
 		m_vertexBufferPM->setData(m_vertexBufferMemory.data(), m_vertexCount * sizeof(UIVertex), 0);
-		m_indexBuffer->setData(m_indexBufferMemory.data(), m_indexCount * sizeof(uint16_t), 0);
+		m_indexBufferPM->setData(m_indexBufferMemory.data(), m_indexCount * sizeof(uint16_t), 0);
 	}
 	 
 	void UIMeshBuffer::draw(IRenderPass* _renderPass, IArgument* _argument, IPipeline* _pipeline, float _screenWidth, float _screenHeight) {

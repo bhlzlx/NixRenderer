@@ -42,8 +42,9 @@ namespace Nix {
 	//
 	IBuffer* ContextVk::createVertexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator) {
 		if (!_allocator) {
-			_allocator = m_VBOAllocator;
+			_allocator = m_vtxStaticDrawAllocator;
 		}
+		assert(_allocator->type() == BufferType::VertexDraw);
 		BufferAllocation allocation = _allocator->allocate(_size);
 		BufferVk b(this, allocation, _allocator, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 		VertexBuffer* buffer = new VertexBuffer(std::move(b));
@@ -56,8 +57,9 @@ namespace Nix {
 
 	IBuffer* ContextVk::createIndexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator) {
 		if (!_allocator) {
-			_allocator = m_IBOAllocator;
+			_allocator = m_idxStaticDrawAllocator;
 		}
+		assert(_allocator->type() == BufferType::IndexDraw);
 		BufferAllocation allocation = _allocator->allocate(_size);
 		BufferVk b(this, allocation, _allocator, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 		IndexBuffer* buffer = new IndexBuffer(std::move(b));
@@ -65,6 +67,18 @@ namespace Nix {
 		if (_data) {
 			(buffer->operator Nix::BufferVk & ()).uploadDataImmediatly(_data, _size, 0);
 		}
+		return buffer;
+	}
+
+	IBuffer* ContextVk::createIndexBufferPM(size_t _size, IBufferAllocator* _allocator) {
+		if (!_allocator) {
+			_allocator = m_idxStreamDrawAllocator;
+		}
+		assert(_allocator->type() == BufferType::IndexStreamDraw);
+		BufferAllocation allocation = _allocator->allocate(_size);
+		BufferVk b(this, allocation, _allocator, VK_BUFFER_USAGE_INDEX_BUFFER_BIT );
+		IndexBufferPM* buffer = new IndexBufferPM(std::move(b));
+		assert(buffer);
 		return buffer;
 	}
 
@@ -77,14 +91,15 @@ namespace Nix {
 		}
 	}
 
-	IBuffer* ContextVk::createDynamicVertexBuffer(size_t _size, IBufferAllocator* _allocator) {
+	IBuffer* ContextVk::createVertexBufferPM(size_t _size, IBufferAllocator* _allocator) {
 		if (!_allocator) {
-			_allocator = m_VBOAllocatorPM;
+			_allocator = m_vtxStreamDrawAllocator;
 		}
+		assert(_allocator->type() == BufferType::VertexStreamDraw);
 		// transient buffer should use `persistent mapping` feature
 		BufferAllocation allocation = _allocator->allocate(_size * MaxFlightCount);
 		BufferVk b(this, allocation, _allocator, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-		CachedVertexBuffer* buffer = new CachedVertexBuffer(std::move(b));
+		VertexBufferPM* buffer = new VertexBufferPM(std::move(b));
 		assert(buffer);
 		return buffer;
 	}
@@ -116,28 +131,21 @@ namespace Nix {
 		m_context->getGraphicsQueue()->updateBuffer(this, _offset, _data, _size);
 	}
 
-	size_t CachedVertexBuffer::getSize() {
+	size_t VertexBufferPM::getSize() {
 		return m_buffer.size();
 	}
 
-	void CachedVertexBuffer::setData(const void* _data, size_t _size, size_t _offset) {
-		auto frame = m_buffer.m_context->getFrameCounter();
-		if (m_frame != frame) {
-			m_frame = frame;
-			auto offset = m_offsets[2];
-			m_offsets[2] = m_offsets[1];
-			m_offsets[1] = m_offsets[0];
-			m_offsets[0] = offset;
-			// in fact, it's maybe a little slow
-			memcpy(m_mem + m_offsets[0], m_mem + m_offsets[1], m_size);
-		}
-		// 'memcpy' is an expensive function call
-		memcpy( m_mem + m_offsets[0] + _offset, _data, _size );
+	void VertexBufferPM::setData(const void* _data, size_t _size, size_t _offset) {
+		memcpy( m_mem + _offset, _data, _size );
 	}
 
 	void IndexBuffer::setData(const void* _data, size_t _size, size_t _offset)
 	{
 		m_buffer.m_context->getGraphicsQueue()->updateBuffer(&m_buffer, _offset, _data, _size);
+	}
+
+	void IndexBufferPM::setData(const void* _data, size_t _size, size_t _offset) {
+		memcpy(m_mem + _offset, _data, _size);
 	}
 
 	void VertexBuffer::release()
@@ -146,13 +154,19 @@ namespace Nix {
 		delete this;
 	}
 
-	void CachedVertexBuffer::release()
+	void IndexBuffer::release()
 	{
 		GetDeferredDeletor().destroyResource(&m_buffer);
 		delete this;
 	}
 
-	void IndexBuffer::release()
+	void VertexBufferPM::release()
+	{
+		GetDeferredDeletor().destroyResource(&m_buffer);
+		delete this;
+	}
+
+	void IndexBufferPM::release()
 	{
 		GetDeferredDeletor().destroyResource(&m_buffer);
 		delete this;

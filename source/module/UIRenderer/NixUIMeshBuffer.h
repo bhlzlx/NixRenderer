@@ -22,16 +22,25 @@ namespace Nix {
 
 	class UIMeshBuffer {
 	private:
-		IRenderable* m_renderable;
-		IBuffer* m_vertexBufferPM;
+		IRenderable*				m_renderable;
+		IBuffer*					m_vertexBufferPM;
 		std::vector<UIVertex>		m_vertexBufferMemory;
-		IBuffer* m_indexBuffer;
+		IBuffer*					m_indexBufferPM;
 		std::vector<uint16_t>		m_indexBufferMemory;
 		uint32_t					m_vertexCount;
 		uint32_t					m_indexCount;
 		//
 		std::vector<UIDrawBatch>	m_vecCommands;
 	public:
+		UIMeshBuffer()
+			: m_renderable(nullptr)
+			, m_vertexBufferPM(nullptr)
+			, m_indexBufferPM(nullptr)
+			, m_vertexCount(0)
+			, m_indexCount(0)
+		{
+		}
+
 		void initialize(IContext* _context, IRenderable* _renderable, uint32_t _vertexCount);
 
 		void clear() {

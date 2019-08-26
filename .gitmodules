@@ -1,3 +1,7 @@
 [submodule "thirdpart/MemoryPool"]
 	path = thirdpart/MemoryPool
 	url = https://github.com/cacay/MemoryPool.git
+
+[submodule "thirdpart/freetype"]
+	path = thirdpart/freetype
+	url = https://github.com/bhlzlx/freetype2.git

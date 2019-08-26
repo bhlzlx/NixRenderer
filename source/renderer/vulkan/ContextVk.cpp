@@ -101,11 +101,12 @@ namespace Nix {
 		//DVBOVk::Initialize();
 		context->m_argumentAllocator.initialize(context);
 		//
-		context->m_VBOAllocator = createVertexBufferGeneralAllocator(context);
-		context->m_VBOAllocatorPM = createVertexBufferGeneralAllocatorPM(context);
+		context->m_vtxStaticDrawAllocator = createVertexBufferGeneralAllocator(context);
+		context->m_vtxStreamDrawAllocator = createVertexBufferGeneralAllocatorPM(context);
+		context->m_idxStaticDrawAllocator = createIndexBufferGeneralAllocator(context);
+		context->m_idxStreamDrawAllocator = createIndexBufferGeneralAllocatorPM(context);
 		context->m_uniformAllocator = createUniformBufferGeneralAllocator(context);
 		context->m_stagingBufferAllocator = createStagingBufferGeneralAllocator(context);
-		context->m_IBOAllocator = createIndexBufferGeneralAllocator(context);
 		// Initialize glslang library.
 		//glslang::InitializeProcess();
 		//
@@ -361,44 +362,52 @@ namespace Nix {
 
 	IBufferAllocator* ContextVk::createVertexBufferAllocator(size_t _heapSize, size_t _minSize) {
 		if (!_heapSize || !_minSize) {
-			return this->m_VBOAllocator;
+			return this->m_vtxStaticDrawAllocator;
 		}
 		IBufferAllocator* allocator = Nix::createVertexBufferAllocator(this, _heapSize, _minSize);
 		return allocator;
 	}
 	IBufferAllocator* ContextVk::createVertexBufferAllocatorPM(size_t _heapSize, size_t _minSize) {
 		if (!_heapSize || !_minSize) {
-			return this->m_VBOAllocatorPM;
+			return this->m_vtxStreamDrawAllocator;
 		}
 		IBufferAllocator* allocator = Nix::createVertexBufferAllocatorPM(this, _heapSize, _minSize);
 		return allocator;
 	}
 	IBufferAllocator* ContextVk::createIndexBufferAllocator(size_t _heapSize, size_t _minSize) {
 		if (!_heapSize || !_minSize) {
-			return this->m_IBOAllocator;
+			return this->m_idxStaticDrawAllocator;
 		}
 		IBufferAllocator* allocator = Nix::createIndexBufferAllocator(this, _heapSize, _minSize);
+		return allocator;
+	}
+
+	IBufferAllocator* ContextVk::createIndexBufferAllocatorPM(size_t _heapSize, size_t _minSize) {
+		if (!_heapSize || !_minSize) {
+			return m_idxStreamDrawAllocator;
+		}
+		IBufferAllocator* allocator = Nix::createIndexBufferAllocatorPM(this, _heapSize, _minSize);
 		return allocator;
 	}
 
 	//IBuffer* ContextVk::createVertexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator)
 	//{
 	//	if (!_allocator) {
-	//		_allocator = this->m_VBOAllocator;
+	//		_allocator = this->m_vtxStaticDrawAllocator;
 	//	}
 	//	BufferAllocation allocation = _allocator->allocate(_size);
 	//	BufferVk b(this, allocation, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 	//	return new VertexBuffer(std::move(b));
 	//}
 	//
-	//IBuffer* ContextVk::createDynamicVertexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator)
+	//IBuffer* ContextVk::createVertexBufferPM(const void* _data, size_t _size, IBufferAllocator* _allocator)
 	//{
 	//	if (!_allocator) {
-	//		_allocator = this->m_VBOAllocatorPM;
+	//		_allocator = this->m_vtxStreamDrawAllocator;
 	//	}
 	//	BufferAllocation allocation = _allocator->allocate(_size*3);
 	//	BufferVk b(this, allocation, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-	//	return new CachedVertexBuffer(std::move(b));
+	//	return new VertexBufferPM(std::move(b));
 	//}
 
 	IGraphicsQueue* ContextVk::getGraphicsQueue(uint32_t _index) {
