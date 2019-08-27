@@ -320,6 +320,28 @@ namespace Nix {
 		return drawData;
 	}
 
+	UIDrawData* UIRenderer::build(uint32_t _numTri, UIDrawData* _oldDrawData)
+	{
+		UIDrawData* drawData = nullptr;
+		if (_oldDrawData) {
+			if (_oldDrawData->type == UITriangle && _oldDrawData->primitiveCapacity >= _numTri) {
+				drawData = _oldDrawData;
+				drawData->primitiveCount = _numTri;
+			}
+			else {
+				this->destroyDrawData(_oldDrawData);
+			}
+		}
+		if (!drawData) {
+			drawData = m_drawDataPool.newElement();
+			drawData->primitiveCapacity = drawData->primitiveCount = _numTri;
+			drawData->type = UIRectangle;
+			drawData->vertexBufferAllocation = m_vertexMemoryHeap.allocateTriangles(_numTri);
+		}
+		drawData->type = UITriangle;
+		return drawData;
+	}
+
 	UIDrawData* UIRenderer::copyDrawData(UIDrawData* _drawData)
 	{
 		UIDrawData* drawData = m_drawDataPool.newElement();

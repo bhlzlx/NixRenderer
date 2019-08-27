@@ -114,7 +114,28 @@ namespace Nix {
 		Nix::Rect<float> rc;
 		m_drawData = m_uiRenderer->build(m_draw,true, nullptr, rc);
 		m_plainDrawData = m_uiRenderer->build(m_plainDraw, nullptr, rc);
-		//
+
+		constexpr float radius = 50.0f;
+		constexpr uint32_t section = 5;
+
+		m_triDrawData = m_uiRenderer->build(section, nullptr);
+		UIVertex* triVert = (UIVertex*)m_triDrawData->vertexBufferAllocation.ptr;
+
+		for (uint32_t i = 0; i < section; ++i) {
+			triVert[0].color = triVert[1].color = triVert[2].color = 0x55555588;
+			triVert[0].layer = triVert[1].layer = triVert[2].layer = 2;
+			triVert[0].u = triVert[0].v = 0.005f;
+			triVert[1].u = 0.005f; triVert[1].v = 0.03;
+			triVert[2].u = 0.03; triVert[2].v = 0.005f;
+
+			triVert[0].x = triVert[0].y = radius;
+			triVert[1].x = sin(3.1415926f * 2 / section * i) * radius + radius;
+			triVert[1].y = cos(3.1415926f * 2 / section * i) * radius + radius;
+			triVert[2].x = sin(3.1415926f * 2 / section * (i+1)) * radius + radius;
+			triVert[2].y = cos(3.1415926f * 2 / section * (i+1)) * radius + radius;
+			triVert += 3;
+		}
+
 		return true;
 	}
 
@@ -145,7 +166,8 @@ namespace Nix {
 			UIDrawState drawState;
 			drawState.setScissor(m_scissor);
 			m_uiRenderer->beginBuild(tickCounter);
-			m_uiRenderer->buildDrawCall(m_drawData,drawState);
+			m_uiRenderer->buildDrawCall(m_triDrawData, drawState);
+			m_uiRenderer->buildDrawCall(m_drawData, drawState);
 		//	m_uiRenderer->buildDrawCall(m_plainDrawData,drawState);
 			m_uiRenderer->endBuild();
 

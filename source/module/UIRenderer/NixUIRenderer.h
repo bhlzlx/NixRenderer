@@ -143,57 +143,15 @@ namespace Nix {
 		//  build draw data
 		// ---------------------------------------------------------------------------------------------------
 		
-		/**
-		* @brief ���� draw data
-		*	����ִ�вü�
-		* @param[in] _draw  ��Ҫ�������ı�����
-		* @param[in] _oldDrawData �ɵ�draw data�ɱ�����
-		* @return ���ع������
-		* @see
-		*/
 		UIDrawData* build( const PlainTextDraw& _draw, UIDrawData* _oldDrawData, Nix::Rect<float>& _rc );
-
-		UIDrawData* build(const RichTextDraw& _draw, bool _autoWrap, UIDrawData* _oldDrawData, Nix::Rect<float>& _rc);
-
+		UIDrawData* build( const RichTextDraw& _draw, bool _autoWrap, UIDrawData* _oldDrawData, Nix::Rect<float>& _rc);
 		UIDrawData* build( const ImageDraw* _draws, uint32_t _count, UIDrawData* _oldDrawData );
+		UIDrawData* build(uint32_t _numTri, UIDrawData* _oldDrawData);
 
-		/**
-		* @brief ����һ�� draw data��һ�㸴����������Ⱦ����Ҫ��Ϊ��Ƶ������λ�õĿؼ�ʹ��
-		*	ԭ draw data һ����Ϊһ�����ݴ洢��
-		* @param[in] _drawData  ���ƶ���
-		* @return ���ظ��ƽ��
-		* @see
-		*/
+
 		UIDrawData* copyDrawData(UIDrawData* _drawData);
-		/**
-		* @brief ��һ��  draw data ����λ�ò�������� _to ����Ϊ�գ���ԭ��ִ�б任
-		*	
-		* @param[in] _draw  ��������
-		* @param[in] _offsetX  xλ��
-		* @param[in] _offsetY  yλ��
-		* @see
-		*/
 		void transformDrawData( UIDrawData* _draw, float _offsetX, float _offsetY, UIDrawData* _to);
-
-		/**
-		* @brief ��һ��  draw data ���вü������������ _output
-		*
-		* @param[in] _draw  ��������
-		* @param[in] _scissor  �ü�����
-		* @see
-		*/
-		void scissorDrawData(UIDrawData* _draw, const Nix::Scissor& _scissor, UIDrawData* _output );
-		//
-		//UIDrawData* build( const ImageDraw* _pImages, uint32_t _count );
-		//UIDrawData* build( const ImageDraw* _pImages, uint32_t _count, const PlainTextDraw& _draw );
-
-		/**
-		* @brief ����һ�� draw data
-		*
-		* @param[in] _draw  ���ٶ���
-		* @see
-		*/
-
+		void scissorDrawData(UIDrawData* _draw, const Nix::Scissor& _scissor, UIDrawData* _output);
 		void destroyDrawData( UIDrawData* _draw );
 
 		// ---------------------------------------------------------------------------------------------------
