@@ -150,7 +150,8 @@ namespace Nix {
 
 
 		UIDrawData* copyDrawData(UIDrawData* _drawData);
-		void transformDrawData( UIDrawData* _draw, float _offsetX, float _offsetY, UIDrawData* _to);
+		void translateDrawData( UIDrawData* _draw, float _offsetX, float _offsetY, UIDrawData* _to);
+		void rotateDrawData( UIDrawData* _draw, const Nix::Point<float>& _anchor, float _angle, UIDrawData* _to);
 		void scissorDrawData(UIDrawData* _draw, const Nix::Scissor& _scissor, UIDrawData* _output);
 		void destroyDrawData( UIDrawData* _draw );
 

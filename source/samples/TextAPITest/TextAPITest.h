@@ -119,11 +119,13 @@ namespace Nix {
 
 		UIRenderer::RichTextDraw m_draw;
 		Nix::UIDrawData*		m_drawData; //
+		Nix::UIDrawData*		m_drawDataDynamic; //
 
 		UIRenderer::PlainTextDraw 
 								m_plainDraw;
 		Nix::UIDrawData*		m_plainDrawData;
 		Nix::UIDrawData*		m_triDrawData;
+		Nix::UIDrawData* 		m_triDrawDataDynamic;
 
 
 		float					m_width;

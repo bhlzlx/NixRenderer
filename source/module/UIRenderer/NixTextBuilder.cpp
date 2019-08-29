@@ -359,7 +359,7 @@ namespace Nix {
 		return drawData;
 	}
 
-	void UIRenderer::transformDrawData(UIDrawData* _draw, float _offsetX, float _offsetY, UIDrawData* _to)
+	void UIRenderer::translateDrawData(UIDrawData* _draw, float _offsetX, float _offsetY, UIDrawData* _to)
 	{
 		assert(_draw != _to);
 		assert(_draw->primitiveCount == _to->primitiveCount);
@@ -370,6 +370,30 @@ namespace Nix {
 		for (uint32_t i = 0; i < count; ++i) {
 			vtxDst->x = vtxSrc->x + _offsetX;
 			vtxDst->y = vtxSrc->y + _offsetY;
+			++vtxDst;
+			++vtxSrc;
+		}
+	}
+
+	void UIRenderer::rotateDrawData(UIDrawData* _draw, const Nix::Point<float>& _anchor, float _angle, UIDrawData* _to)
+	{
+		auto funRotate = [](const Nix::Point<float>& _point, const Nix::Point<float>& _anchor, float _angle) -> Nix::Point<float> {
+			Nix::Point<float> ret;
+			float arc = _angle / 180.0f * 3.1415926f;
+			ret.x =(_point.x - _anchor.x) * cosf(-arc) - (_point.y - _anchor.y) * sinf(-arc) + _anchor.x;
+			ret.y =(_point.x - _anchor.x) * sinf(-arc) + (_point.y - _anchor.y) * cosf(-arc) + _anchor.y;
+			return ret;
+		};
+		assert(_draw->primitiveCount == _to->primitiveCount);
+		//
+		uint32_t count = _draw->type == UIRectangle ? _draw->primitiveCount * 4 : _draw->primitiveCount * 3;
+		UIVertex* vtxSrc = (UIVertex*)_draw->vertexBufferAllocation.ptr;
+		UIVertex* vtxDst = (UIVertex*)_to->vertexBufferAllocation.ptr;
+		for (uint32_t i = 0; i < count; ++i) {
+			const Nix::Point<float> pt = { vtxSrc->x, vtxSrc->y };
+			auto rst = funRotate(pt, _anchor, _angle);
+			vtxDst->x = rst.x;
+			vtxDst->y = rst.y;
 			++vtxDst;
 			++vtxSrc;
 		}

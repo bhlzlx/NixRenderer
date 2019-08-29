@@ -113,6 +113,7 @@ namespace Nix {
 
 		Nix::Rect<float> rc;
 		m_drawData = m_uiRenderer->build(m_draw,true, nullptr, rc);
+		m_drawDataDynamic = m_uiRenderer->copyDrawData(m_drawData);
 		m_plainDrawData = m_uiRenderer->build(m_plainDraw, nullptr, rc);
 
 		constexpr float radius = 50.0f;
@@ -135,6 +136,8 @@ namespace Nix {
 			triVert[2].y = cos(3.1415926f * 2 / section * (i+1)) * radius + radius;
 			triVert += 3;
 		}
+
+		m_triDrawDataDynamic = m_uiRenderer->copyDrawData(m_triDrawData);
 
 		return true;
 	}
@@ -160,14 +163,16 @@ namespace Nix {
 
 		static uint64_t tickCounter = 0;
 		tickCounter++;
-		tickCounter %= 3;
+
+		m_uiRenderer->rotateDrawData(m_triDrawData, Nix::Point<float>{50, 50}, tickCounter, m_triDrawDataDynamic);
+		m_uiRenderer->rotateDrawData(m_drawData, Nix::Point<float>{256, 256}, tickCounter, m_drawDataDynamic);
 
 		if (m_context->beginFrame()) {
 			UIDrawState drawState;
 			drawState.setScissor(m_scissor);
-			m_uiRenderer->beginBuild(tickCounter);
-			m_uiRenderer->buildDrawCall(m_triDrawData, drawState);
-			m_uiRenderer->buildDrawCall(m_drawData, drawState);
+			m_uiRenderer->beginBuild(tickCounter%3);
+			m_uiRenderer->buildDrawCall(m_triDrawDataDynamic, drawState);
+			m_uiRenderer->buildDrawCall(m_drawDataDynamic, drawState);
 		//	m_uiRenderer->buildDrawCall(m_plainDrawData,drawState);
 			m_uiRenderer->endBuild();
 
