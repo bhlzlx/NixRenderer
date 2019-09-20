@@ -1,13 +1,13 @@
 #include "VkShaderCompiler.h"
-
 #include <glslang/Public/ShaderLang.h>
 #include <SPIRV/GlslangToSpv.h>
 #include <StandAlone/DirStackFileIncluder.h>
+#include <SPIRV-Cross/spirv_cross.hpp>
 // #include "complier/GLSLCompiler.h"
 // #include "complier/SPIRVReflection.h"
 
-extern "C" {
-
+namespace Nix {
+	//
 	const TBuiltInResource DefaultTBuiltInResource = {
 		/* .MaxLights = */ 32,
 		/* .MaxClipPlanes = */ 6,
@@ -114,8 +114,16 @@ extern "C" {
 			/* .generalConstantMatrixVectorIndexing = */ 1,
 		}
 	};
+	//
+	bool VkShaderCompiler::initializeEnvironment() {
+		bool rst = glslang::InitializeProcess();
+		return rst;
+	}
 
-	bool CompileGLSL2SPV( Nix::ShaderModuleType _type, const char * _text, const uint32_t** _spvBytes, size_t* _length, const char ** _compileLog )
+	void VkShaderCompiler::finalizeEnvironment() {
+		glslang::FinalizeProcess();
+	}
+	bool VkShaderCompiler::compile(Nix::ShaderModuleType _type, const char * _text)
 	{
 		EShLanguage ShaderType = EShLanguage::EShLangVertex;
 		switch (_type) {
@@ -156,16 +164,13 @@ extern "C" {
 		if (!res) {
 			const char* pLog = Shader.getInfoLog();
 			const char* pDbgLog = Shader.getInfoDebugLog();
-
-			static thread_local std::string compileLog;
-			compileLog.clear();
-			compileLog += "Info :";
-			compileLog += pLog;
-			compileLog += "\r\n";
-			compileLog += "Debug :";
-			compileLog += pDbgLog;
-			compileLog += "\r\n";
-			*_compileLog = compileLog.c_str();
+			m_compileMessage.clear();
+			m_compileMessage += "Info :";
+			m_compileMessage += pLog;
+			m_compileMessage += "\r\n";
+			m_compileMessage += "Debug :";
+			m_compileMessage += pDbgLog;
+			m_compileMessage += "\r\n";
 			return false;
 		}
 		glslang::TProgram Program;
@@ -174,21 +179,102 @@ extern "C" {
 		assert(res == true);
 		spv::SpvBuildLogger logger;
 		glslang::SpvOptions spvOptions;
-		static thread_local std::vector<uint32_t> spvBytes;
-		spvBytes.clear();
-		glslang::GlslangToSpv(*Program.getIntermediate(ShaderType), spvBytes, &logger, &spvOptions);
-		*_spvBytes = spvBytes.data();
-		*_length = spvBytes.size();
+		m_compiledSPV.clear();
+		glslang::GlslangToSpv(*Program.getIntermediate(ShaderType), m_compiledSPV, &logger, &spvOptions);
 		return true;
 	}
 
-	bool InitializeShaderCompiler() {
-		bool rst = glslang::InitializeProcess();
-		return rst;
+	//>! 
+	bool VkShaderCompiler::parseSPV(Nix::ShaderModuleType _type, uint32_t * _spv, size_t _numU32) {
+		spirv_cross::Compiler spvCompiler(_spv, _numU32);
+		spirv_cross::ShaderResources spvResource = spvCompiler.get_shader_resources();
+		// get vertex binding information
+		m_vecStageInput.clear();
+		for (auto& vertexInput : spvResource.stage_inputs) {
+			auto location = spvCompiler.get_decoration(vertexInput.id, spv::Decoration::DecorationLocation);
+			StageIOAttribute attr; 
+			attr.location = location;
+			attr.name = vertexInput.name;
+			//attr.type = vertexInput.base_type_id;
+			m_vecStageInput[location] = attr;
+		}
+		m_vecStageOutput.clear();
+		for (auto& vertexInput : spvResource.stage_inputs) {
+			auto location = spvCompiler.get_decoration(vertexInput.id, spv::Decoration::DecorationLocation);
+			StageIOAttribute attr;
+			attr.location = location;
+			attr.name = vertexInput.name;
+			//attr.type = vertexInput.base_type_id;
+			m_vecStageOutput[location] = attr;
+		}
+		//
+		if (spvResource.push_constant_buffers.size()) {
+			auto& constants = spvResource.push_constant_buffers[0];
+			auto ranges = spvCompiler.get_active_buffer_ranges(constants.id);
+			m_pushConstants.offset = ranges[0].offset;
+			m_pushConstants.size = (ranges.back().offset - m_pushConstants.offset) + ranges.back().range;
+			m_pushConstants.offset = m_pushConstants.offset;
+		}
+		//
+		for (auto& pass : spvResource.subpass_inputs) {
+			SubpassInput input;
+			input.set = spvCompiler.get_decoration(pass.id, spv::Decoration::DecorationDescriptorSet);
+			input.binding = spvCompiler.get_decoration(pass.id, spv::Decoration::DecorationBinding);
+			input.inputIndex = spvCompiler.get_decoration(pass.id, spv::Decoration::DecorationIndex);
+			m_inputAttachment.push_back(input);
+		}
+		//
+		for (auto& uniformBlock : spvResource.uniform_buffers) {
+			UniformBlock block;
+			block.set = spvCompiler.get_decoration(uniformBlock.id, spv::Decoration::DecorationDescriptorSet);
+			block.binding = spvCompiler.get_decoration(uniformBlock.id, spv::Decoration::DecorationBinding);
+			block.name = uniformBlock.name;
+			auto uniformType = spvCompiler.get_type_from_variable(uniformBlock.id);
+			block.size = spvCompiler.get_declared_struct_size(uniformType);
+			m_vecUBO.push_back(block);
+		}
+		//>!!!!
+		for (auto& sampler : spvResource.sampled_images) {
+			CombinedImageSampler image;
+			image.binding = spvCompiler.get_decoration(sampler.id, spv::Decoration::DecorationBinding);
+			image.set = spvCompiler.get_decoration(sampler.id, spv::Decoration::DecorationDescriptorSet);
+			image.name = sampler.name;
+			m_vecSamplers.push_back(image);
+		}
+		//
+		m_vecSSBO.clear();
+		for (auto& item : spvResource.storage_buffers) {
+			ShaderStorageBufferObject ssbo;
+			ssbo.binding = spvCompiler.get_decoration(item.id, spv::Decoration::DecorationBinding);
+			ssbo.set = spvCompiler.get_decoration(item.id, spv::Decoration::DecorationDescriptorSet);
+			ssbo.name = item.name;
+			auto uniformType = spvCompiler.get_type_from_variable(item.id);
+			ssbo.size = spvCompiler.get_declared_struct_size(uniformType);
+			m_vecSSBO.push_back(ssbo);
+		}
+		//
+		m_vecTBO.clear();
+		for (auto& item : spvResource.storage_images) {
+			TexelBufferObject tbo;
+			tbo.binding = spvCompiler.get_decoration(item.id, spv::Decoration::DecorationBinding);
+			tbo.set = spvCompiler.get_decoration(item.id, spv::Decoration::DecorationDescriptorSet);
+			tbo.name = item.name;
+			m_vecTBO.push_back(tbo);
+		}
+		m_atomicCounter.clear();
+		for (auto& item : spvResource.atomic_counters) {
+			AtomicCounter counter;
+			counter.binding = spvCompiler.get_decoration(item.id, spv::Decoration::DecorationBinding);
+			counter.set = spvCompiler.get_decoration(item.id, spv::Decoration::DecorationDescriptorSet);
+			counter.name = item.name;
+			m_atomicCounter.push_back(counter);
+		}
+		return true;
 	}
+}
 
-	void FinalizeShaderCompiler() {
-		glslang::FinalizeProcess();
-	}
+extern "C" {
+
+	
 
 }
