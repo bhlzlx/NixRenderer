@@ -146,12 +146,14 @@ namespace Nix {
 		UIDrawData* build( const PlainTextDraw& _draw, UIDrawData* _oldDrawData, Nix::Rect<float>& _rc );
 		UIDrawData* build( const RichTextDraw& _draw, bool _autoWrap, UIDrawData* _oldDrawData, Nix::Rect<float>& _rc);
 		UIDrawData* build( const ImageDraw* _draws, uint32_t _count, UIDrawData* _oldDrawData );
-		UIDrawData* build(uint32_t _numTri, UIDrawData* _oldDrawData);
+		UIDrawData* build( uint32_t _numTri, UIDrawData* _oldDrawData);
+		UIDrawData* buildLines( Nix::Point<float>* _points, uint32_t _numLine );
 
 
 		UIDrawData* copyDrawData(UIDrawData* _drawData);
-		void translateDrawData( UIDrawData* _draw, float _offsetX, float _offsetY, UIDrawData* _to);
+		void translateDrawData(UIDrawData* _draw, float _offsetX, float _offsetY, UIDrawData* _to);
 		void rotateDrawData( UIDrawData* _draw, const Nix::Point<float>& _anchor, float _angle, UIDrawData* _to);
+		void transformDrawData( UIDrawData* _draw, const Nix::Point<float>& _anchor, float _angle, float _scale, UIDrawData* _to );
 		void scissorDrawData(UIDrawData* _draw, const Nix::Scissor& _scissor, UIDrawData* _output);
 		void destroyDrawData( UIDrawData* _draw );
 

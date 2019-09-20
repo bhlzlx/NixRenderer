@@ -399,6 +399,30 @@ namespace Nix {
 		}
 	}
 
+	void UIRenderer::transformDrawData(UIDrawData* _draw, const Nix::Point<float>& _anchor, float _angle, float _scale, UIDrawData* _to)
+	{
+		auto funTransform = [](const Nix::Point<float>& _point, const Nix::Point<float>& _anchor, float _angle, float _scale) -> Nix::Point<float> {
+			Nix::Point<float> ret;
+			float arc = _angle / 180.0f * 3.1415926f;
+			ret.x = _scale*((_point.x - _anchor.x) * cosf(-arc) - (_point.y - _anchor.y) * sinf(-arc)) + _anchor.x;
+			ret.y = _scale*((_point.x - _anchor.x) * sinf(-arc) + (_point.y - _anchor.y) * cosf(-arc)) + _anchor.y;
+			return ret;
+		};
+		assert(_draw->primitiveCount == _to->primitiveCount);
+		//
+		uint32_t count = _draw->type == UIRectangle ? _draw->primitiveCount * 4 : _draw->primitiveCount * 3;
+		UIVertex* vtxSrc = (UIVertex*)_draw->vertexBufferAllocation.ptr;
+		UIVertex* vtxDst = (UIVertex*)_to->vertexBufferAllocation.ptr;
+		for (uint32_t i = 0; i < count; ++i) {
+			const Nix::Point<float> pt = { vtxSrc->x, vtxSrc->y };
+			auto rst = funTransform(pt, _anchor, _angle, _scale);
+			vtxDst->x = rst.x;
+			vtxDst->y = rst.y;
+			++vtxDst;
+			++vtxSrc;
+		}
+	}
+
 	void UIRenderer::scissorDrawData(UIDrawData* _draw, const Nix::Scissor& _scissor, UIDrawData* _output)
 	{
 		assert(_draw->type == UIRectangle);

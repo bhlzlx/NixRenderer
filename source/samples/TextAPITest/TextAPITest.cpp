@@ -164,8 +164,8 @@ namespace Nix {
 		static uint64_t tickCounter = 0;
 		tickCounter++;
 
-		m_uiRenderer->rotateDrawData(m_triDrawData, Nix::Point<float>{50, 50}, tickCounter, m_triDrawDataDynamic);
-		m_uiRenderer->rotateDrawData(m_drawData, Nix::Point<float>{256, 256}, tickCounter, m_drawDataDynamic);
+		m_uiRenderer->transformDrawData(m_triDrawData, Nix::Point<float>{50, 50}, tickCounter, 4.0f, m_triDrawDataDynamic);
+		m_uiRenderer->transformDrawData(m_drawData, Nix::Point<float>{256, 256}, tickCounter, 1.0f, m_drawDataDynamic);
 
 		if (m_context->beginFrame()) {
 			UIDrawState drawState;
