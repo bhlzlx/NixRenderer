@@ -35,6 +35,33 @@ namespace Nix {
 	static const uint32_t MaxNameLength = 64;
 	static const uint32_t MaxMipLevelCount = 12;
 
+	template< class DEST, class SOURCE >
+	struct IntegerComposer {
+		union {
+			struct {
+				SOURCE a;
+				SOURCE b;
+			};
+			DEST val;
+		};
+		IntegerComposer(SOURCE _a, SOURCE _b)
+			: a(_a)
+			, b(_b)
+		{
+		}
+		IntegerComposer& operator=(const IntegerComposer& _val) {
+			key = _val.key;
+			return *this;
+		}
+		bool operator == (const IntegerComposer& _val) const {
+			return key == _val.key;
+		}
+		bool operator < (const IntegerComposer& _val) const {
+			return key < _val.key;
+		}
+		static_assert(sizeof(val) == sizeof(low) * 2, "!");
+	};
+
     template < class T >
     struct Point {
         T x;
@@ -112,8 +139,11 @@ namespace Nix {
 
     enum ShaderModuleType {
         VertexShader = 0,
+		TessellationShader,
+		GeometryShader,
         FragmentShader,
-        ComputeShader
+        ComputeShader,
+		ShaderTypeCount,
     };
 
 	enum NixFormat : uint8_t {
@@ -465,9 +495,13 @@ namespace Nix {
 		NIX_JSON(index, descriptorCount, descriptors)
 	};
 
+	struct ShaderConfigure {
+		ShaderModuleType	type = ShaderTypeCount;
+		const char *		content = nullptr;
+	};
+
 	struct MaterialDescription {
-		char									vertexShader[64];
-		char									fragmentShader[64];
+		ShaderConfigure							shaders[ShaderTypeCount];
 		VertexLayout							vertexLayout;
 		uint32_t								argumentCount;
 		ArgumentDescription						argumentLayouts[MaxArgumentCount];
@@ -477,7 +511,7 @@ namespace Nix {
 		TopologyMode							topologyMode;
 		PolygonMode								pologonMode;
 		//
-		NIX_JSON(vertexShader, fragmentShader, vertexLayout, argumentCount, argumentLayouts, renderState, topologyMode, pologonMode)
+		NIX_JSON(shaders, vertexLayout, argumentCount, argumentLayouts, renderState, topologyMode, pologonMode)
 	};
 
 	class IRenderPass;

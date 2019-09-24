@@ -2,7 +2,7 @@
 	"fonts" : [
 		"font/msyahei.ttf",
 		"font/hwzhsong.ttf",
-		"font/msfanli.ttf"
+		"font/jianli1.ttf"
 	],
 	"textures" : [{
 		"file" : "texture/pack/gui_pack.png",
