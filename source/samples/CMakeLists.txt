@@ -43,6 +43,7 @@ else()
 		add_definitions(-DUNICODE -D_UNICODE)
 		
         add_subdirectory( HelloWorld )
+        add_subdirectory( VkCompilerSample )
         #add_subdirectory( ClearScreen )
         #add_subdirectory( Triangle )
         #add_subdirectory( WavefrontModel )
