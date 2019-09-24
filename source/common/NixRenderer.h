@@ -59,7 +59,7 @@ namespace Nix {
 		bool operator < (const IntegerComposer& _val) const {
 			return key < _val.key;
 		}
-		static_assert(sizeof(val) == sizeof(low) * 2, "!");
+		static_assert(sizeof(DEST) == sizeof(SOURCE) * 2, "!");
 	};
 
     template < class T >

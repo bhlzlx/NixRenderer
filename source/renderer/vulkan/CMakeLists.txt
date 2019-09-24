@@ -83,7 +83,7 @@ if( ANDROID )
         #SPIRV
         #glslang
         #OSDependent
-        spirv-cross-core
+        #spirv-cross-core
         nix
 		log
 		android
@@ -95,7 +95,7 @@ else()
         #SPIRV
         #glslang
         #OSDependent
-        spirv-cross-core
+        #spirv-cross-core
 		#spirv-cross-c-sharedc
         nix
         #${vulkan-1}

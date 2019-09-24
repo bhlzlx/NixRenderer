@@ -12,31 +12,6 @@ namespace Nix {
 	// 1.生成SPV
 	// 2.获取SPV信息
 
-	template< class T1, class T2 >
-	class IntegerComposer {
-	private:
-		union {
-			struct {
-				T2 a;
-				T2 b;
-			};
-			T1 t;
-		};
-	public:
-		IntegerComposer( T2 _a = 0, T2 _b = 0)
-			: a(_a)
-			, b(_b) {
-		}
-		operator T1 () const {
-			return t
-		}
-		operator a() const {
-			return a;
-		}
-		operator b() const {
-			return b;
-		}
-	};
 	typedef IntegerComposer<uint32_t, uint16_t> DescriptorKey;
 
 	struct Binding {
@@ -98,31 +73,38 @@ namespace Nix {
 		std::string name;
 	};
 
-	class VkShaderCompiler {
+
+	class NIX_API_DECL VkShaderCompiler {
 	private:
 		std::vector<uint32_t>							m_compiledSPV; // binary spv data
 		std::string										m_compileMessage; // compiling error/warnings
 		//
 		std::vector<uint16_t>							m_vecSetID; // stores the set id
-		std::map<uint16_t, std::map<uint16_t, Binding>> m_bindingMap; // set as key, binding as value
-		std::map < uint32_t, std::vector<UniformBlock::Member>> m_UBOMemberInfo; //
+		std::map<uint16_t, std::vector<uint16_t>>		m_bindingMap; // set as key, binding as value
+		std::map < uint32_t, std::vector<UniformBlock::Member>> 
+														m_UBOMemberInfo; //
 		//
-		std::map< uint16_t, StageIOAttribute>	m_vecStageInput;
-		std::map< uint16_t, StageIOAttribute>	m_vecStageOutput;
-		PushConstants							m_pushConstants;
+		std::vector<StageIOAttribute>					m_vecStageInput;
+		std::vector<StageIOAttribute>					m_vecStageOutput;
+		PushConstants									m_pushConstants;
 		//
-		std::vector<SubpassInput>				m_inputAttachment;
-		std::vector<UniformBlock>				m_vecUBO;
-		std::vector<CombinedImageSampler>		m_vecSamplers;
-		std::vector<ShaderStorageBufferObject>	m_vecSSBO;
-		std::vector<TexelBufferObject>			m_vecTBO;
-		std::vector<AtomicCounter>				m_atomicCounter;
+		std::vector<SubpassInput>						m_inputAttachment;
+		std::vector<UniformBlock>						m_vecUBO;
+		std::vector<CombinedImageSampler>				m_vecSamplers;
+		std::vector<ShaderStorageBufferObject>			m_vecSSBO;
+		std::vector<TexelBufferObject>					m_vecTBO;
+		std::vector<AtomicCounter>						m_atomicCounter;
 	private:
 		static VkShaderCompiler* Instance;
+		bool											m_initailized;
+		//
+		void addDescriptorRecord(uint16_t _id, uint16_t _binding);
+		void clearResourceInfo();
 	public:
 		VkShaderCompiler() {
 			assert(!Instance);
 			Instance = this;
+			m_initailized = false;
 		}
 		// 初始化/清理 生产环境
 		bool initializeEnvironment();
@@ -137,66 +119,89 @@ namespace Nix {
 			return (uint16_t)m_vecSetID.size();
 		}
 
-		typedef bool(*PFN_ON_GET_STAGE_ATTRIBUTE)(uint16_t _location, const char* _name, uint16_t _type, void* _userData);
-		typedef bool(*PFN_ON_GET_STAGE_ATTRIBUTE)(uint16_t _location, const char* _name, uint16_t _type, void* _userData);
-		//
-		typedef bool(*PFN_ON_GET_DESCRIPTOR_SET)(uint16_t _setID, void* _userData );
-		typedef bool(*PFN_ON_GET_DESCRIPTOR_BINDING)(uint16_t _binding, const char * _name, ShaderDescriptorType _type, void* _userData);
-		//
-		typedef bool(*PFN_ON_GET_UNIFORM_BLOCK)(uint16_t _setID, uint16_t _binding, const char * _name, uint16_t _size, void* _userData);
-		typedef bool(*PFN_ON_GET_UNIFORM_BLOCK_LAYOUT)(uint16_t _setID, uint16_t _binding, const char* _name, uint16_t _offset, uint16_t _size, void* _userData);
-
-		uint16_t getDescriptorSets(PFN_ON_GET_DESCRIPTOR_SET _callback, void* _userData) const {
-			uint16_t c = 0;
-			for (auto setID : m_vecSetID) {
-				if (!_callback(setID, _userData)) {
-					return c;
-				}
-				++c;
+		uint16_t getDescriptorSets( const uint16_t** _sets ) const {
+			uint16_t c = m_vecSetID.size();
+			if (c) {
+				*_sets = m_vecSetID.data();
 			}
 			return c;
 		}
-		void getBindings( uint16_t _setID, PFN_ON_GET_DESCRIPTOR_BINDING _callback, void* _userData) {
+		uint16_t getBindings( uint16_t _setID, const uint16_t** _bindings ) {
 			auto it = m_bindingMap.find(_setID);
 			if (it == m_bindingMap.end()) {
-				return;
+				return 0;
 			}
-			for (auto& binding : it->second) {
-				_callback(binding.first, binding.second.name.c_str(), binding.second.type, _userData);
+			uint16_t count = it->second.size();
+			*_bindings = it->second.data();
+			return count;
+		}
+		uint16_t getUniformBlocks(const UniformBlock** _blocks) {
+			uint16_t count = m_vecUBO.size();
+			if (count) {
+				*_blocks = m_vecUBO.data();
 			}
+			return count;
 		}
-		//
-		uint16_t getUniformBlockCount() {
-			return (uint16_t)m_vecUBO.size();
-		}
-		void getUniformBlocks( PFN_ON_GET_UNIFORM_BLOCK _callback, void* _userData) {
-			for (auto& ubo : m_vecUBO) {
-				_callback(ubo.set, ubo.binding, ubo.name.c_str(), ubo.size, _userData);
-			}
-		}
-		bool getUniformBlockLayout(uint16_t _set, uint16_t _binding, PFN_ON_GET_UNIFORM_BLOCK_LAYOUT _cb, void* _userData) {
+		uint16_t getUniformBlockMembers(uint16_t _set, uint16_t _binding, const UniformBlock::Member** _member ) {
 			DescriptorKey key(_set, _binding);
-			auto it = m_UBOMemberInfo.find(key.operator uint32_t());
+			auto it = m_UBOMemberInfo.find(key.val);
 			if (it == m_UBOMemberInfo.end()) {
-				return false;
+				return 0;
 			}
-			for (auto& member : it->second) {
-				_cb(_set, _binding, member.name.c_str(), member.offset, member.size, _userData);
-			}
-			return true;
+			*_member = it->second.data();
+			return it->second.size();
 		}
-		void getPushConstants(  );
+		void getPushConstants(uint16_t* _offset, uint16_t* _size) {
+			*_offset = m_pushConstants.offset;
+			*_size = m_pushConstants.size;
+		}
+		uint16_t getInputAttachment(const SubpassInput** _attachments) {
+			if (m_inputAttachment.size()) {
+				*_attachments = m_inputAttachment.data();
+			}
+			return m_inputAttachment.size();
+		}
+		uint16_t getStageInput(const StageIOAttribute** _inputs) {
+			if (m_vecStageInput.size()) {
+				*_inputs = m_vecStageInput.data();
+			}
+			return m_vecStageInput.size();
+		}
+		uint16_t getStageOutput(const StageIOAttribute** _outputs) {
+			if (m_vecStageOutput.size()) {
+				*_outputs = m_vecStageOutput.data();
+			}
+			return m_vecStageOutput.size();
+		}
+		uint16_t getShaderStorageBuffers(const ShaderStorageBufferObject** _ssbo) {
+			if (m_vecSSBO.size()) {
+				*_ssbo = m_vecSSBO.data();
+			}
+			return m_vecSSBO.size();
+		}
+		uint16_t getSamplers(const CombinedImageSampler** _samplers) {
+			if (m_vecSamplers.size()) {
+				*_samplers = m_vecSamplers.data();
+			}
+			return m_vecSamplers.size();
+		}
+		uint16_t getTexelBuffer(const TexelBufferObject** _tbo) {
+			if (m_vecTBO.size()) {
+				*_tbo = m_vecTBO.data();
+			}
+			return m_vecTBO.size();
+		}
+		uint16_t getAtomicCounter( const AtomicCounter** _counter ) {
+			if (m_atomicCounter.size()) {
+				*_counter = m_atomicCounter.data();
+			}
+			return m_atomicCounter.size();
+		}
 	};
+
+	extern VkShaderCompiler compiler;
 }
 
 extern "C" {
-
-	NIX_API_DECL bool InitializeShaderCompiler();
-	NIX_API_DECL bool CompileGLSL2SPV( Nix::ShaderModuleType _type, const char * _text, const uint32_t** _spvBytes, size_t* _length, const char ** _compileLog);
-	NIX_API_DECL void FinalizeShaderCompiler();
-
-	typedef bool(*PFN_INITIALIZE_SHADER_COMPILER)();
-	typedef bool(*PFN_COMPILE_GLSL_2_SPV)(Nix::ShaderModuleType _type, const char * _text, const uint32_t** _spvBytes, size_t* _length, const char** _compileLog);
-	typedef void(*PFN_FINALIZE_SHADER_COMPILER)();
-
+	Nix::VkShaderCompiler* GetVkCompiler();
 }

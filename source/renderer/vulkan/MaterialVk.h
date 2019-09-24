@@ -2,7 +2,6 @@
 #include "VkInc.h"
 #include <NixRenderer.h>
 #include <array>
-#include <SPIRV-Cross/spirv_cross.hpp>
 
 namespace Nix {
 	//
@@ -87,7 +86,6 @@ namespace Nix {
 		}
 		//
 		static MaterialVk* CreateMaterial( ContextVk* _context, const MaterialDescription& _desc );
-		static bool ValidationShaderDescriptor( ShaderDescriptor& _descriptor, const uint32_t _setIndex, const spirv_cross::Compiler& _compiler, const spirv_cross::ShaderResources& _resources, ContextVk* _context, spirv_cross::Resource& res);
 		static VkShaderModule CreateShaderModule( ContextVk* _context, const char * _shader, ShaderModuleType _type, std::vector<uint32_t>& _spvBytes );
 	};
 

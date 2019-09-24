@@ -8,66 +8,6 @@
 
 namespace Nix {
 
-	bool MaterialVk::ValidationShaderDescriptor( ShaderDescriptor& _descriptor, const uint32_t _setIndex, const spirv_cross::Compiler& _compiler, const spirv_cross::ShaderResources& _resources, ContextVk* _context, spirv_cross::Resource& res ) {
-		if (_descriptor.type == SDT_UniformBlock) 
-		{
-			for (auto& shaderRes : _resources.uniform_buffers) 
-			{
-				// find a shader descriptor with a same name
-				if (shaderRes.name == _descriptor.name)
-				{
-					auto set = _compiler.get_decoration( shaderRes.id, spv::Decoration::DecorationDescriptorSet);
-					auto binding = _compiler.get_decoration(shaderRes.id, spv::Decoration::DecorationBinding);
-					if (set == _setIndex && binding == _descriptor.binding) 
-					{
-						auto uniformType = _compiler.get_type_from_variable(shaderRes.id);
-						auto uniformChunkSize = _compiler.get_declared_struct_size(uniformType);
-						_descriptor.dataSize = (uint32_t)uniformChunkSize;
-						res = shaderRes;
-						return true;
-					}
-				}
-			}
-			return false;
-		}
-		else if (_descriptor.type == SDT_Sampler) 
-		{
-			for (auto& shaderRes : _resources.sampled_images)
-			{
-				// find a shader descriptor with a same name
-				if (shaderRes.name == _descriptor.name)
-				{
-					auto set = _compiler.get_decoration(shaderRes.id, spv::Decoration::DecorationDescriptorSet);
-					auto binding = _compiler.get_decoration(shaderRes.id, spv::Decoration::DecorationBinding);
-					if (set == _setIndex && binding == _descriptor.binding)
-					{
-						res = shaderRes;
-						return true;
-					}
-				}
-			}
-			return false;
-		}
-		else if (_descriptor.type == SDT_SSBO)
-		{
-			for (auto& shaderRes : _resources.storage_buffers)
-			{
-				// find a shader descriptor with a same name
-				if (shaderRes.name == _descriptor.name)
-				{
-					auto set = _compiler.get_decoration(shaderRes.id, spv::Decoration::DecorationDescriptorSet);
-					auto binding = _compiler.get_decoration(shaderRes.id, spv::Decoration::DecorationBinding);
-					if (set == _setIndex && binding == _descriptor.binding)
-					{
-						return true;
-					}
-				}
-			}
-			return false;
-		}
-		return true;
-	}
-
 	VkShaderStageFlagBits NixShaderStageToVk(ShaderModuleType _stage) {
 		switch (_stage)
 		{
@@ -119,22 +59,7 @@ namespace Nix {
 		MaterialDescription materialDesc = _desc;
 		//
 		VkDevice device = _context->getDevice();
-		// load SPV from disk!
-		std::vector<uint32_t> vertexSpvBytes;
-		std::vector<uint32_t> fragmentSpvBytes;
-		VkShaderModule vertSM = CreateShaderModule(_context, _desc.vertexShader, VertexShader, vertexSpvBytes);
-		if (VK_NULL_HANDLE == vertSM) {
-			assert(false); return nullptr;
-		}
-		VkShaderModule fragSM = CreateShaderModule(_context, _desc.fragmentShader, FragmentShader, fragmentSpvBytes);
-		if (VK_NULL_HANDLE == fragSM) {
-			assert(false); return nullptr;
-		}
-		// reflect the resource information
-		spirv_cross::Compiler vertCompiler(vertexSpvBytes.data(), vertexSpvBytes.size());
-		spirv_cross::ShaderResources vertexResource = vertCompiler.get_shader_resources();
-		spirv_cross::Compiler fragCompiler(fragmentSpvBytes.data(), fragmentSpvBytes.size());
-		spirv_cross::ShaderResources fragmentResource = fragCompiler.get_shader_resources();
+		std::map<>
 		// 1. verify the vertex input layout
 		// 2. verify the descriptor set description
 		// 3. get the push constants information

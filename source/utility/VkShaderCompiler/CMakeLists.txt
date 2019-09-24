@@ -21,4 +21,5 @@ add_library( VkShaderCompiler SHARED
 target_link_libraries( VkShaderCompiler
 	glslang
 	SPIRV
+	spirv-cross-core
 )
