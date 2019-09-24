@@ -12,6 +12,31 @@ namespace Nix {
 	// 1.生成SPV
 	// 2.获取SPV信息
 
+	template< class T1, class T2 >
+	class IntegerComposer {
+	private:
+		union {
+			struct {
+				T2 a;
+				T2 b;
+			};
+			T1 t;
+		};
+	public:
+		IntegerComposer( T2 _a = 0, T2 _b = 0)
+			: a(_a)
+			, b(_b) {
+		}
+		operator T1 () const {
+			return t
+		}
+		operator a() const {
+			return a;
+		}
+		operator b() const {
+			return b;
+		}
+	};
 	typedef IntegerComposer<uint32_t, uint16_t> DescriptorKey;
 
 	struct Binding {
@@ -64,7 +89,7 @@ namespace Nix {
 	struct AtomicCounter {
 		uint16_t set;
 		uint16_t binding;
-		std::string name;s
+		std::string name;
 	};
 
 	struct CombinedImageSampler {
@@ -75,11 +100,12 @@ namespace Nix {
 
 	class VkShaderCompiler {
 	private:
-		std::vector<uint32_t>	m_compiledSPV; // binary spv data
-		std::string				m_compileMessage; // compiling error/warnings
+		std::vector<uint32_t>							m_compiledSPV; // binary spv data
+		std::string										m_compileMessage; // compiling error/warnings
 		//
-		std::vector<uint16_t>	m_vecSetID; // stores the set id
+		std::vector<uint16_t>							m_vecSetID; // stores the set id
 		std::map<uint16_t, std::map<uint16_t, Binding>> m_bindingMap; // set as key, binding as value
+		std::map < uint32_t, std::vector<UniformBlock::Member>> m_UBOMemberInfo; //
 		//
 		std::map< uint16_t, StageIOAttribute>	m_vecStageInput;
 		std::map< uint16_t, StageIOAttribute>	m_vecStageOutput;
@@ -103,12 +129,63 @@ namespace Nix {
 		void finalizeEnvironment();
 		// 将 GLSL 编译成 SPV
 		bool compile(Nix::ShaderModuleType _type, const char* _text);
+		bool getCompiledSpv( const uint32_t*& _spv, size_t& _numU32 ) const;
 		// 解析SPV
-		bool parseSPV(Nix::ShaderModuleType _type, uint32_t*  _spv, size_t _numU32);
-		// 获取信息		
-		uint16_t getDescriptorSets(const std::function<void(uint16_t _setID)>& _cb) const;
-		bool getDescriptor(uint16_t _setID, const std::function<void(uint16_t _binding, ShaderDescriptorType _type, const char * _name)>& _cb) const;
-		bool getBlockMemoryLayout( uint16_t _setID, uint16_t _binding, const std::function<void(const char *_name, uint32_t _offset, uint32_t _size)>& _cb ) const;
+		bool parseSpvLayout(Nix::ShaderModuleType _type, uint32_t*  _spv, size_t _numU32);
+		// 获取信息
+		uint16_t getDescriptorSetCount() {
+			return (uint16_t)m_vecSetID.size();
+		}
+
+		typedef bool(*PFN_ON_GET_STAGE_ATTRIBUTE)(uint16_t _location, const char* _name, uint16_t _type, void* _userData);
+		typedef bool(*PFN_ON_GET_STAGE_ATTRIBUTE)(uint16_t _location, const char* _name, uint16_t _type, void* _userData);
+		//
+		typedef bool(*PFN_ON_GET_DESCRIPTOR_SET)(uint16_t _setID, void* _userData );
+		typedef bool(*PFN_ON_GET_DESCRIPTOR_BINDING)(uint16_t _binding, const char * _name, ShaderDescriptorType _type, void* _userData);
+		//
+		typedef bool(*PFN_ON_GET_UNIFORM_BLOCK)(uint16_t _setID, uint16_t _binding, const char * _name, uint16_t _size, void* _userData);
+		typedef bool(*PFN_ON_GET_UNIFORM_BLOCK_LAYOUT)(uint16_t _setID, uint16_t _binding, const char* _name, uint16_t _offset, uint16_t _size, void* _userData);
+
+		uint16_t getDescriptorSets(PFN_ON_GET_DESCRIPTOR_SET _callback, void* _userData) const {
+			uint16_t c = 0;
+			for (auto setID : m_vecSetID) {
+				if (!_callback(setID, _userData)) {
+					return c;
+				}
+				++c;
+			}
+			return c;
+		}
+		void getBindings( uint16_t _setID, PFN_ON_GET_DESCRIPTOR_BINDING _callback, void* _userData) {
+			auto it = m_bindingMap.find(_setID);
+			if (it == m_bindingMap.end()) {
+				return;
+			}
+			for (auto& binding : it->second) {
+				_callback(binding.first, binding.second.name.c_str(), binding.second.type, _userData);
+			}
+		}
+		//
+		uint16_t getUniformBlockCount() {
+			return (uint16_t)m_vecUBO.size();
+		}
+		void getUniformBlocks( PFN_ON_GET_UNIFORM_BLOCK _callback, void* _userData) {
+			for (auto& ubo : m_vecUBO) {
+				_callback(ubo.set, ubo.binding, ubo.name.c_str(), ubo.size, _userData);
+			}
+		}
+		bool getUniformBlockLayout(uint16_t _set, uint16_t _binding, PFN_ON_GET_UNIFORM_BLOCK_LAYOUT _cb, void* _userData) {
+			DescriptorKey key(_set, _binding);
+			auto it = m_UBOMemberInfo.find(key.operator uint32_t());
+			if (it == m_UBOMemberInfo.end()) {
+				return false;
+			}
+			for (auto& member : it->second) {
+				_cb(_set, _binding, member.name.c_str(), member.offset, member.size, _userData);
+			}
+			return true;
+		}
+		void getPushConstants(  );
 	};
 }
 

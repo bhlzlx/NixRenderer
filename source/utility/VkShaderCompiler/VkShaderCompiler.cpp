@@ -184,8 +184,17 @@ namespace Nix {
 		return true;
 	}
 
+	bool VkShaderCompiler::getCompiledSpv(const uint32_t*& _spv, size_t& _numU32) const {
+		if (!m_compiledSPV.size()) {
+			return false;
+		}
+		_spv = m_compiledSPV.data();
+		_numU32 = m_compiledSPV.size();
+		return true;
+	}
+
 	//>! 
-	bool VkShaderCompiler::parseSPV(Nix::ShaderModuleType _type, uint32_t * _spv, size_t _numU32) {
+	bool VkShaderCompiler::parseSpvLayout(Nix::ShaderModuleType _type, uint32_t * _spv, size_t _numU32) {
 		spirv_cross::Compiler spvCompiler(_spv, _numU32);
 		spirv_cross::ShaderResources spvResource = spvCompiler.get_shader_resources();
 		// get vertex binding information
