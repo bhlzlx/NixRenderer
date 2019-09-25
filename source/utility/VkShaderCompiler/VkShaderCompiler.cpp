@@ -3,6 +3,7 @@
 #include <SPIRV/GlslangToSpv.h>
 #include <StandAlone/DirStackFileIncluder.h>
 #include <SPIRV-Cross/spirv_cross.hpp>
+#include <SPIRV-Cross/spirv_parser.hpp>
 #include <algorithm>
 #include <utility>
 
@@ -41,7 +42,7 @@ namespace Nix {
 		void addDescriptorRecord(uint16_t _id, uint16_t _binding);
 		void clearResourceInfo();
 	public:
-		VkShaderCompiler() {
+		VkShaderCompiler() : Compiler(nullptr,0) {
 			assert(!Instance);
 			m_numRef = 0;
 			Instance = this;
@@ -64,7 +65,7 @@ namespace Nix {
 		void finalizeEnvironment();
 		// 将 GLSL 编译成 SPV
 		bool compile(Nix::ShaderModuleType _type, const char* _text);
-		bool getCompiledSpv(const uint32_t*& _spv, size_t& _numU32) const;
+		bool getCompiledSpv(const uint32_t** _spv, size_t* _numU32) const;
 		// 解析SPV
 		bool parseSpvLayout(Nix::ShaderModuleType _type, const uint32_t* _spv, size_t _numU32);
 		// 获取信息
@@ -149,6 +150,47 @@ namespace Nix {
 				*_counter = m_atomicCounter.data();
 			}
 			return m_atomicCounter.size();
+		}
+
+		Nix::VertexType getVertexType(const spirv_cross::SPIRType& _type) {
+			switch (_type.basetype) {
+			case spirv_cross::SPIRType::BaseType::Float: {
+				Nix::VertexType types[] = {
+					Nix::VertexType::VertexTypeFloat,
+					Nix::VertexType::VertexTypeFloat,
+					Nix::VertexType::VertexTypeFloat2,
+					Nix::VertexType::VertexTypeFloat3,
+				};
+				return types[_type.vecsize];
+			}
+			case spirv_cross::SPIRType::BaseType::Int: {
+				Nix::VertexType types[] = {
+					Nix::VertexType::VertexTypeUint,
+					Nix::VertexType::VertexTypeUint2,
+					Nix::VertexType::VertexTypeUint3,
+					Nix::VertexType::VertexTypeUint4,
+				};
+				return types[_type.vecsize];
+			}
+			case spirv_cross::SPIRType::BaseType::UInt: {
+				Nix::VertexType types[] = {
+					Nix::VertexType::VertexTypeUint,
+					Nix::VertexType::VertexTypeUint2,
+					Nix::VertexType::VertexTypeUint3,
+					Nix::VertexType::VertexTypeUint4,
+				};
+				return types[_type.vecsize];
+			}
+			case spirv_cross::SPIRType::BaseType::UByte: {
+				Nix::VertexType types[] = {
+					Nix::VertexType::VertexTypeUByte4,
+				};
+				return types[_type.vecsize];
+			}
+			case spirv_cross::SPIRType::BaseType::Boolean: {
+			}
+			}
+			return VertexTypeInvalid;
 		}
 	};
 	//
@@ -359,42 +401,52 @@ namespace Nix {
 		return true;
 	}
 
-	bool VkShaderCompiler::getCompiledSpv(const uint32_t*& _spv, size_t& _numU32) const {
+	bool VkShaderCompiler::getCompiledSpv(const uint32_t** _spv, size_t* _numU32) const {
 		if (!m_compiledSPV.size()) {
 			return false;
 		}
-		_spv = m_compiledSPV.data();
-		_numU32 = m_compiledSPV.size();
+		*_spv = m_compiledSPV.data();
+		*_numU32 = m_compiledSPV.size();
 		return true;
 	}
 
 	//>! 
 	bool VkShaderCompiler::parseSpvLayout(Nix::ShaderModuleType _type, const uint32_t * _spv, size_t _numU32) {
-		spirv_cross::Compiler spvCompiler(_spv, _numU32);
-		spirv_cross::ShaderResources spvResource = spvCompiler.get_shader_resources();
+		//spirv_cross::Compiler spvCompiler(_spv, _numU32);
+		spirv_cross::Parser parser(_spv, _numU32);
+		parser.parse();
+		set_ir(std::move(parser.get_parsed_ir()));
+		//
+		spirv_cross::ShaderResources spvResource = get_shader_resources();
 		// get vertex binding information
 		m_vecStageInput.clear();
 		for (auto& stageInput : spvResource.stage_inputs) {
-			auto location = spvCompiler.get_decoration(stageInput.id, spv::Decoration::DecorationLocation);
+			auto location = get_decoration(stageInput.id, spv::Decoration::DecorationLocation);
 			StageIOAttribute attr; 
 			attr.location = location;
 			attr.name = stageInput.name;
+			//
+			auto& type = get<spirv_cross::SPIRType>(stageInput.base_type_id);
+			attr.type = getVertexType(type);
 			m_vecStageInput.push_back(attr);
 		}
 		m_vecStageOutput.clear();
 		for (auto& stageOutput : spvResource.stage_outputs) {
-			auto location = spvCompiler.get_decoration(stageOutput.id, spv::Decoration::DecorationLocation);
+			auto location = get_decoration(stageOutput.id, spv::Decoration::DecorationLocation);
 			StageIOAttribute attr;
 			attr.location = location;
 			attr.name = stageOutput.name;
-			spirv_cross::SPIRType& spirType = spvCompiler.get<spirv_cross::SPIRType>(stageOutput.id);
-			auto& type = get<SPIRType>(var.basetype);
+			auto& type = get<spirv_cross::SPIRType>(stageOutput.base_type_id);
+			attr.type = getVertexType(type);
 			m_vecStageOutput.push_back(attr);
 		}
 		//
+		m_pushConstants.offset = 0;
+		m_pushConstants.size = 0;
+		//
 		if (spvResource.push_constant_buffers.size()) {
 			auto& constants = spvResource.push_constant_buffers[0];
-			auto ranges = spvCompiler.get_active_buffer_ranges(constants.id);
+			auto ranges = get_active_buffer_ranges(constants.id);
 			m_pushConstants.offset = ranges[0].offset;
 			m_pushConstants.size = (ranges.back().offset - m_pushConstants.offset) + ranges.back().range;
 			m_pushConstants.offset = m_pushConstants.offset;
@@ -402,20 +454,20 @@ namespace Nix {
 		//
 		for (auto& pass : spvResource.subpass_inputs) {
 			SubpassInput input;
-			input.set = spvCompiler.get_decoration(pass.id, spv::Decoration::DecorationDescriptorSet);
-			input.binding = spvCompiler.get_decoration(pass.id, spv::Decoration::DecorationBinding);
-			input.inputIndex = spvCompiler.get_decoration(pass.id, spv::Decoration::DecorationIndex);
+			input.set = get_decoration(pass.id, spv::Decoration::DecorationDescriptorSet);
+			input.binding = get_decoration(pass.id, spv::Decoration::DecorationBinding);
+			input.inputIndex = get_decoration(pass.id, spv::Decoration::DecorationIndex);
 			m_inputAttachment.push_back(input);
 			addDescriptorRecord(input.set, input.binding);
 		}
 		//
 		for (auto& uniformBlock : spvResource.uniform_buffers) {
 			UniformBlock block;
-			block.set = spvCompiler.get_decoration(uniformBlock.id, spv::Decoration::DecorationDescriptorSet);
-			block.binding = spvCompiler.get_decoration(uniformBlock.id, spv::Decoration::DecorationBinding);
+			block.set = get_decoration(uniformBlock.id, spv::Decoration::DecorationDescriptorSet);
+			block.binding = get_decoration(uniformBlock.id, spv::Decoration::DecorationBinding);
 			block.name = uniformBlock.name;
-			auto uniformType = spvCompiler.get_type_from_variable(uniformBlock.id);
-			block.size = spvCompiler.get_declared_struct_size(uniformType);
+			auto uniformType = get_type_from_variable(uniformBlock.id);
+			block.size = get_declared_struct_size(uniformType);
 			m_vecUBO.push_back(block);
 			addDescriptorRecord(block.set, block.binding);
 			//
@@ -423,13 +475,13 @@ namespace Nix {
 			auto& layoutRecord = m_UBOMemberInfo[key.val];
 			uint32_t memberIndex = 0;
 			while (true) {
-				std::string name = spvCompiler.get_member_name(uniformBlock.base_type_id, memberIndex);
+				std::string name = get_member_name(uniformBlock.base_type_id, memberIndex);
 				if (!name.length()) {
 					break;
 				}
 				UniformBlock::Member member;
 				member.name = name;
-				member.offset = spvCompiler.get_member_decoration(uniformBlock.base_type_id, memberIndex, spv::Decoration::DecorationOffset);
+				member.offset = get_member_decoration(uniformBlock.base_type_id, memberIndex, spv::Decoration::DecorationOffset);
 				//
 				layoutRecord.push_back(member);
 				++memberIndex;
@@ -452,8 +504,8 @@ namespace Nix {
 		//>!!!!
 		for (auto& sampler : spvResource.sampled_images) {
 			CombinedImageSampler image;
-			image.binding = spvCompiler.get_decoration(sampler.id, spv::Decoration::DecorationBinding);
-			image.set = spvCompiler.get_decoration(sampler.id, spv::Decoration::DecorationDescriptorSet);
+			image.binding = get_decoration(sampler.id, spv::Decoration::DecorationBinding);
+			image.set = get_decoration(sampler.id, spv::Decoration::DecorationDescriptorSet);
 			image.name = sampler.name;
 			m_vecSamplers.push_back(image);
 			addDescriptorRecord(image.set, image.binding);
@@ -462,11 +514,11 @@ namespace Nix {
 		m_vecSSBO.clear();
 		for (auto& item : spvResource.storage_buffers) {
 			ShaderStorageBufferObject ssbo;
-			ssbo.binding = spvCompiler.get_decoration(item.id, spv::Decoration::DecorationBinding);
-			ssbo.set = spvCompiler.get_decoration(item.id, spv::Decoration::DecorationDescriptorSet);
+			ssbo.binding = get_decoration(item.id, spv::Decoration::DecorationBinding);
+			ssbo.set = get_decoration(item.id, spv::Decoration::DecorationDescriptorSet);
 			ssbo.name = item.name;
-			auto uniformType = spvCompiler.get_type_from_variable(item.id);
-			ssbo.size = spvCompiler.get_declared_struct_size(uniformType);
+			auto uniformType = get_type_from_variable(item.id);
+			ssbo.size = get_declared_struct_size(uniformType);
 			m_vecSSBO.push_back(ssbo);
 			addDescriptorRecord(ssbo.set, ssbo.binding);
 		}
@@ -474,8 +526,8 @@ namespace Nix {
 		m_vecTBO.clear();
 		for (auto& item : spvResource.storage_images) {
 			TexelBufferObject tbo;
-			tbo.binding = spvCompiler.get_decoration(item.id, spv::Decoration::DecorationBinding);
-			tbo.set = spvCompiler.get_decoration(item.id, spv::Decoration::DecorationDescriptorSet);
+			tbo.binding = get_decoration(item.id, spv::Decoration::DecorationBinding);
+			tbo.set = get_decoration(item.id, spv::Decoration::DecorationDescriptorSet);
 			tbo.name = item.name;
 			m_vecTBO.push_back(tbo);
 			addDescriptorRecord(tbo.set, tbo.binding);
@@ -483,8 +535,8 @@ namespace Nix {
 		m_atomicCounter.clear();
 		for (auto& item : spvResource.atomic_counters) {
 			AtomicCounter counter;
-			counter.binding = spvCompiler.get_decoration(item.id, spv::Decoration::DecorationBinding);
-			counter.set = spvCompiler.get_decoration(item.id, spv::Decoration::DecorationDescriptorSet);
+			counter.binding = get_decoration(item.id, spv::Decoration::DecorationBinding);
+			counter.set = get_decoration(item.id, spv::Decoration::DecorationDescriptorSet);
 			counter.name = item.name;
 			m_atomicCounter.push_back(counter);
 			addDescriptorRecord(counter.set, counter.binding);

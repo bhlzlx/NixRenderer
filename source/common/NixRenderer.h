@@ -263,15 +263,21 @@ namespace Nix {
     };
 
 	enum VertexType :uint8_t {
-		VertexTypeFloat1,
+		VertexTypeFloat,
 		VertexTypeFloat2,
 		VertexTypeFloat3,
 		VertexTypeFloat4,
 		VertexTypeUint,
+		VertexTypeUint2,
+		VertexTypeUint3,
+		VertexTypeUint4,
+		VertexTypeHalf,
 		VertexTypeHalf2,
+		VertexTypeHalf3,
 		VertexTypeHalf4,
 		VertexTypeUByte4,
 		VertexTypeUByte4N,
+		VertexTypeInvalid
 	};
 
 	enum TextureType :uint8_t {
@@ -353,7 +359,7 @@ namespace Nix {
         VertexAttribueDescription() : 
             bufferIndex(0),
             offset(0),
-            type(VertexTypeFloat1){
+            type(VertexTypeFloat){
             }
 		NIX_JSON( name, bufferIndex, offset, type )
     };

@@ -59,7 +59,6 @@ namespace Nix {
 		MaterialDescription materialDesc = _desc;
 		//
 		VkDevice device = _context->getDevice();
-		std::map<>
 		// 1. verify the vertex input layout
 		// 2. verify the descriptor set description
 		// 3. get the push constants information

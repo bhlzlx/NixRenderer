@@ -286,7 +286,7 @@ namespace Nix {
 	{
 		switch (_type)
 		{
-		case VertexTypeFloat1: return VK_FORMAT_R32_SFLOAT;
+		case VertexTypeFloat: return VK_FORMAT_R32_SFLOAT;
 		case VertexTypeFloat2: return VK_FORMAT_R32G32_SFLOAT;
 		case VertexTypeFloat3: return VK_FORMAT_R32G32B32_SFLOAT;
 		case VertexTypeFloat4: return VK_FORMAT_R32G32B32A32_SFLOAT;

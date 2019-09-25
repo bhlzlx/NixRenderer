@@ -2,12 +2,98 @@
 #include "VkInc.h"
 #include <NixRenderer.h>
 #include <array>
+#include <vector>
+#include <VkShaderCompiler/VkShaderCompiler.h>
 
 namespace Nix {
 	//
 	class ContextVk;
 	class RenderableVk;
 	class ArgumentVk;
+
+	struct Binding {
+		ShaderDescriptorType	type = SDT_UniformBlock;
+		std::string				name;
+	};
+
+	struct StageIOAttribute {
+		uint16_t location;
+		VertexType type;
+		std::string  name;
+	};
+
+	struct SubpassInput {
+		uint16_t set;
+		uint16_t binding;
+		uint16_t inputIndex;
+	};
+
+	struct PushConstants {
+		uint16_t offset;
+		uint16_t size;
+	};
+
+	struct UniformBlock {
+		struct Member {
+			uint16_t offset;
+			uint16_t size;
+			std::string name;
+		};
+		uint16_t set;
+		uint16_t binding;
+		uint16_t size;
+		std::string name;
+	};
+
+	struct ShaderStorageBufferObject {
+		uint16_t set;
+		uint16_t binding;
+		std::string name;
+		size_t size;
+	};
+
+	struct TexelBufferObject {
+		uint16_t set;
+		uint16_t binding;
+		std::string name;
+	};
+
+	struct AtomicCounter {
+		uint16_t set;
+		uint16_t binding;
+		std::string name;
+	};
+
+	struct CombinedImageSampler {
+		uint16_t set;
+		uint16_t binding;
+		std::string name;
+	};
+
+	class ArgumentLayoutExt {
+		using ArgumentUniformLayouts = std::map<uint32_t, std::vector<UniformBlock>>;
+	private:
+		uint32_t									m_setID;
+		VkDescriptorSet								m_vkSet;
+		//
+		std::vector<SubpassInput>					m_vecSubpassInput;
+		std::vector<UniformBlock>					m_vecUniformBlock;
+		std::vector<ShaderStorageBufferObject>		m_vecSSBO;
+		std::vector<TexelBufferObject>				m_vecTBO;
+		std::vector<AtomicCounter>					m_vecAtomic;
+		std::vector<CombinedImageSampler>			m_vecSampler;
+		//
+		ArgumentUniformLayouts						m_uniformLayouts;
+	public:
+		const UniformBlock* getUniform(const std::string& _name) const;
+		const UniformBlock::Member* getUniformMember(uint32_t _binding, const std::string& _name) const;
+		const CombinedImageSampler* getSampler(const std::string& _name) const;
+		const ShaderStorageBufferObject* getSSBO(const std::string& _name) const;
+		const TexelBufferObject* getTBO(const std::string& _name) const;
+		const SubpassInput* getSubpassInput(const std::string& _name) const;
+		void updateDynamicalBindings();
+	};
+
 	//
 	struct ArgumentLayout {
 		struct UniformMember {
@@ -23,8 +109,6 @@ namespace Nix {
 		std::vector<ShaderDescriptor>	m_storageBufferDescriptor;
 		std::vector<ShaderDescriptor>	m_texelBufferDescriptor;
 		std::vector< uint32_t >			m_dynamicalBindings;
-
-
 		std::vector<UniformMember>		m_uniformMembers;
 		///////
 		const ShaderDescriptor* getUniformBlock(const std::string& _name);

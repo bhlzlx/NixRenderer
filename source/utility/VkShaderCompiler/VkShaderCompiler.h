@@ -79,7 +79,7 @@ namespace Nix {
 		virtual void finalizeEnvironment() = 0;
 		// 将 GLSL 编译成 SPV
 		virtual bool compile(Nix::ShaderModuleType _type, const char* _text) = 0;
-		virtual bool getCompiledSpv(const uint32_t*& _spv, size_t& _numU32) const = 0;
+		virtual bool getCompiledSpv(const uint32_t** _spv, size_t* _numU32) const = 0;
 		// 解析SPV
 		virtual bool parseSpvLayout(Nix::ShaderModuleType _type, const uint32_t* _spv, size_t _numU32) = 0;
 		//
@@ -102,5 +102,6 @@ namespace Nix {
 }
 
 extern "C" {
+	typedef Nix::IShaderCompiler*(*PFN_GETSHADERCOMPILER)();
 	NIX_API_DECL Nix::IShaderCompiler* GetVkShaderCompiler();
 }

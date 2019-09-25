@@ -56,9 +56,8 @@ namespace Nix {
 		SimplerLogger						m_logger;
 		//
 		void*								m_compilerLibrary;
-		PFN_INITIALIZE_SHADER_COMPILER		m_initializeShaderCompiler;
-		PFN_FINALIZE_SHADER_COMPILER		m_finalizeShaderCompiler;
-		PFN_COMPILE_GLSL_2_SPV				m_compileGLSL2SPV;
+		PFN_GETSHADERCOMPILER				m_getShaderCompiler;
+		IShaderCompiler*					m_shaderCompiler;
 	public:
 		DriverVk() :
 			m_instance(VK_NULL_HANDLE)
@@ -91,6 +90,6 @@ namespace Nix {
 		bool validatePipelineCache(const void * _data, size_t _length);
 		inline VkInstance getInstance() { return m_instance; }
 		inline const VkPhysicalDeviceProperties& getPhysicalDeviceProperties() { return m_deviceProps; }
-		bool compileGLSL2SPV(ShaderModuleType _type, const char * _text, const uint32_t** _spvBytes, size_t* _length, const char** _compileLog);
+		IShaderCompiler* getShaderCompiler();
 	};
 }

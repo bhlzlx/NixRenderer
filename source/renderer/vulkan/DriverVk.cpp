@@ -110,21 +110,16 @@ namespace Nix {
 		vkGetPhysicalDeviceProperties(m_PhDevice, &m_deviceProps);
 //////////////////////////////////////////////////////////////////////////
 		m_compilerLibrary = (void*)OpenLibrary(SHADER_COMPILER_LIBRARY_NAME);
-		if (m_compilerLibrary == NULL) return false;
-		m_initializeShaderCompiler = (PFN_INITIALIZE_SHADER_COMPILER)GetExportAddress(m_compilerLibrary, "InitializeShaderCompiler");
-		m_compileGLSL2SPV = (PFN_COMPILE_GLSL_2_SPV)GetExportAddress(m_compilerLibrary, "CompileGLSL2SPV");
-		m_finalizeShaderCompiler = (PFN_FINALIZE_SHADER_COMPILER)GetExportAddress(m_compilerLibrary, "FinalizeShaderCompiler");
-
-		if (m_initializeShaderCompiler && m_compileGLSL2SPV && m_finalizeShaderCompiler) {
-			m_initializeShaderCompiler();
-		}
+		if (m_compilerLibrary == NULL)
+			return false;
+		m_getShaderCompiler = reinterpret_cast<PFN_GETSHADERCOMPILER>(GetExportAddress(m_compilerLibrary, "GetVkShaderCompiler"));		
+		m_shaderCompiler = m_getShaderCompiler();
 
 		return true;
 	}
 
 	void DriverVk::release() {
-		if( m_finalizeShaderCompiler )
-			m_finalizeShaderCompiler();
+		m_shaderCompiler->release();
 		if (m_compilerLibrary) {
 			CloseLibrary(m_compilerLibrary);
 			m_compilerLibrary = nullptr;
@@ -481,15 +476,9 @@ namespace Nix {
 		return true;
 	}
 
-	bool DriverVk::compileGLSL2SPV(ShaderModuleType _type, const char * _text, const uint32_t ** _spvBytes, size_t* _length, const char** _compileLog)
-	{
-		if (m_compileGLSL2SPV) {
-			return m_compileGLSL2SPV(_type, _text, _spvBytes, _length, _compileLog);
-		}
-		*_compileLog = "GLSL compiler component not found!";
-		return false;
+	IShaderCompiler* DriverVk::getShaderCompiler() {
+		return m_shaderCompiler;
 	}
-
 }
 
 extern "C" {
