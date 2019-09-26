@@ -1,4 +1,5 @@
-﻿#include <NixRenderer.h>
+﻿#pragma once
+#include <NixRenderer.h>
 #include <vector>
 #include <mutex>
 #include <map>
@@ -12,22 +13,24 @@ namespace Nix {
 	// 1.生成SPV
 	// 2.获取SPV信息
 	typedef IntegerComposer<uint32_t, uint16_t> DescriptorKey;
+	const uint32_t MaxDescriptorNameLength = 64;
 
-	struct Binding {
-		ShaderDescriptorType	type = SDT_UniformBlock;
+	/*struct Binding {
+		ShaderDescriptorType	type = SDT_UniformBuffer;
 		std::string				name;
-	};
+	};*/
 
 	struct StageIOAttribute {
 		uint16_t location;
 		VertexType type;
-		std::string  name;
+		char name[MaxDescriptorNameLength];
 	};
 
 	struct SubpassInput {
 		uint16_t set;
 		uint16_t binding;
 		uint16_t inputIndex;
+		char name[MaxDescriptorNameLength];
 	};
 
 	struct PushConstants {
@@ -39,37 +42,37 @@ namespace Nix {
 		struct Member {
 			uint16_t offset;
 			uint16_t size;
-			std::string name;
+			char name[MaxDescriptorNameLength];
 		};
 		uint16_t set;
 		uint16_t binding;
 		uint16_t size;
-		std::string name;
+		char name[MaxDescriptorNameLength];
 	};
 
 	struct ShaderStorageBufferObject {
 		uint16_t set;
 		uint16_t binding;
-		std::string name;
+		char name[MaxDescriptorNameLength];
 		size_t size;
 	};
 
 	struct TexelBufferObject {
 		uint16_t set;
 		uint16_t binding;
-		std::string name;
+		char name[MaxDescriptorNameLength];
 	};
 
-	struct AtomicCounter {
-		uint16_t set;
-		uint16_t binding;
-		std::string name;
-	};
+	//struct AtomicCounter {
+	//	uint16_t set;
+	//	uint16_t binding;
+	//	char name[MaxDescriptorNameLength];
+	//};
 
 	struct CombinedImageSampler {
 		uint16_t set;
 		uint16_t binding;
-		std::string name;
+		char name[MaxDescriptorNameLength];
 	};
 
 	class NIX_API_DECL IShaderCompiler {
@@ -93,7 +96,7 @@ namespace Nix {
 		virtual uint16_t getShaderStorageBuffers(const ShaderStorageBufferObject** _ssbo) = 0;
 		virtual uint16_t getSamplers(const CombinedImageSampler** _samplers) = 0;
 		virtual uint16_t getTexelBuffer(const TexelBufferObject** _tbo) = 0;
-		virtual uint16_t getAtomicCounter(const AtomicCounter** _counter) = 0;
+		//virtual uint16_t getAtomicCounter(const AtomicCounter** _counter) = 0;
 		virtual void getPushConstants(uint16_t* _offset, uint16_t* _size) = 0;
 		//
 		virtual void retain() = 0;

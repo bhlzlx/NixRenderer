@@ -58,146 +58,118 @@ namespace Nix {
 	{
 		MaterialDescription materialDesc = _desc;
 		//
+		VkShaderModule shaderModules[ShaderModuleType::ShaderTypeCount] = {};
+		std::vector< VkPushConstantRange > constantRanges;
+		uint32_t constantsStageFlags = 0;
+		std::array<ArgumentLayoutExt, MaxArgumentCount> argumentLayouts;
+		//
 		VkDevice device = _context->getDevice();
 		// 1. verify the vertex input layout
 		// 2. verify the descriptor set description
 		// 3. get the push constants information
-
-		//\ 1 - vertex layout validation
-		if (materialDesc.vertexLayout.attributeCount != vertexResource.stage_inputs.size()) {
-			_context->getDriver()->getLogger()->error("vertex attribute count mismatch! ");			return nullptr;
-		}
-		for (auto& vertexInput : vertexResource.stage_inputs) {
-			auto location = vertCompiler.get_decoration(vertexInput.id, spv::Decoration::DecorationLocation);
-			if (materialDesc.vertexLayout.attributes[location].name != vertexInput.name) {
-				assert("name does not match!" && false);
-				return nullptr;
-			}
-		}
-		//\ 2 - descriptor set validation
-
-		spirv_cross::Compiler* compiler = nullptr;
-		spirv_cross::ShaderResources* shaderResource = nullptr;
-
-		std::array<ArgumentLayout, MaxArgumentCount> argumentLayouts;
-
-		for (uint32_t argumentIndex = 0; argumentIndex < materialDesc.argumentCount; ++argumentIndex) {
-			auto& argument = materialDesc.argumentLayouts[argumentIndex];
-			for (uint32_t descriptorIndex = 0; descriptorIndex < argument.descriptorCount; ++descriptorIndex) {
-				auto& descinfo = argument.descriptors[descriptorIndex];
-
-				if (descinfo.shaderStage == VertexShader) {
-					compiler = &vertCompiler; shaderResource = &vertexResource;
-				}
-				else if (descinfo.shaderStage == FragmentShader) {
-					compiler = &fragCompiler; shaderResource = &fragmentResource;
-				}
-				spirv_cross::Resource resItem;
-				if (!ValidationShaderDescriptor(descinfo, argument.index, *compiler, *shaderResource, _context, resItem))
-				{
-					_context->getDriver()->getLogger()->error("shader descriptor set mismatch! ");
-					_context->getDriver()->getLogger()->error("name : ");
-					_context->getDriver()->getLogger()->error(descinfo.name);
-					_context->getDriver()->getLogger()->error("\n");
-					return nullptr;
-				}
-				// collect uniform block member information
-				if (descinfo.type == SDT_UniformBlock) {
-					uint32_t memberIndex = 0;
-					while (true) {
-						std::string name = compiler->get_member_name(resItem.base_type_id, memberIndex);
-						if (!name.length()) {
-							break;
-						}
-						ArgumentLayout::UniformMember member;
-						member.name = name;
-						member.offset = compiler->get_member_decoration(resItem.base_type_id, memberIndex, spv::Decoration::DecorationOffset);
-						member.binding = descinfo.binding;
-						argumentLayouts[argumentIndex].m_uniformMembers.push_back(member);
-						++memberIndex;
+		DriverVk* driver = (DriverVk*)_context->getDriver();
+		auto compiler = driver->getShaderCompiler();
+		for (const auto& shader : materialDesc.shaders) {
+			if (shader.content) {
+				shaderModules[shader.type] = CreateShaderModule(_context, shader.content, shader.type);
+				// 这个switch其实是处理一些需要特殊验证
+				switch (shader.type) {
+				case ShaderModuleType::VertexShader: {
+					// validate the vertex layout
+					const StageIOAttribute* vertexInputs = nullptr;
+					uint16_t vertexAttrCount = compiler->getStageInput(&vertexInputs);
+					if (vertexAttrCount != _desc.vertexLayout.attributeCount) {
+						assert(false && "layout does not match!");
+						return nullptr;
 					}
-				}
-
-				switch (descinfo.type) {
-				case SDT_Sampler:
-					argumentLayouts[argumentIndex].m_samplerImageDescriptor.push_back(descinfo); break;
-				case SDT_UniformBlock:
-					argumentLayouts[argumentIndex].m_uniformBlockDescriptor.push_back(descinfo); break;
-				case SDT_SSBO:
-					argumentLayouts[argumentIndex].m_storageBufferDescriptor.push_back(descinfo); break;
-				case SDT_TBO:
-					argumentLayouts[argumentIndex].m_texelBufferDescriptor.push_back(descinfo); break;
-				}
-
-				if (descinfo.type == SDT_UniformBlock) {
-					uint32_t i = 0;
-					while (true) {
-						const auto & name = compiler->get_member_name(resItem.type_id, i);
-						if (name.empty()) {
-							break;
+					for (uint32_t attrIndex = 0; attrIndex < materialDesc.vertexLayout.attributeCount; ++attrIndex) {
+						//
+						auto& descAttr = materialDesc.vertexLayout.attributes[attrIndex];
+						auto& compilerAttr = vertexInputs[attrIndex];
+						assert(compilerAttr.location == attrIndex);
+						if (strcmp(compilerAttr.name, descAttr.name) != 0) {
+							assert(false && "name does not match!");
+							return nullptr;
 						}
-						else 
-						{
-							auto offset = compiler->get_member_decoration(resItem.type_id, i, spv::Decoration::DecorationOffset);
-							argumentLayouts[argumentIndex].m_uniformMembers.push_back({
-								name, descinfo.binding, offset
-							});
+						if ( compilerAttr.type != descAttr.type ) {
+							assert(false && "vertex type does not match!");
+							return nullptr;
 						}
 					}
 				}
+				case ShaderModuleType::FragmentShader: {
+				}
+				case ShaderModuleType::ComputeShader: {
+				}
+				case ShaderModuleType::TessellationShader: {
+				}
+				case ShaderModuleType::GeometryShader: {
+				}
+				default: {
+				}
+				}
+				// 处理 descriptor
+				const UniformBlock* uniforms;
+				uint16_t numUnif = compiler->getUniformBlocks(&uniforms);
+				for (uint16_t i = 0; i < numUnif; ++i) {
+					const UniformBlock& unif = uniforms[i];
+					auto& argument = argumentLayouts[unif.set];
+					argument.m_vecUniformBlock.push_back(unif);
+				}
+				const CombinedImageSampler* samplers;
+				uint16_t numSampler = compiler->getSamplers(&samplers);
+				for (uint16_t i = 0; i < numSampler; ++i) {
+					const CombinedImageSampler& sampler = samplers[i];
+					auto& argument = argumentLayouts[sampler.set];
+					argument.m_vecSampler.push_back(sampler);
+				}
+				const ShaderStorageBufferObject* ssbos;
+				uint16_t numSsbo = compiler->getShaderStorageBuffers(&ssbos);
+				for (uint16_t i = 0; i < numSsbo; ++i) {
+					const ShaderStorageBufferObject& ssbo = ssbos[i];
+					auto& argument = argumentLayouts[ssbo.set];
+					argument.m_vecSSBO.push_back(ssbo);
+				}
+				const TexelBufferObject* tbos;
+				uint16_t numTbo = compiler->getTexelBuffer(&tbos);
+				for (uint16_t i = 0; i < numTbo; ++i) {
+					const TexelBufferObject& tbo = tbos[i];
+					auto& argument = argumentLayouts[tbo.set];
+					argument.m_vecTBO.push_back(tbo);
+				}
+				const SubpassInput* subpassInputs;
+				uint16_t numSubpass = compiler->getInputAttachment(&subpassInputs);
+				for (uint16_t i = 0; i < numSubpass; ++i) {
+					const SubpassInput& attachment = subpassInputs[i];
+					auto& argument = argumentLayouts[attachment.set];
+					argument.m_vecSubpassInput.push_back(attachment);
+				}
 			}
-		}
-
-		//\ 3 - push constants information
-		std::vector< VkPushConstantRange > constantRanges;
-
-		uint32_t constantsShaderFlags = 0;
-
-		if (vertexResource.push_constant_buffers.size()) {
-			auto& vc = vertexResource.push_constant_buffers[0];
-			auto ranges = vertCompiler.get_active_buffer_ranges(vc.id);
-			VkPushConstantRange range = {};
-			range.offset = ranges[0].offset;
-			range.size = (ranges.back().offset - range.offset) + ranges.back().range;
-			//range.offset = (uint32_t)ranges[0].offset;
-			//range.size = (uint32_t)ranges[0].range;
-			range.stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
-			constantRanges.push_back(range);
-
-			constantsShaderFlags = VK_SHADER_STAGE_VERTEX_BIT;
-		}
-
-		if (fragmentResource.push_constant_buffers.size()) {
-			auto& fc = fragmentResource.push_constant_buffers[0];
-			auto ranges = fragCompiler.get_active_buffer_ranges(fc.id);
-			VkPushConstantRange range = {};
-			range.offset = ranges[0].offset;
-			range.size = (ranges.back().offset - range.offset) + ranges.back().range;
-
-			range.stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
-			constantRanges.push_back(range);
-
-			constantsShaderFlags |= VK_SHADER_STAGE_FRAGMENT_BIT;
+			PushConstants pc;
+			compiler->getPushConstants(&pc.offset, &pc.size);
+			VkPushConstantRange vkpc;
+			vkpc.offset = pc.offset;
+			vkpc.size = pc.size;
+			VkShaderStageFlagBits shaderStages[] = {
+				VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
+				VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT,
+				VkShaderStageFlagBits::VK_SHADER_STAGE_GEOMETRY_BIT,
+				VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
+				VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT,
+			};
+			vkpc.stageFlags = shaderStages[shader.type];
+			constantsStageFlags |= vkpc.stageFlags;
+			constantRanges.push_back(vkpc);
 		}
 		//
-		VkDescriptorSetLayout layouts[MaxArgumentCount];
-		for (uint32_t layoutIndex = 0; layoutIndex < materialDesc.argumentCount; ++layoutIndex) {
+		VkDescriptorSetLayout setLayouts[MaxArgumentCount];
+		for (uint32_t setIndex = 0; setIndex < materialDesc.argumentCount; ++setIndex) {
 			std::vector<VkDescriptorSetLayoutBinding> bindings;
-			auto& argument = materialDesc.argumentLayouts[layoutIndex];
+			auto& argument = materialDesc.argumentLayouts[setIndex];
             for( uint32_t dscIndex = 0; dscIndex < argument.descriptorCount; ++dscIndex){
                 auto& descriptor = argument.descriptors[dscIndex];
-                if (descriptor.type == SDT_UniformBlock)
-				{
-					VkDescriptorSetLayoutBinding binding;
-					binding.binding = descriptor.binding;
-					binding.descriptorCount = 1;
-					binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-					binding.stageFlags = NixShaderStageToVk(descriptor.shaderStage);
-					binding.pImmutableSamplers = nullptr;
-					bindings.push_back(binding);
-				}
-				else if (descriptor.type == SDT_Sampler)
-				{
+				switch (descriptor.type) {
+				case SDT_Sampler: {
 					VkDescriptorSetLayoutBinding binding;
 					binding.binding = descriptor.binding;
 					binding.descriptorCount = 1;
@@ -205,9 +177,19 @@ namespace Nix {
 					binding.stageFlags = NixShaderStageToVk(descriptor.shaderStage);
 					binding.pImmutableSamplers = nullptr;
 					bindings.push_back(binding);
+					break;
 				}
-				else if (descriptor.type == SDT_SSBO)
-				{
+				case SDT_UniformBuffer: {
+					VkDescriptorSetLayoutBinding binding;
+					binding.binding = descriptor.binding;
+					binding.descriptorCount = 1;
+					binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+					binding.stageFlags = NixShaderStageToVk(descriptor.shaderStage);
+					binding.pImmutableSamplers = nullptr;
+					bindings.push_back(binding);
+					break;
+				}
+				case SDT_StorageBuffer: {
 					VkDescriptorSetLayoutBinding binding;
 					binding.binding = descriptor.binding;
 					binding.descriptorCount = 1;
@@ -215,9 +197,39 @@ namespace Nix {
 					binding.stageFlags = NixShaderStageToVk(descriptor.shaderStage);
 					binding.pImmutableSamplers = nullptr;
 					bindings.push_back(binding);
+					break;
+				}
+				case SDT_UniformTexelBuffer: {
+					VkDescriptorSetLayoutBinding binding;
+					binding.binding = descriptor.binding;
+					binding.descriptorCount = 1;
+					binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+					binding.stageFlags = NixShaderStageToVk(descriptor.shaderStage);
+					binding.pImmutableSamplers = nullptr;
+					bindings.push_back(binding);
+					break;
+				}
+				case SDT_StorageTexelBuffer: {
+					VkDescriptorSetLayoutBinding binding;
+					binding.binding = descriptor.binding;
+					binding.descriptorCount = 1;
+					binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+					binding.stageFlags = NixShaderStageToVk(descriptor.shaderStage);
+					binding.pImmutableSamplers = nullptr;
+					bindings.push_back(binding);
+					break;
+				}
+				case SDT_Attachment: {
+					VkDescriptorSetLayoutBinding binding;
+					binding.binding = descriptor.binding;
+					binding.descriptorCount = 1;
+					binding.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+					binding.stageFlags = NixShaderStageToVk(descriptor.shaderStage);
+					binding.pImmutableSamplers = nullptr;
+					bindings.push_back(binding);
+				}
 				}
             }
-
 			VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {}; {
 				layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 				layoutCreateInfo.pNext = nullptr;
@@ -225,17 +237,18 @@ namespace Nix {
 				layoutCreateInfo.bindingCount = (uint32_t)bindings.size();
 				layoutCreateInfo.pBindings = bindings.data();
 			}
-			vkCreateDescriptorSetLayout(device, &layoutCreateInfo, nullptr, &layouts[layoutIndex]);
-			argumentLayouts[layoutIndex].m_descriptorSetIndex = layoutIndex;
-			argumentLayouts[layoutIndex].m_descriptorSetLayout = layouts[layoutIndex];
-			argumentLayouts[layoutIndex].updateDynamicalBindings();
+			vkCreateDescriptorSetLayout(device, &layoutCreateInfo, nullptr, &setLayouts[setIndex]);
+			argumentLayouts[setIndex].m_setLayout = setLayouts[setIndex];
+			argumentLayouts[setIndex].m_setID = setIndex;
+			//
+			argumentLayouts[setIndex].completeSetup();
 		}
 		// create pipeline layout
 		VkPipelineLayoutCreateInfo info; {
 			info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 			info.pNext = nullptr;
 			info.flags = 0;
-			info.pSetLayouts = layouts;
+			info.pSetLayouts = setLayouts;
 			info.setLayoutCount = static_cast<uint32_t>(materialDesc.argumentCount);
 			info.pushConstantRangeCount = (uint32_t)constantRanges.size();
 			info.pPushConstantRanges = constantRanges.size() ? &constantRanges[0] : nullptr;
@@ -247,82 +260,79 @@ namespace Nix {
 		MaterialVk* material = new MaterialVk();
 		material->m_description = materialDesc;
 		material->m_context = _context;
-		material->m_vertexShader = vertSM;
-		material->m_fragmentShader = fragSM;
+		memcpy(material->m_shaderModules, shaderModules, sizeof(shaderModules));
 		material->m_descriptorSetLayoutCount = (uint32_t)materialDesc.argumentCount;
 		material->m_pipelineLayout = pipelineLayout;
 		material->m_argumentLayouts = argumentLayouts;
 		material->m_topology = NixTopologyToVk( materialDesc.topologyMode );
 		material->m_pologonMode = NixPolygonModeToVk(materialDesc.pologonMode);
-		material->m_constantsStageFlags = constantsShaderFlags;
+		material->m_constantsStageFlags = constantsStageFlags;
 		//
 		return material;
 	}
 
-	const ShaderDescriptor* ArgumentLayout::getUniformBlock(const std::string& _name)
-	{
-		uint32_t i = 0;
-		for (; i < m_uniformBlockDescriptor.size(); ++i) {
-			if (m_uniformBlockDescriptor.at(i).type == SDT_UniformBlock) {
-				if (m_uniformBlockDescriptor.at(i).name == _name) {
-					return &m_uniformBlockDescriptor.at(i);
-				}
-			}
-		}
-		return nullptr;
-	}
+	//const ShaderDescriptor* ArgumentLayout::getUniformBlock(const std::string& _name)
+	//{
+	//	uint32_t i = 0;
+	//	for (; i < m_uniformBlockDescriptor.size(); ++i) {
+	//		if (m_uniformBlockDescriptor.at(i).type == SDT_UniformBuffer) {
+	//			if (m_uniformBlockDescriptor.at(i).name == _name) {
+	//				return &m_uniformBlockDescriptor.at(i);
+	//			}
+	//		}
+	//	}
+	//	return nullptr;
+	//}
 
-	uint32_t ArgumentLayout::getUniformBlockMemberOffset(uint32_t _binding, const std::string& _name)
-	{
-		for (auto& member : m_uniformMembers) {
-			if (member.binding == _binding && member.name == _name ) {
-				return member.offset;
-			}
-		}
-		return -1;
-	}
+	//uint32_t ArgumentLayout::getUniformBlockMemberOffset(uint32_t _binding, const std::string& _name)
+	//{
+	//	for (auto& member : m_uniformMembers) {
+	//		if (member.binding == _binding && member.name == _name ) {
+	//			return member.offset;
+	//		}
+	//	}
+	//	return -1;
+	//}
 
-	const ShaderDescriptor* ArgumentLayout::getSampler(const std::string& _name)
-	{
-		uint32_t i = 0;
-		for (; i < m_samplerImageDescriptor.size(); ++i) {
-			if (m_samplerImageDescriptor[i].type == SDT_Sampler) {
-				if (m_samplerImageDescriptor[i].name == _name) {
-					return &m_samplerImageDescriptor[i];
-				}
-			}
-		}
-		return nullptr;
-	}
+	//const ShaderDescriptor* ArgumentLayout::getSampler(const std::string& _name)
+	//{
+	//	uint32_t i = 0;
+	//	for (; i < m_samplerImageDescriptor.size(); ++i) {
+	//		if (m_samplerImageDescriptor[i].type == SDT_Sampler) {
+	//			if (m_samplerImageDescriptor[i].name == _name) {
+	//				return &m_samplerImageDescriptor[i];
+	//			}
+	//		}
+	//	}
+	//	return nullptr;
+	//}
 
-	const ShaderDescriptor* ArgumentLayout::getSSBO(const std::string& _name)
-	{
-		uint32_t i = 0;
-		for (; i < m_storageBufferDescriptor.size(); ++i) {
-			if (m_storageBufferDescriptor[i].type == SDT_SSBO) {
-				if (m_storageBufferDescriptor[i].name == _name) {
-					return &m_storageBufferDescriptor[i];
-				}
-			}
-		}
-		return nullptr;
-	}
+	//const ShaderDescriptor* ArgumentLayout::getSSBO(const std::string& _name)
+	//{
+	//	uint32_t i = 0;
+	//	for (; i < m_storageBufferDescriptor.size(); ++i) {
+	//		if (m_storageBufferDescriptor[i].type == SDT_SSBO) {
+	//			if (m_storageBufferDescriptor[i].name == _name) {
+	//				return &m_storageBufferDescriptor[i];
+	//			}
+	//		}
+	//	}
+	//	return nullptr;
+	//}
 
-	void ArgumentLayout::updateDynamicalBindings()
-	{
-		// only uniform buffer object need dynamical bindings
-		for (auto& descriptor : m_uniformBlockDescriptor) {
-			m_dynamicalBindings.push_back(descriptor.binding);
-		}
-		//
-		std::sort(m_dynamicalBindings.begin(), m_dynamicalBindings.end());
-	}
+	//void ArgumentLayout::updateDynamicalBindings()
+	//{
+	//	// only uniform buffer object need dynamical bindings
+	//	for (auto& descriptor : m_uniformBlockDescriptor) {
+	//		m_dynamicalBindings.push_back(descriptor.binding);
+	//	}
+	//	//
+	//	std::sort(m_dynamicalBindings.begin(), m_dynamicalBindings.end());
+	//}
 
-	VkShaderModule MaterialVk::CreateShaderModule(ContextVk* _context, const char * _shader, ShaderModuleType _type, std::vector<uint32_t>& _spvBytes)
-	{
+	VkShaderModule MaterialVk::CreateShaderModule( ContextVk* _context, const char * _shader, ShaderModuleType _type ) {
 		auto length = strlen(_shader);
-
-		const char* compileInfo;
+		//const char* compileInfo;
 		const uint32_t* spvBytes;
 		size_t spvLength;
 		// 
@@ -342,19 +352,23 @@ namespace Nix {
 			mem->seek(SeekSet, 0);
 			file->read(file->size(), mem);
 			file->release();
+
+			DriverVk* driver = (DriverVk*)_context->getDriver();
+			auto compiler = driver->getShaderCompiler();
+
 			if (*(const char*)mem->constData() == '#') {
-				DriverVk* driver = (DriverVk*)_context->getDriver();
-				bool rst = driver->compileGLSL2SPV(_type, (const char*)mem->constData(), &spvBytes, &spvLength, &compileInfo);
+				bool rst = compiler->compile(_type, (const char*)mem->constData());
 				if (!rst) {
 					mem->release();
 					return VK_NULL_HANDLE;
 				}
-				_spvBytes = std::vector<uint32_t>(spvBytes, spvBytes + spvLength);
+				rst = compiler->getCompiledSpv(&spvBytes, &spvLength);
+				rst = compiler->parseSpvLayout(_type, spvBytes, spvLength);
 				VkShaderModule module = NixCreateShaderModule(device, spvBytes, spvLength * sizeof(uint32_t));
 				return module;
 			} else {
 				auto module = NixCreateShaderModule(device, mem->constData(), mem->size() - 1 );
-				_spvBytes = std::vector<uint32_t>((uint32_t*)mem->constData(), (uint32_t*)mem->constData() + mem->size() / sizeof(uint32_t));
+				bool rst = compiler->parseSpvLayout(_type, (uint32_t*)mem->constData(), mem->size() / sizeof(uint32_t));
 				mem->release();
 				return module;
 			}
@@ -363,15 +377,81 @@ namespace Nix {
 		{
 			if (*_shader == '#') { // @_shader is shader text content
 				DriverVk* driver = (DriverVk*)_context->getDriver();
-				bool rst = driver->compileGLSL2SPV(_type, _shader, &spvBytes, &spvLength, &compileInfo);
+				auto compiler = driver->getShaderCompiler();
+				bool rst = compiler->compile(_type, _shader);
 				if (!rst) {
 					return VK_NULL_HANDLE;
 				}
-				_spvBytes = std::vector<uint32_t>(spvBytes, spvBytes + spvLength);
-				return NixCreateShaderModule( _context->getDevice(), spvBytes, spvLength * sizeof(uint32_t));
+				rst = compiler->getCompiledSpv(&spvBytes, &spvLength);
+				rst = compiler->parseSpvLayout(_type, spvBytes, spvLength);
+				VkShaderModule module = NixCreateShaderModule(_context->getDevice(), spvBytes, spvLength * sizeof(uint32_t));
+				return module;
 			}
 		}
 		return VK_NULL_HANDLE;
+	}
+
+	const UniformBlock * ArgumentLayoutExt::getUniform(const std::string & _name) const {
+		for (const auto& uniform : m_vecUniformBlock) {
+			if (uniform.name == _name) {
+				return &uniform;
+			}
+		}
+		return nullptr;
+	}
+
+	const UniformBlock::Member * ArgumentLayoutExt::getUniformMember(uint32_t _binding, const std::string & _name) const {
+		auto it = m_uniformLayouts.find(_binding);
+		if ( it == m_uniformLayouts.end()) {
+			return nullptr;
+		}
+		for (auto& member : it->second) {
+			if (member.name == _name) {
+				return &member;
+			}
+		}
+		return nullptr;
+	}
+
+	const CombinedImageSampler * ArgumentLayoutExt::getSampler(const std::string & _name) const {
+		for (const auto& sampler : m_vecSampler) {
+			if (sampler.name == _name) {
+				return &sampler;
+			}
+		}
+		return nullptr;
+	}
+
+	const ShaderStorageBufferObject * ArgumentLayoutExt::getSSBO(const std::string & _name) const {
+		for (const auto& ssbo : m_vecSSBO) {
+			if (ssbo.name == _name) {
+				return &ssbo;
+			}
+		}
+		return nullptr;
+	}
+
+	const TexelBufferObject * ArgumentLayoutExt::getTBO(const std::string & _name) const {
+		for (const auto& tbo : m_vecTBO) {
+			if (tbo.name == _name) {
+				return &tbo;
+			}
+		}
+		return nullptr;
+	}
+
+	const SubpassInput * ArgumentLayoutExt::getSubpassInput(const std::string & _name) const {
+		for (const auto& attachment : m_vecSubpassInput) {
+			if (attachment.name == _name) {
+				return &attachment;
+			}
+		}
+		return nullptr;
+	}
+
+	void ArgumentLayoutExt::completeSetup()
+	{
+		// calculate the uniform usage, every block's local offset, totabl block size
 	}
 
 }

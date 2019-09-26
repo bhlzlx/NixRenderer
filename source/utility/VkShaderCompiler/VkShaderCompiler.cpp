@@ -13,7 +13,10 @@ extern "C" {
 
 namespace Nix {
 
-	class VkShaderCompiler : public IShaderCompiler, public spirv_cross::Compiler {
+	class VkShaderCompiler 
+		: public IShaderCompiler
+		, public spirv_cross::Compiler 
+	{
 	private:
 		uint32_t										m_numRef;
 		//
@@ -23,8 +26,7 @@ namespace Nix {
 		std::vector<uint16_t>							m_vecSetID;			// stores the set id
 		std::map<uint16_t, std::vector<uint16_t>>		m_bindingMap;		// set as key, binding as value
 		std::map < uint32_t, std::vector<UniformBlock::Member>>
-			m_UBOMemberInfo;	//
-//
+														m_UBOMemberInfo;	//
 		std::vector<StageIOAttribute>					m_vecStageInput;
 		std::vector<StageIOAttribute>					m_vecStageOutput;
 		PushConstants									m_pushConstants;
@@ -34,7 +36,7 @@ namespace Nix {
 		std::vector<CombinedImageSampler>				m_vecSamplers;
 		std::vector<ShaderStorageBufferObject>			m_vecSSBO;
 		std::vector<TexelBufferObject>					m_vecTBO;
-		std::vector<AtomicCounter>						m_atomicCounter;
+		//std::vector<AtomicCounter>						m_atomicCounter;
 	private:
 		static VkShaderCompiler* Instance;
 		bool											m_initailized;
@@ -145,12 +147,12 @@ namespace Nix {
 			}
 			return m_vecTBO.size();
 		}
-		uint16_t getAtomicCounter(const AtomicCounter** _counter) {
-			if (m_atomicCounter.size()) {
-				*_counter = m_atomicCounter.data();
-			}
-			return m_atomicCounter.size();
-		}
+		//uint16_t getAtomicCounter(const AtomicCounter** _counter) {
+		//	if (m_atomicCounter.size()) {
+		//		*_counter = m_atomicCounter.data();
+		//	}
+		//	return m_atomicCounter.size();
+		//}
 
 		Nix::VertexType getVertexType(const spirv_cross::SPIRType& _type) {
 			switch (_type.basetype) {
@@ -325,7 +327,7 @@ namespace Nix {
 		m_vecSamplers.clear();
 		m_vecSSBO.clear();
 		m_vecTBO.clear();
-		m_atomicCounter.clear();
+		//m_atomicCounter.clear();
 	}
 	//
 	bool VkShaderCompiler::initializeEnvironment() {
@@ -424,7 +426,7 @@ namespace Nix {
 			auto location = get_decoration(stageInput.id, spv::Decoration::DecorationLocation);
 			StageIOAttribute attr; 
 			attr.location = location;
-			attr.name = stageInput.name;
+			strcpy(attr.name, stageInput.name.c_str());
 			//
 			auto& type = get<spirv_cross::SPIRType>(stageInput.base_type_id);
 			attr.type = getVertexType(type);
@@ -435,7 +437,7 @@ namespace Nix {
 			auto location = get_decoration(stageOutput.id, spv::Decoration::DecorationLocation);
 			StageIOAttribute attr;
 			attr.location = location;
-			attr.name = stageOutput.name;
+			strcpy(attr.name, stageOutput.name.c_str());
 			auto& type = get<spirv_cross::SPIRType>(stageOutput.base_type_id);
 			attr.type = getVertexType(type);
 			m_vecStageOutput.push_back(attr);
@@ -457,6 +459,7 @@ namespace Nix {
 			input.set = get_decoration(pass.id, spv::Decoration::DecorationDescriptorSet);
 			input.binding = get_decoration(pass.id, spv::Decoration::DecorationBinding);
 			input.inputIndex = get_decoration(pass.id, spv::Decoration::DecorationIndex);
+			strcpy(input.name, pass.name.c_str());
 			m_inputAttachment.push_back(input);
 			addDescriptorRecord(input.set, input.binding);
 		}
@@ -465,7 +468,7 @@ namespace Nix {
 			UniformBlock block;
 			block.set = get_decoration(uniformBlock.id, spv::Decoration::DecorationDescriptorSet);
 			block.binding = get_decoration(uniformBlock.id, spv::Decoration::DecorationBinding);
-			block.name = uniformBlock.name;
+			strcpy(block.name, uniformBlock.name.c_str());
 			auto uniformType = get_type_from_variable(uniformBlock.id);
 			block.size = get_declared_struct_size(uniformType);
 			m_vecUBO.push_back(block);
@@ -480,7 +483,7 @@ namespace Nix {
 					break;
 				}
 				UniformBlock::Member member;
-				member.name = name;
+				strcpy(member.name, name.c_str());
 				member.offset = get_member_decoration(uniformBlock.base_type_id, memberIndex, spv::Decoration::DecorationOffset);
 				//
 				layoutRecord.push_back(member);
@@ -506,7 +509,7 @@ namespace Nix {
 			CombinedImageSampler image;
 			image.binding = get_decoration(sampler.id, spv::Decoration::DecorationBinding);
 			image.set = get_decoration(sampler.id, spv::Decoration::DecorationDescriptorSet);
-			image.name = sampler.name;
+			strcpy(image.name, sampler.name.c_str());
 			m_vecSamplers.push_back(image);
 			addDescriptorRecord(image.set, image.binding);
 		}
@@ -516,7 +519,7 @@ namespace Nix {
 			ShaderStorageBufferObject ssbo;
 			ssbo.binding = get_decoration(item.id, spv::Decoration::DecorationBinding);
 			ssbo.set = get_decoration(item.id, spv::Decoration::DecorationDescriptorSet);
-			ssbo.name = item.name;
+			strcpy(ssbo.name, item.name.c_str());
 			auto uniformType = get_type_from_variable(item.id);
 			ssbo.size = get_declared_struct_size(uniformType);
 			m_vecSSBO.push_back(ssbo);
@@ -528,19 +531,19 @@ namespace Nix {
 			TexelBufferObject tbo;
 			tbo.binding = get_decoration(item.id, spv::Decoration::DecorationBinding);
 			tbo.set = get_decoration(item.id, spv::Decoration::DecorationDescriptorSet);
-			tbo.name = item.name;
+			strcpy(tbo.name, item.name.c_str());
 			m_vecTBO.push_back(tbo);
 			addDescriptorRecord(tbo.set, tbo.binding);
 		}
-		m_atomicCounter.clear();
-		for (auto& item : spvResource.atomic_counters) {
-			AtomicCounter counter;
-			counter.binding = get_decoration(item.id, spv::Decoration::DecorationBinding);
-			counter.set = get_decoration(item.id, spv::Decoration::DecorationDescriptorSet);
-			counter.name = item.name;
-			m_atomicCounter.push_back(counter);
-			addDescriptorRecord(counter.set, counter.binding);
-		}
+		//m_atomicCounter.clear();
+		//for (auto& item : spvResource.atomic_counters) {
+		//	AtomicCounter counter;
+		//	counter.binding = get_decoration(item.id, spv::Decoration::DecorationBinding);
+		//	counter.set = get_decoration(item.id, spv::Decoration::DecorationDescriptorSet);
+		//	strcpy(counter.name, item.name.c_str());			
+		//	m_atomicCounter.push_back(counter);
+		//	addDescriptorRecord(counter.set, counter.binding);
+		//}
 		return true;
 	}
 }
