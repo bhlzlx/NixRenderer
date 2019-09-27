@@ -55,12 +55,12 @@ namespace Nix {
 		);
 	}
 
-	bool ArgumentVk::getUniformBlock( const char * _name, uint32_t* id_)
+	bool ArgumentVk::getUniformBlock( const char * _name, uint32_t* id_ )
 	{
 		uint32_t i = 0;
-		const ArgumentLayout& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
-		for (; i < argLayout.m_uniformBlockDescriptor.size(); ++i) {
-			if ( strcmp(argLayout.m_uniformBlockDescriptor[i].name, _name) == 0 ) {
+		const ArgumentLayoutExt& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
+		for (; i < argLayout.m_vecUniformBlock.size(); ++i) {
+			if ( strcmp(argLayout.m_vecUniformBlock[i].name, _name) == 0 ) {
 				*id_ = i;
 				return true;
 			}
@@ -71,11 +71,11 @@ namespace Nix {
 	bool ArgumentVk::getUniformMemberOffset(uint32_t _uniform, const char* _name, uint32_t* offset_)
 	{
 		uint32_t i = 0;
-		const ArgumentLayout& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
-		auto binding = argLayout.m_uniformBlockDescriptor[_uniform].binding;
-		for (; i < argLayout.m_uniformMembers.size(); ++i) {
-			if ( argLayout.m_uniformMembers[i].name == _name) {
-				*offset_ = argLayout.m_uniformMembers[i].offset;
+		const ArgumentLayoutExt& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
+		auto& members = argLayout.m_uniformLayouts[_uniform];
+		for ( auto& member : members) {
+			if (member.name == _name) {
+				*offset_ = member.offset;
 				return true;
 			}
 		}
@@ -85,9 +85,9 @@ namespace Nix {
 	bool ArgumentVk::getSampler(const char* _name, uint32_t* id_)
 	{
 		uint32_t i = 0;
-		const ArgumentLayout& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
-		for (; i < argLayout.m_samplerImageDescriptor.size(); ++i) {
-			if ( strcmp(argLayout.m_samplerImageDescriptor[i].name, _name)) {
+		const ArgumentLayoutExt& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
+		for (; i < argLayout.m_vecSampler.size(); ++i) {
+			if ( strcmp(argLayout.m_vecSampler[i].name, _name)) {
 				*id_ = i;
 				return true;
 			}
@@ -97,7 +97,7 @@ namespace Nix {
 
 	void ArgumentVk::setSampler(uint32_t _index, const SamplerState& _sampler, const ITexture* _texture)
 	{
-		auto descriptor = m_material->getDescriptorSetLayout(m_descriptorSetIndex).m_samplerImageDescriptor[_index];
+		auto descriptor = m_material->getDescriptorSetLayout(m_descriptorSetIndex).m_vecSampler[_index];
 		for (auto& write : m_vecDescriptorWrites) {
 			if (write.dstBinding == descriptor.binding) {
 				VkDescriptorImageInfo* imageInfo = const_cast<VkDescriptorImageInfo*>(write.pImageInfo);
@@ -110,11 +110,9 @@ namespace Nix {
 		}
 	}
 
-	void ArgumentVk::setUniform(uint32_t _index, uint32_t _offset, const void * _data, uint32_t _size)
-	{
-		auto flightIndex = m_context->getSwapchain()->getFlightIndex();
-		BufferAllocation ubo = m_uniformBlocks[_index];
-		memcpy(ubo.raw + (flightIndex * ubo.size / MaxFlightCount) + _offset, _data, _size);
+	void ArgumentVk::setUniform( uint32_t _offset, const void * _data, uint32_t _size) {
+		unsigned char* localUniform = m_localUnifrom.data();
+		memcpy( localUniform + _offset, _data, _size );
 	}
 
 	void ArgumentVk::setShaderCache(uint32_t _offset, const void* _data, uint32_t _size)
@@ -129,9 +127,6 @@ namespace Nix {
 
 	void ArgumentVk::release()
 	{
-		for (auto& uniformAllocation : m_uniformBlocks) {
-			m_context->uniformAllocator()->free(uniformAllocation);
-		}
 		m_material->destroyArgument(this);
 	}
 
@@ -139,8 +134,6 @@ namespace Nix {
 	{
 		const auto& descriptorSetLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
 		// get all uniform block size & binding slot);
-// 		std::vector<VkDescriptorBufferInfo> vecBufferInfo;
-// 		std::vector<VkWriteDescriptorSet> vecWrites;
 		ContextVk* context = m_material->getContext();
 		auto& dynamicalBindings = m_material->getDescriptorSetLayout(m_descriptorSetIndex).m_dynamicalBindings;
 		//

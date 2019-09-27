@@ -11,6 +11,9 @@ layout( set = 0, binding = 0 ) uniform Argument {
 layout( set = 0, binding = 1 ) uniform sampler2D samHeightField;
 
 layout ( location = 0 ) out float color;
+layout ( location = 1 ) out vec3 color1;
+layout ( location = 2 ) out int color2;
+layout ( location = 3 ) out ivec3 color3;
 
 out gl_PerVertex {
     vec4 gl_Position;

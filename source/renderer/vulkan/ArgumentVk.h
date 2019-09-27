@@ -17,9 +17,8 @@ namespace Nix {
 		friend class PipelineVk;
 		friend class ArgumentAllocator;
 	private:
-		std::vector< BufferAllocation >							m_uniformBlocks;
-		std::vector< std::pair< TextureVk*, SamplerState> >		m_textures;
-		//std::vector< BufferVk* >								m_ssbos;
+		std::vector<std::pair<TextureVk*, SamplerState>>		m_textures;
+		std::vector< BufferVk* >								m_ssbos;
 		std::vector< uint32_t >									m_dynamicalOffsets[MaxFlightCount];
 		//
 		uint32_t												m_descriptorSetIndex;
@@ -30,12 +29,14 @@ namespace Nix {
 		ContextVk*												m_context;
 		MaterialVk*												m_material;
 		//
-		std::vector<VkDescriptorBufferInfo>						m_vecDescriptorBufferInfo; // UBO, SSBO, TBO
-		std::vector<VkDescriptorImageInfo>						m_vecDescriptorImageInfo; // sampler/image
+		std::vector<VkDescriptorBufferInfo>						m_vecBufferInfo;
+		std::vector<VkDescriptorImageInfo>						m_vecImageInfo; // sampler/image
+		//
 		std::vector<VkWriteDescriptorSet>						m_vecDescriptorWrites;
 		//
 		bool													m_needUpdate;
-
+		//
+		std::vector<unsigned char>								m_localUnifrom;
 		uint32_t												m_constantsShaderStages;
 	public:
 		ArgumentVk();
@@ -48,7 +49,7 @@ namespace Nix {
 		virtual bool getSampler(const char* _name, uint32_t* id_) override;
 		//
 		virtual void setSampler(uint32_t _index, const SamplerState& _sampler, const ITexture* _texture) override;
-		virtual void setUniform(uint32_t _index, uint32_t _offset, const void * _data, uint32_t _size) override;
+		//virtual void setUniform(uint32_t _offset, const void * _data, uint32_t _size) override;
 		virtual void setShaderCache(uint32_t _offset, const void* _data, uint32_t _size) override;
 		virtual void release() override;
 		//

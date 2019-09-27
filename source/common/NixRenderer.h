@@ -479,12 +479,16 @@ namespace Nix {
 	};
 
 	enum ShaderDescriptorType {
-		SDT_Sampler,			// sampler&image
+		SDT_Sampler,			// sampler object
+		SDT_SampledImage,		// image can be sampled
+		SDT_StorageImage,		// writable image
+		//SDT_SamplerImage,		// sampler & image
+		SDT_InputAttachment,	// input attachment
+		//
 		SDT_UniformBuffer,		// uniform block
 		SDT_StorageBuffer,		// ssbo
 		SDT_UniformTexelBuffer,	// uniform texel buffer
 		SDT_StorageTexelBuffer,	// storage texel buffer
-		SDT_Attachment,			// input attachment
 	};
 
 	struct ShaderDescriptor {

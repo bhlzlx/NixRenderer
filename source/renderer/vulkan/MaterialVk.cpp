@@ -219,7 +219,7 @@ namespace Nix {
 					bindings.push_back(binding);
 					break;
 				}
-				case SDT_Attachment: {
+				case SDT_InputAttachment: {
 					VkDescriptorSetLayoutBinding binding;
 					binding.binding = descriptor.binding;
 					binding.descriptorCount = 1;
@@ -241,7 +241,7 @@ namespace Nix {
 			argumentLayouts[setIndex].m_setLayout = setLayouts[setIndex];
 			argumentLayouts[setIndex].m_setID = setIndex;
 			//
-			argumentLayouts[setIndex].completeSetup();
+			argumentLayouts[setIndex].completeSetup(_context);
 		}
 		// create pipeline layout
 		VkPipelineLayoutCreateInfo info; {
@@ -449,9 +449,17 @@ namespace Nix {
 		return nullptr;
 	}
 
-	void ArgumentLayoutExt::completeSetup()
-	{
+	void ArgumentLayoutExt::completeSetup(ContextVk* _context) {
 		// calculate the uniform usage, every block's local offset, totabl block size
+		DriverVk* driver = (DriverVk*)_context->getDriver();
+		uint16_t uniformAlignment = driver->getPhysicalDeviceProperties().limits.minUniformBufferOffsetAlignment;
+		size_t unifIndex = 0;
+		m_UBOLocalOffsets.clear();
+		m_UBOLocalSize = 0;
+		for (; unifIndex < m_vecUniformBlock.size(); ++unifIndex) {
+			m_UBOLocalOffsets.push_back(m_UBOLocalSize);
+			m_UBOLocalSize += m_vecUniformBlock.size();
+			m_UBOLocalSize = (m_UBOLocalSize + (uniformAlignment - 1))&~(uniformAlignment - 1);
+		}
 	}
-
 }
