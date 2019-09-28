@@ -28,7 +28,7 @@ namespace Nix {
 			std::vector<uint16_t>							m_vecSetID;			// stores the set id
 			std::map<uint16_t, std::vector<uint16_t>>		m_bindingMap;		// set as key, binding as value
 			std::map < uint32_t, std::vector<UniformBuffer::Member>>
-				m_UBOMemberInfo;	//
+															m_UBOMemberInfo;	
 			std::vector<StageIOAttribute>					m_vecStageInput;
 			std::vector<StageIOAttribute>					m_vecStageOutput;
 			PushConstants									m_pushConstants;
@@ -37,9 +37,11 @@ namespace Nix {
 			std::vector<StorageBuffer>						m_vecSSBO;
 			//
 			std::vector<SubpassInput>						m_inputAttachment;
-			std::vector<Sampler>							m_vecSamplers;
-			std::vector<SampledImage>						m_vecSampledImages;
+			std::vector<SeparateSampler>					m_vecSamplers;
+			std::vector<SeparateImage>						m_vecSampledImages;
 			std::vector<StorageImage>						m_vecStorageImages;
+			std::vector<CombinedImageSampler>				m_vecCombinedImageSampler;
+			// deprecated types
 			//std::vector<TexelBufferObject>					m_vecTBO;
 			//std::vector<AtomicCounter>						m_atomicCounter;
 		private:
@@ -140,7 +142,7 @@ namespace Nix {
 				}
 				return m_vecSSBO.size();
 			}
-			uint16_t getSamplers(const Sampler** _samplers) {
+			uint16_t getSamplers(const SeparateSampler** _samplers) {
 				if (m_vecSamplers.size()) {
 					*_samplers = m_vecSamplers.data();
 				}
@@ -152,11 +154,17 @@ namespace Nix {
 				}
 				return m_vecStorageImages.size();
 			}
-			uint16_t getSampledImages(const SampledImage** _images) {
+			uint16_t getSampledImages(const SeparateImage** _images) {
 				if (m_vecSampledImages.size()) {
 					*_images = m_vecSampledImages.data();
 				}
 				return m_vecSampledImages.size();
+			}
+			uint16_t getCombinedImageSampler(const CombinedImageSampler** _images) {
+				if (m_vecCombinedImageSampler.size()) {
+					*_images = m_vecCombinedImageSampler.data();
+				}
+				return m_vecCombinedImageSampler.size();
 			}
 
 			Nix::VertexType getVertexType(const spirv_cross::SPIRType& _type) {
@@ -459,19 +467,9 @@ namespace Nix {
 				m_pushConstants.size = (ranges.back().offset - m_pushConstants.offset) + ranges.back().range;
 				m_pushConstants.offset = m_pushConstants.offset;
 			}
-			//
-			for (auto& pass : spvResource.subpass_inputs) {
-				SubpassInput input;
-				input.set = get_decoration(pass.id, spv::Decoration::DecorationDescriptorSet);
-				input.binding = get_decoration(pass.id, spv::Decoration::DecorationBinding);
-				input.inputIndex = get_decoration(pass.id, spv::Decoration::DecorationIndex);
-				strcpy(input.name, pass.name.c_str());
-				m_inputAttachment.push_back(input);
-				addDescriptorRecord(input.set, input.binding);
-			}
-			//
+			// ======================= buffer type ===========================
 			for (auto& uniformBlock : spvResource.uniform_buffers) {
-				UniformBlock block;
+				UniformBuffer block;
 				block.set = get_decoration(uniformBlock.id, spv::Decoration::DecorationDescriptorSet);
 				block.binding = get_decoration(uniformBlock.id, spv::Decoration::DecorationBinding);
 				strcpy(block.name, uniformBlock.name.c_str());
@@ -488,14 +486,14 @@ namespace Nix {
 					if (!name.length()) {
 						break;
 					}
-					UniformBlock::Member member;
+					UniformBuffer::Member member;
 					strcpy(member.name, name.c_str());
 					member.offset = get_member_decoration(uniformBlock.base_type_id, memberIndex, spv::Decoration::DecorationOffset);
 					//
 					layoutRecord.push_back(member);
 					++memberIndex;
 				}
-				std::sort(layoutRecord.begin(), layoutRecord.end(), [](const UniformBlock::Member& _member1, const UniformBlock::Member& _member2) {
+				std::sort(layoutRecord.begin(), layoutRecord.end(), [](const UniformBuffer::Member& _member1, const UniformBuffer::Member& _member2) {
 					return _member1.offset < _member2.offset;
 				});
 				uint32_t prevMemberOffset = -1;
@@ -510,19 +508,10 @@ namespace Nix {
 					layoutRecord.back().size = block.size;
 				}
 			}
-			//>!!!!
-			for (auto& sampler : spvResource.sampled_images) {
-				CombinedImageSampler image;
-				image.binding = get_decoration(sampler.id, spv::Decoration::DecorationBinding);
-				image.set = get_decoration(sampler.id, spv::Decoration::DecorationDescriptorSet);
-				strcpy(image.name, sampler.name.c_str());
-				m_vecSamplers.push_back(image);
-				addDescriptorRecord(image.set, image.binding);
-			}
 			//
 			m_vecSSBO.clear();
 			for (auto& item : spvResource.storage_buffers) {
-				ShaderStorageBufferObject ssbo;
+				StorageBuffer ssbo;
 				ssbo.binding = get_decoration(item.id, spv::Decoration::DecorationBinding);
 				ssbo.set = get_decoration(item.id, spv::Decoration::DecorationDescriptorSet);
 				strcpy(ssbo.name, item.name.c_str());
@@ -531,25 +520,50 @@ namespace Nix {
 				m_vecSSBO.push_back(ssbo);
 				addDescriptorRecord(ssbo.set, ssbo.binding);
 			}
-			//
-			m_vecTBO.clear();
-			for (auto& item : spvResource.storage_images) {
-				TexelBufferObject tbo;
-				tbo.binding = get_decoration(item.id, spv::Decoration::DecorationBinding);
-				tbo.set = get_decoration(item.id, spv::Decoration::DecorationDescriptorSet);
-				strcpy(tbo.name, item.name.c_str());
-				m_vecTBO.push_back(tbo);
-				addDescriptorRecord(tbo.set, tbo.binding);
+			// ======================= image type ===========================
+			// 4 type : sampler/sampled image/storage image/input attachment
+			for (auto& sampler : spvResource.separate_samplers) {
+				SeparateSampler sam;
+				sam.binding = get_decoration(sampler.id, spv::Decoration::DecorationBinding);
+				sam.set = get_decoration(sampler.id, spv::Decoration::DecorationDescriptorSet);
+				strcpy(sam.name, sampler.name.c_str());
+				m_vecSamplers.push_back(sam);
+				addDescriptorRecord(sam.set, sam.binding);
 			}
-			//m_atomicCounter.clear();
-			//for (auto& item : spvResource.atomic_counters) {
-			//	AtomicCounter counter;
-			//	counter.binding = get_decoration(item.id, spv::Decoration::DecorationBinding);
-			//	counter.set = get_decoration(item.id, spv::Decoration::DecorationDescriptorSet);
-			//	strcpy(counter.name, item.name.c_str());			
-			//	m_atomicCounter.push_back(counter);
-			//	addDescriptorRecord(counter.set, counter.binding);
-			//}
+			for (auto& image : spvResource.separate_images) {
+				SeparateImage img;
+				img.binding = get_decoration(image.id, spv::Decoration::DecorationBinding);
+				img.set = get_decoration(image.id, spv::Decoration::DecorationDescriptorSet);
+				strcpy(img.name, image.name.c_str());
+				m_vecSampledImages.push_back(img);
+				addDescriptorRecord(img.set, img.binding);
+			}
+			for (auto& sampledImage : spvResource.sampled_images) {
+				CombinedImageSampler image;
+				image.binding = get_decoration(sampledImage.id, spv::Decoration::DecorationBinding);
+				image.set = get_decoration(sampledImage.id, spv::Decoration::DecorationDescriptorSet);
+				strcpy(image.name, sampledImage.name.c_str());
+				m_vecCombinedImageSampler.push_back(image);
+				addDescriptorRecord(image.set, image.binding);
+			}
+			for (auto& storageImage : spvResource.storage_images) {
+				StorageImage image;
+				image.binding = get_decoration(storageImage.id, spv::Decoration::DecorationBinding);
+				image.set = get_decoration(storageImage.id, spv::Decoration::DecorationDescriptorSet);
+				strcpy(image.name, storageImage.name.c_str());
+				m_vecStorageImages.push_back(image);
+				addDescriptorRecord(image.set, image.binding);
+			}
+			//
+			for (auto& pass : spvResource.subpass_inputs) {
+				SubpassInput input;
+				input.set = get_decoration(pass.id, spv::Decoration::DecorationDescriptorSet);
+				input.binding = get_decoration(pass.id, spv::Decoration::DecorationBinding);
+				input.inputIndex = get_decoration(pass.id, spv::Decoration::DecorationIndex);
+				strcpy(input.name, pass.name.c_str());
+				m_inputAttachment.push_back(input);
+				addDescriptorRecord(input.set, input.binding);
+			}
 			return true;
 		}
 	}
@@ -557,14 +571,14 @@ namespace Nix {
 }
 
 extern "C" {
-	Nix::IShaderCompiler * GetVkShaderCompiler() {
+	Nix::spvcompiler::IShaderCompiler * GetVkShaderCompiler() {
 		if (!compilerInstance) {
-			compilerInstance = new Nix::VkShaderCompiler();
+			compilerInstance = new Nix::spvcompiler::VkShaderCompiler();
 			if (!compilerInstance->initializeEnvironment()) {
 				return nullptr;
 			}
 		}
-		Nix::VkShaderCompiler* compiler = (Nix::VkShaderCompiler*)compilerInstance;
+		Nix::spvcompiler::VkShaderCompiler* compiler = (Nix::spvcompiler::VkShaderCompiler*)compilerInstance;
 		compiler->retain();
 		return compilerInstance;
 	}

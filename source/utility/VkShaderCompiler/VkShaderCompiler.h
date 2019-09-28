@@ -15,12 +15,7 @@ namespace Nix {
 	namespace spvcompiler {
 		typedef IntegerComposer<uint32_t, uint16_t> DescriptorKey;
 		const uint32_t MaxDescriptorNameLength = 64;
-
-		/*struct Binding {
-		ShaderDescriptorType	type = SDT_UniformBuffer;
-		std::string				name;
-		};*/
-
+		//
 		struct StageIOAttribute {
 			uint16_t location;
 			VertexType type;
@@ -70,24 +65,27 @@ namespace Nix {
 		//	char name[MaxDescriptorNameLength];
 		//};
 
-		struct Sampler {
+		struct SeparateSampler {
 			uint16_t set;
 			uint16_t binding;
 			char name[MaxDescriptorNameLength];
 		};
-
+		struct SeparateImage {
+			uint16_t set;
+			uint16_t binding;
+			char name[MaxDescriptorNameLength];
+		};
 		struct StorageImage {
 			uint16_t set;
 			uint16_t binding;
 			char name[MaxDescriptorNameLength];
 		};
-
-		struct SampledImage {
+		struct CombinedImageSampler {
 			uint16_t set;
 			uint16_t binding;
 			char name[MaxDescriptorNameLength];
 		};
-
+		
 
 		class NIX_API_DECL IShaderCompiler {
 		private:
@@ -102,19 +100,20 @@ namespace Nix {
 			//
 			virtual uint16_t getDescriptorSets(const uint16_t** _sets) const = 0;
 			virtual uint16_t getBindings(uint16_t _setID, const uint16_t** _bindings) = 0;
-			//
+			// stage in/out
 			virtual uint16_t getStageInput(const StageIOAttribute** _inputs) = 0;
 			virtual uint16_t getStageOutput(const StageIOAttribute** _outputs) = 0;
-			//
+			// buffer descriptor
 			virtual uint16_t getUniformBuffers(const UniformBuffer** _blocks) = 0;
 			virtual uint16_t getUniformBufferMemebers(uint16_t _set, uint16_t _binding, const UniformBuffer::Member** _member) = 0;
 			virtual uint16_t getShaderStorageBuffers(const StorageBuffer** _ssbo) = 0;
-			//
-			virtual uint16_t getSamplers(const Sampler** _samplers) = 0;
+			// image descriptor
+			virtual uint16_t getSamplers(const SeparateSampler** _samplers) = 0;
+			virtual uint16_t getSampledImages(const SeparateImage** _iamges) = 0;
 			virtual uint16_t getStorageImages(const StorageImage** _images ) = 0;
-			virtual uint16_t getSampledImages(const SampledImage** _iamges ) = 0;
+			virtual uint16_t getCombinedImageSampler(const CombinedImageSampler** _iamges ) = 0;
 			virtual uint16_t getInputAttachment(const SubpassInput** _attachments) = 0;
-			//
+			// constants
 			virtual void getPushConstants(uint16_t* _offset, uint16_t* _size) = 0;
 			//
 			virtual void retain() = 0;

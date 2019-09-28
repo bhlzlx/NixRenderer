@@ -2,27 +2,30 @@
 #include <NixRenderer.h>
 #include <nix/io/archieve.h>
 #include <cstdio>
+#include <cassert>
 #include <VkShaderCompiler/VkShaderCompiler.h>
 
+Nix::IShaderCompiler* compiler = nullptr;
 
-class VkCompiler : public NixApplication {
-	virtual bool initialize( void* _wnd, Nix::IArchieve* _arch) {
+class HelloWorld : public NixApplication {
+	virtual bool initialize( void* _wnd, Nix::IArchieve* _arch ) {
         printf("%s", "HelloWorld is initializing!");
 		//
 		HMODULE library = ::LoadLibraryA("VkShaderCompiler.dll");
 		if (!library) {
 			return false;
 		}
-		PFN_GETSHADERCOMPILER getShaderCompiler = reinterpret_cast<PFN_GETSHADERCOMPILER>(::GetProcAddress(library, "GetVkShaderCompiler"));
-		Nix::spvcompiler::IShaderCompiler * compiler = getShaderCompiler();
+		typedef Nix::IShaderCompiler*(*PFN_GETVKSHADERCOMPILER)();
+		PFN_GETVKSHADERCOMPILER getShaderCompiler = reinterpret_cast<PFN_GETVKSHADERCOMPILER>(::GetProcAddress(library, "GetVkShaderCompiler"));
+		compiler = getShaderCompiler();
 		Nix::TextReader reader;
-		reader.openFile(_arch, "shader/vulkan/heightfield/heightfield.vert");
-		bool rst = compiler->compile(Nix::ShaderModuleType::VertexShader, reader.getText());
-		const uint32_t* spv;
+		bool rst = reader.openFile(_arch, "shader/vulkan/test/test.vert");
+		compiler->compile(Nix::ShaderModuleType::VertexShader, reader.getText());
+		const uint32_t* spvData = nullptr;
 		size_t nWord;
-		rst = compiler->getCompiledSpv(&spv, &nWord);
+		compiler->getCompiledSpv(spvData, nWord);
+		compiler->parseSpvLayout(Nix::ShaderModuleType::VertexShader, spvData, nWord);
 		//
-		compiler->parseSpvLayout(Nix::ShaderModuleType::VertexShader, spv, nWord);
 		return true;
     }
     
@@ -46,7 +49,7 @@ class VkCompiler : public NixApplication {
 	}
 };
 
-VkCompiler theapp;
+HelloWorld theapp;
 
 NixApplication* GetApplication() {
     return &theapp;
