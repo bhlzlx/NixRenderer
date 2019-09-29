@@ -78,6 +78,8 @@ namespace Nix {
 		virtual IBuffer* createVertexBufferPM( size_t _size, IBufferAllocator* _allocator = nullptr) override;
 		virtual IBuffer* createIndexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator = nullptr) override;
 		virtual IBuffer* createIndexBufferPM(size_t _size, IBufferAllocator* _allocator = nullptr) override;
+		virtual IBuffer* createTexelBuffer( size_t _size );
+		virtual IBuffer* createStorageBuffer(size_t _size);
 
 		virtual ITexture* createTexture(const TextureDescription& _desc, TextureUsageFlags _usage = TextureUsageNone) override;
 		virtual ITexture* createTextureDDS(const void* _data, size_t _length) override;

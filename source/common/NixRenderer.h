@@ -669,21 +669,21 @@ namespace Nix {
 	class NIX_API_DECL IArgument {
 	private:
 	public:
-		virtual bool getUniformBlock( const char * _name, uint32_t* id_, uint32_t* offset_, const GLSLStructMember** members_, uint32_t* numMember_ ) = 0;
+		virtual bool getUniformBlock( const char * _name, uint32_t* offset_, const GLSLStructMember** members_, uint32_t* numMember_ ) = 0;
 		virtual bool getStorageBuffer( const char* _name, uint32_t* id_  ) = 0;
 		//
 		virtual bool getSampler(const char* _name, uint32_t* id_ ) = 0; // sampler object
 		virtual bool getTexture(const char* _name, uint32_t* id_) = 0; // sampled image
 		virtual bool getCombinedImageSampler(const char* _name, uint32_t* id_) = 0; // combined image sampler
-		virtual bool getImage(const char* _name, uint32_t* id_) = 0; // storage image
-		virtual bool getTexelBuffer(const char * _name, uint32_t id_) = 0; // texel buffer
+		virtual bool getStorageImage(const char* _name, uint32_t* id_) = 0; // storage image
+		virtual bool getTexelBuffer(const char * _name, uint32_t* id_) = 0; // texel buffer
 		//
 		virtual void setUniform( uint32_t _offset, const void * _data, uint32_t _size ) = 0;
 		virtual void setStorageBuffer( uint32_t _offset, const void * _data, uint32_t _size ) = 0;
 		//
 		virtual void setSampler(uint32_t _id, const SamplerState& _sampler ) = 0;
 		virtual void setTexture(uint32_t _id, ITexture* _texture) = 0;
-		virtual void setImage(uint32_t _idj, ITexture* _texture) = 0;
+		virtual void setStorageImage(uint32_t _idj, ITexture* _texture) = 0;
 		virtual void setTexelBuffer(uint32_t _id, ITexture* _texture) = 0;
 		virtual void setCombinedImageSampler(uint32_t _id, const SamplerState& _sampler, ITexture* _texture);
 		//

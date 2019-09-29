@@ -35,7 +35,7 @@ namespace Nix {
 		//
 		bool													m_needUpdate;
 		//
-		std::vector<unsigned char>								m_localUnifrom;
+		std::vector<unsigned char>								m_uniformCache;
 		uint32_t												m_constantsShaderStages;
 	public:
 		ArgumentVk();
@@ -43,21 +43,24 @@ namespace Nix {
 
 		void bind(VkCommandBuffer _commandBuffer);
 
-		virtual bool getUniformBlock(const char * _name, uint32_t* id_, uint32_t* offset_, const GLSLStructMember** _members, uint32_t* _numMember) override;
+		virtual bool getUniformBlock(const char * _name, uint32_t* offset_, const GLSLStructMember** _members, uint32_t* _numMember) override;
+		virtual void setUniform(uint32_t _offset, const void* _data, uint32_t _size) override;
+
 		virtual bool getStorageBuffer(const char* _name, uint32_t* id_) override;
 		//
 		virtual bool getSampler(const char* _name, uint32_t* id_) override; // sampler object
 		virtual bool getTexture(const char* _name, uint32_t* id_) override; // sampled image
+		virtual bool getStorageImage(const char* _name, uint32_t* id_) override; // storage image
 		virtual bool getCombinedImageSampler(const char* _name, uint32_t* id_) override; // combined image sampler
-		virtual bool getImage(const char* _name, uint32_t* id_) override; // storage image
-		virtual bool getTexelBuffer(const char * _name, uint32_t id_) override; // texel buffer
+		virtual bool getTexelBuffer(const char * _name, uint32_t* id_) override; // texel buffer
 																		   //
-		virtual void setUniform(uint32_t _offset, const void * _data, uint32_t _size) override;
 		virtual void setStorageBuffer(uint32_t _offset, const void * _data, uint32_t _size) override;
 		//
 		virtual void setSampler(uint32_t _id, const SamplerState& _sampler) override;
+		// 这里注意一下，setTexture/setStorageImage实际上设置流程都一样的，需要的是 VkImage / VkImageView
 		virtual void setTexture(uint32_t _id, ITexture* _texture) override;
-		virtual void setImage(uint32_t _idj, ITexture* _texture) override;
+		virtual void setStorageImage(uint32_t _id, ITexture* _texture) override;
+		// 而 setTexelBuffer 需要的是 VkImage / VkBufferView
 		virtual void setTexelBuffer(uint32_t _id, ITexture* _texture) override;
 		virtual void setCombinedImageSampler(uint32_t _id, const SamplerState& _sampler, ITexture* _texture);
 		virtual void setShaderCache(uint32_t _offset, const void* _data, uint32_t _size) override;
