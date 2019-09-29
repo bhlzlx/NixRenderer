@@ -3,6 +3,7 @@
 #include <NixRenderer.h>
 #include <array>
 #include <vector>
+#include <map>
 #include <VkShaderCompiler/VkShaderCompiler.h>
 
 namespace Nix {
@@ -11,8 +12,10 @@ namespace Nix {
 	class RenderableVk;
 	class ArgumentVk;
 
+	using namespace Nix::spvcompiler;
+
 	class ArgumentLayoutExt {
-		using ArgumentUniformLayouts = std::vector<std::vector<UniformBlock::Member>>;
+		using ArgumentUniformLayouts = std::vector<std::vector<GLSLStructMember>>;
 		friend class MaterialVk;
 		friend class ArgumentVk;		
 		friend ArgumentAllocator;
@@ -20,14 +23,17 @@ namespace Nix {
 		uint32_t									m_setID;
 		VkDescriptorSetLayout						m_setLayout;
 		//
-		std::vector<SubpassInput>					m_vecSubpassInput;
-		std::vector<UniformBlock>					m_vecUniformBlock;
-		std::vector<ShaderStorageBufferObject>		m_vecSSBO;
+		std::vector<SubpassInput>					m_vecSubpassInput; // input attachment
+		std::vector<SeparateSampler>				m_vecSampler; // samplers
+		std::vector<SeparateImage>					m_vecSampledImage; // sampled image
+		std::vector<StorageImage>					m_vecStorageImage; // read/write image
+		std::vector<StorageImage>					m_vecTexelBuffer; // texel buffer
+		std::vector<CombinedImageSampler>			m_vecCombinedImageSampler; // sampler & image
 		//
-		std::vector<TexelBufferObject>				m_vecTBO;
-		std::vector<CombinedImageSampler>			m_vecSampler;
+		std::vector<UniformBuffer>					m_vecUniformBuffer; // uniform buffer
+		std::vector<StorageBuffer>					m_vecStorageBuffer; // storage buffer
 		//
-		ArgumentUniformLayouts						m_uniformLayouts;
+		ArgumentUniformLayouts						m_uniformLayouts; // 
 		
 		// VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER	   只读 Texel Buffer，
 		// VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER     可读写 Texel Buffer
@@ -43,45 +49,37 @@ namespace Nix {
 		// VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT 一个 input attachment
 		std::vector<VkDescriptorImageInfo>			m_vecDescriptorImageInfo;
 		//
-		std::vector<uint16_t>						m_vecBufferOffsets;
-		uint16_t									m_UBOLocalSize;
+		uint32_t									m_sizeUniformBuffer;
+		uint32_t									m_sizeStorageBuffer;
+		// key : binding , value : offset index
+		std::map<uint32_t, uint32_t>				m_offsetTable;
+		// offsets passed to the vkBindDescriptorSet
+		std::vector<uint32_t>						m_uniformIndices;
+		std::vector<uint32_t>						m_storageIndices;
+		std::vector<VkDeviceSize>					m_vecBufferBaseOffsets;
+	private:
 	public:
-		const UniformBlock* getUniform(const std::string& _name) const;
-		const UniformBlock::Member* getUniformMember(uint32_t _binding, const std::string& _name) const;
-		const CombinedImageSampler* getSampler(const std::string& _name) const;
-		const ShaderStorageBufferObject* getSSBO(const std::string& _name) const;
-		const TexelBufferObject* getTBO(const std::string& _name) const;
+		// image descriptor
+		const SeparateSampler* getSampler(const std::string& _name) const;
+		const SeparateImage* getSampledImage(const std::string& _name) const;
+		const StorageImage* getStorageImage(const std::string& _name) const;
+		const CombinedImageSampler* getCombinedImageSampler(const std::string& _name) const;
 		const SubpassInput* getSubpassInput(const std::string& _name) const;
+		// buffer descriptor
+		const StorageBuffer* getStorageBuffer(const std::string& _name) const;
+		const UniformBuffer* getUniform(const std::string& _name, const std::vector<GLSLStructMember>*& _members, uint32_t& _localOffset ) const;
 		//
-		void completeSetup( ContextVk* _context );
-		//
-		void setupDescriptorBufferInfo();
-		void setupDescriptorImageInfo();
+		void updateUniformBufferOffsets(VkDeviceSize _newUniformOffset, std::vector<VkDeviceSize>& _offsets) {
+			for (auto index : m_uniformIndices) {
+				_offsets[index] = m_vecBufferBaseOffsets[index] + _newUniformOffset;
+			}
+		}
+		void updateStorageBufferOffsets(VkDeviceSize _newStorageOffset, std::vector<VkDeviceSize>& _offsets) {
+			for (auto index : m_storageIndices) {
+				_offsets[index] = m_vecBufferBaseOffsets[index] + _newStorageOffset;
+			}
+		}
 	};
-
-	//
-	//struct ArgumentLayout {
-	//	struct UniformMember {
-	//		std::string	name;
-	//		uint32_t	binding;
-	//		uint32_t	offset;
-	//	};
-	//	uint32_t						m_descriptorSetIndex;
-	//	VkDescriptorSetLayout			m_descriptorSetLayout;
-	//	//std::vector<ShaderDescriptor>	m_descriptors;
-	//	std::vector<ShaderDescriptor>	m_uniformBlockDescriptor;
-	//	std::vector<ShaderDescriptor>	m_samplerImageDescriptor;
-	//	std::vector<ShaderDescriptor>	m_storageBufferDescriptor;
-	//	std::vector<ShaderDescriptor>	m_texelBufferDescriptor;
-	//	std::vector< uint32_t >			m_dynamicalBindings;
-	//	std::vector<UniformMember>		m_uniformMembers;
-	//	///////
-	//	const ShaderDescriptor* getUniformBlock(const std::string& _name);
-	//	uint32_t getUniformBlockMemberOffset( uint32_t _binding, const std::string& _name );
-	//	const ShaderDescriptor* getSampler(const std::string& _name );
-	//	const ShaderDescriptor* getSSBO(const std::string& _name );
-	//	void updateDynamicalBindings();
-	//};
 
 	class MaterialVk : public IMaterial {
 		friend class ArgumentAllocator;

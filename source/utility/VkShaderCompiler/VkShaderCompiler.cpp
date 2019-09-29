@@ -27,16 +27,16 @@ namespace Nix {
 																				//
 			std::vector<uint16_t>							m_vecSetID;			// stores the set id
 			std::map<uint16_t, std::vector<uint16_t>>		m_bindingMap;		// set as key, binding as value
-			std::map < uint32_t, std::vector<UniformBuffer::Member>>
+			std::map < uint32_t, std::vector<GLSLStructMember>>
 															m_UBOMemberInfo;	
 			std::vector<StageIOAttribute>					m_vecStageInput;
 			std::vector<StageIOAttribute>					m_vecStageOutput;
 			PushConstants									m_pushConstants;
 			//
 			std::vector<UniformBuffer>						m_vecUBO;
-			std::vector<StorageBuffer>						m_vecSSBO;
+			std::vector<StorageBuffer>						m_vecStorageBuffer;
 			//
-			std::vector<SubpassInput>						m_inputAttachment;
+			std::vector<SubpassInput>						m_vecInputAttachment;
 			std::vector<SeparateSampler>					m_vecSamplers;
 			std::vector<SeparateImage>						m_vecSampledImages;
 			std::vector<StorageImage>						m_vecStorageImages;
@@ -105,7 +105,7 @@ namespace Nix {
 				}
 				return count;
 			}
-			uint16_t getUniformBufferMemebers(uint16_t _set, uint16_t _binding, const UniformBuffer::Member** _member) {
+			uint16_t getUniformBufferMemebers(uint16_t _set, uint16_t _binding, const GLSLStructMember** _member) {
 				DescriptorKey key(_set, _binding);
 				auto it = m_UBOMemberInfo.find(key.val);
 				if (it == m_UBOMemberInfo.end()) {
@@ -119,10 +119,10 @@ namespace Nix {
 				*_size = m_pushConstants.size;
 			}
 			uint16_t getInputAttachment(const SubpassInput** _attachments) {
-				if (m_inputAttachment.size()) {
-					*_attachments = m_inputAttachment.data();
+				if (m_vecInputAttachment.size()) {
+					*_attachments = m_vecInputAttachment.data();
 				}
-				return m_inputAttachment.size();
+				return m_vecInputAttachment.size();
 			}
 			uint16_t getStageInput(const StageIOAttribute** _inputs) {
 				if (m_vecStageInput.size()) {
@@ -137,10 +137,10 @@ namespace Nix {
 				return m_vecStageOutput.size();
 			}
 			uint16_t getShaderStorageBuffers(const StorageBuffer** _ssbo) {
-				if (m_vecSSBO.size()) {
-					*_ssbo = m_vecSSBO.data();
+				if (m_vecStorageBuffer.size()) {
+					*_ssbo = m_vecStorageBuffer.data();
 				}
-				return m_vecSSBO.size();
+				return m_vecStorageBuffer.size();
 			}
 			uint16_t getSamplers(const SeparateSampler** _samplers) {
 				if (m_vecSamplers.size()) {
@@ -335,10 +335,10 @@ namespace Nix {
 			m_vecStageOutput.clear();
 			m_pushConstants.offset = 0;
 			m_pushConstants.size = 0;
-			m_inputAttachment.clear();
+			m_vecInputAttachment.clear();
 			m_vecUBO.clear();
 			m_vecSamplers.clear();
-			m_vecSSBO.clear();
+			m_vecStorageBuffer.clear();
 			m_vecStorageImages.clear();
 			m_vecSampledImages.clear();
 			//m_atomicCounter.clear();
@@ -486,14 +486,14 @@ namespace Nix {
 					if (!name.length()) {
 						break;
 					}
-					UniformBuffer::Member member;
+					GLSLStructMember member;
 					strcpy(member.name, name.c_str());
 					member.offset = get_member_decoration(uniformBlock.base_type_id, memberIndex, spv::Decoration::DecorationOffset);
 					//
 					layoutRecord.push_back(member);
 					++memberIndex;
 				}
-				std::sort(layoutRecord.begin(), layoutRecord.end(), [](const UniformBuffer::Member& _member1, const UniformBuffer::Member& _member2) {
+				std::sort(layoutRecord.begin(), layoutRecord.end(), [](const GLSLStructMember& _member1, const GLSLStructMember& _member2) {
 					return _member1.offset < _member2.offset;
 				});
 				uint32_t prevMemberOffset = -1;
@@ -509,7 +509,7 @@ namespace Nix {
 				}
 			}
 			//
-			m_vecSSBO.clear();
+			m_vecStorageBuffer.clear();
 			for (auto& item : spvResource.storage_buffers) {
 				StorageBuffer ssbo;
 				ssbo.binding = get_decoration(item.id, spv::Decoration::DecorationBinding);
@@ -517,7 +517,7 @@ namespace Nix {
 				strcpy(ssbo.name, item.name.c_str());
 				auto uniformType = get_type_from_variable(item.id);
 				ssbo.size = get_declared_struct_size(uniformType);
-				m_vecSSBO.push_back(ssbo);
+				m_vecStorageBuffer.push_back(ssbo);
 				addDescriptorRecord(ssbo.set, ssbo.binding);
 			}
 			// ======================= image type ===========================
@@ -561,7 +561,7 @@ namespace Nix {
 				input.binding = get_decoration(pass.id, spv::Decoration::DecorationBinding);
 				input.inputIndex = get_decoration(pass.id, spv::Decoration::DecorationIndex);
 				strcpy(input.name, pass.name.c_str());
-				m_inputAttachment.push_back(input);
+				m_vecInputAttachment.push_back(input);
 				addDescriptorRecord(input.set, input.binding);
 			}
 			return true;

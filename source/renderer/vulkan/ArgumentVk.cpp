@@ -55,31 +55,24 @@ namespace Nix {
 		);
 	}
 
-	bool ArgumentVk::getUniformBlock( const char * _name, uint32_t* id_ )
+	bool ArgumentVk::getUniformBlock(const char * _name, uint32_t* id_, uint32_t* offset_, const GLSLStructMember** _members, uint32_t* _numMember)
 	{
-		uint32_t i = 0;
 		const ArgumentLayoutExt& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
-		for (; i < argLayout.m_vecUniformBlock.size(); ++i) {
-			if ( strcmp(argLayout.m_vecUniformBlock[i].name, _name) == 0 ) {
-				*id_ = i;
-				return true;
-			}
+		const std::vector<GLSLStructMember>* members;
+		uint32_t localOffset = 0;
+		const UniformBuffer* buffer = argLayout.getUniform(std::string(_name), members, localOffset);
+		if (!buffer) {
+			return false;
 		}
-		return false;
+		*offset_ = localOffset;
+		return true;
 	}
 
-	bool ArgumentVk::getUniformMemberOffset(uint32_t _uniform, const char* _name, uint32_t* offset_)
+	bool ArgumentVk::getStorageBuffer(const char * _name, uint32_t * id_)
 	{
-		uint32_t i = 0;
 		const ArgumentLayoutExt& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
-		auto& members = argLayout.m_uniformLayouts[_uniform];
-		for ( auto& member : members) {
-			if (member.name == _name) {
-				*offset_ = member.offset;
-				return true;
-			}
-		}
-		return false;
+		auto storageBuffer = argLayout.getStorageBuffer(std::string(_name));
+		m_ssbos
 	}
 
 	bool ArgumentVk::getSampler(const char* _name, uint32_t* id_)

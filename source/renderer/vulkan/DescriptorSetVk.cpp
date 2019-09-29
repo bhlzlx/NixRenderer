@@ -61,8 +61,8 @@ namespace Nix {
 		VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC
 		VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC
 		*/
-		bufferCounter += (uint32_t)argLayout.m_vecUniformBlock.size();
-		bufferCounter += (uint32_t)argLayout.m_vecSSBO.size();
+		bufferCounter += (uint32_t)argLayout.m_vecUniformBuffer.size();
+		bufferCounter += (uint32_t)argLayout.m_vecStorageBuffer.size();
 		//
 		imageCounter += (uint32_t)argLayout.m_vecTBO.size();
 		imageCounter += (uint32_t)argLayout.m_vecSampler.size();
@@ -82,7 +82,7 @@ namespace Nix {
 		bufferCounter = 0, imageCounter = 0;
 		uint32_t writeCounter = 0;
 		
-		for ( auto& uniform : argLayout.m_vecUniformBlock )
+		for ( auto& uniform : argLayout.m_vecUniformBuffer )
 		{
 			argument->m_vecDescriptorWrites[writeCounter] = {};{
 				argument->m_vecDescriptorWrites[writeCounter].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

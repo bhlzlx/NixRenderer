@@ -18,7 +18,6 @@ namespace Nix {
 		friend class ArgumentAllocator;
 	private:
 		std::vector<std::pair<TextureVk*, SamplerState>>		m_textures;
-		std::vector< BufferVk* >								m_ssbos;
 		std::vector< uint32_t >									m_dynamicalOffsets[MaxFlightCount];
 		//
 		uint32_t												m_descriptorSetIndex;
@@ -44,12 +43,23 @@ namespace Nix {
 
 		void bind(VkCommandBuffer _commandBuffer);
 
-		virtual bool getUniformBlock( const char* _name, uint32_t* id_ ) override;
-		virtual bool getUniformMemberOffset( uint32_t _uniform, const char* _name, uint32_t* offset_) override;
-		virtual bool getSampler(const char* _name, uint32_t* id_) override;
+		virtual bool getUniformBlock(const char * _name, uint32_t* id_, uint32_t* offset_, const GLSLStructMember** _members, uint32_t* _numMember) override;
+		virtual bool getStorageBuffer(const char* _name, uint32_t* id_) override;
 		//
-		virtual void setSampler(uint32_t _index, const SamplerState& _sampler, const ITexture* _texture) override;
-		//virtual void setUniform(uint32_t _offset, const void * _data, uint32_t _size) override;
+		virtual bool getSampler(const char* _name, uint32_t* id_) override; // sampler object
+		virtual bool getTexture(const char* _name, uint32_t* id_) override; // sampled image
+		virtual bool getCombinedImageSampler(const char* _name, uint32_t* id_) override; // combined image sampler
+		virtual bool getImage(const char* _name, uint32_t* id_) override; // storage image
+		virtual bool getTexelBuffer(const char * _name, uint32_t id_) override; // texel buffer
+																		   //
+		virtual void setUniform(uint32_t _offset, const void * _data, uint32_t _size) override;
+		virtual void setStorageBuffer(uint32_t _offset, const void * _data, uint32_t _size) override;
+		//
+		virtual void setSampler(uint32_t _id, const SamplerState& _sampler) override;
+		virtual void setTexture(uint32_t _id, ITexture* _texture) override;
+		virtual void setImage(uint32_t _idj, ITexture* _texture) override;
+		virtual void setTexelBuffer(uint32_t _id, ITexture* _texture) override;
+		virtual void setCombinedImageSampler(uint32_t _id, const SamplerState& _sampler, ITexture* _texture);
 		virtual void setShaderCache(uint32_t _offset, const void* _data, uint32_t _size) override;
 		virtual void release() override;
 		//

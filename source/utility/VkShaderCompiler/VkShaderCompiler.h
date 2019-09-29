@@ -14,7 +14,6 @@ namespace Nix {
 	// 2.获取SPV信息
 	namespace spvcompiler {
 		typedef IntegerComposer<uint32_t, uint16_t> DescriptorKey;
-		const uint32_t MaxDescriptorNameLength = 64;
 		//
 		struct StageIOAttribute {
 			uint16_t location;
@@ -35,11 +34,6 @@ namespace Nix {
 		};
 
 		struct UniformBuffer {
-			struct Member {
-				uint16_t offset;
-				uint16_t size;
-				char name[MaxDescriptorNameLength];
-			};
 			uint16_t set;
 			uint16_t binding;
 			uint16_t size;
@@ -105,13 +99,13 @@ namespace Nix {
 			virtual uint16_t getStageOutput(const StageIOAttribute** _outputs) = 0;
 			// buffer descriptor
 			virtual uint16_t getUniformBuffers(const UniformBuffer** _blocks) = 0;
-			virtual uint16_t getUniformBufferMemebers(uint16_t _set, uint16_t _binding, const UniformBuffer::Member** _member) = 0;
+			virtual uint16_t getUniformBufferMemebers(uint16_t _set, uint16_t _binding, const GLSLStructMember** _member) = 0;
 			virtual uint16_t getShaderStorageBuffers(const StorageBuffer** _ssbo) = 0;
 			// image descriptor
 			virtual uint16_t getSamplers(const SeparateSampler** _samplers) = 0;
 			virtual uint16_t getSampledImages(const SeparateImage** _iamges) = 0;
 			virtual uint16_t getStorageImages(const StorageImage** _images ) = 0;
-			virtual uint16_t getCombinedImageSampler(const CombinedImageSampler** _iamges ) = 0;
+			virtual uint16_t getCombinedImageSampler(const CombinedImageSampler** _images ) = 0;
 			virtual uint16_t getInputAttachment(const SubpassInput** _attachments) = 0;
 			// constants
 			virtual void getPushConstants(uint16_t* _offset, uint16_t* _size) = 0;

@@ -25,6 +25,7 @@ namespace Nix {
 
 	class IArchieve;
 
+	static const uint32_t MaxDescriptorNameLength = 64;
 	static const uint32_t MaxRenderTarget = 4;
     static const uint32_t MaxVertexAttribute = 16;
 	static const uint32_t MaxVertexBufferBinding = 8;
@@ -482,13 +483,12 @@ namespace Nix {
 		SDT_Sampler,			// sampler object
 		SDT_SampledImage,		// image can be sampled
 		SDT_StorageImage,		// writable image
-		//SDT_SamplerImage,		// sampler & image
+		SDT_TexelBuffer,		// texel buffer
+		SDT_SamplerImage,		// sampler & image
 		SDT_InputAttachment,	// input attachment
 		//
 		SDT_UniformBuffer,		// uniform block
 		SDT_StorageBuffer,		// ssbo
-		SDT_UniformTexelBuffer,	// uniform texel buffer
-		SDT_StorageTexelBuffer,	// storage texel buffer
 	};
 
 	struct ShaderDescriptor {
@@ -660,16 +660,35 @@ namespace Nix {
 		};
 	} UniformSlot;
 
+	struct GLSLStructMember {
+		uint16_t offset;
+		uint16_t size;
+		char name[MaxDescriptorNameLength];
+	};
+
 	class NIX_API_DECL IArgument {
 	private:
 	public:
-		virtual bool getUniformBlock( const char * _name, uint32_t* id_ ) = 0;
-		virtual bool getUniformMemberOffset(uint32_t _uniform, const char* _name, uint32_t* offset_ ) = 0;
-		virtual bool getSampler(const char* _name, uint32_t* id_ ) = 0;
+		virtual bool getUniformBlock( const char * _name, uint32_t* id_, uint32_t* offset_, const GLSLStructMember** members_, uint32_t* numMember_ ) = 0;
+		virtual bool getStorageBuffer( const char* _name, uint32_t* id_  ) = 0;
 		//
-		virtual void setSampler( uint32_t _index, const SamplerState& _sampler, const ITexture* _texture) = 0;
-		virtual void setUniform(uint32_t _index, uint32_t _offset, const void * _data, uint32_t _size) = 0;
+		virtual bool getSampler(const char* _name, uint32_t* id_ ) = 0; // sampler object
+		virtual bool getTexture(const char* _name, uint32_t* id_) = 0; // sampled image
+		virtual bool getCombinedImageSampler(const char* _name, uint32_t* id_) = 0; // combined image sampler
+		virtual bool getImage(const char* _name, uint32_t* id_) = 0; // storage image
+		virtual bool getTexelBuffer(const char * _name, uint32_t id_) = 0; // texel buffer
+		//
+		virtual void setUniform( uint32_t _offset, const void * _data, uint32_t _size ) = 0;
+		virtual void setStorageBuffer( uint32_t _offset, const void * _data, uint32_t _size ) = 0;
+		//
+		virtual void setSampler(uint32_t _id, const SamplerState& _sampler ) = 0;
+		virtual void setTexture(uint32_t _id, ITexture* _texture) = 0;
+		virtual void setImage(uint32_t _idj, ITexture* _texture) = 0;
+		virtual void setTexelBuffer(uint32_t _id, ITexture* _texture) = 0;
+		virtual void setCombinedImageSampler(uint32_t _id, const SamplerState& _sampler, ITexture* _texture);
+		//
 		virtual void setShaderCache( uint32_t _offset, const void* _data, uint32_t _size ) = 0;
+		//
 		virtual void release() = 0;
 	};
 
