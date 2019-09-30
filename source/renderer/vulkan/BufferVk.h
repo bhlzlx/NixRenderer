@@ -240,4 +240,13 @@ namespace Nix {
 			return m_buffer.m_allocation.offset;
 		}
 	};
+
+	class StorageBuffer {
+	private:
+	public:
+		StorageBuffer() {
+		}
+
+	};
+
 }
