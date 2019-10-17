@@ -1,6 +1,12 @@
 {
-	"vertexShader" : "triangle/triangle.vert.spv",
-	"fragmentShader" : "triangle/triangle.frag.spv",
+	"shaders" : [{
+		"type" : "VertexShader",
+		"name" : "triangle/triangle.vert"
+	},{
+		"type" : "FragmentShader",
+		"name" : "triangle/triangle.frag"
+	}
+	],
 	"topologyMode" : "TMTriangleList",
 	"pologonMode" : "PMFill",
   "vertexLayout": {

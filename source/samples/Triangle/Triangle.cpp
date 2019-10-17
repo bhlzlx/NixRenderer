@@ -1,10 +1,12 @@
-#include <NixApplication.h>
+#define NIX_JP_IMPLEMENTATION
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 #include <NixJpDecl.h>
 #include <NixRenderer.h>
+
+#include <NixApplication.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #define STB_IMAGE_IMPLEMENTATION
@@ -40,21 +42,21 @@ namespace Nix {
 		//
 		IMaterial*					m_material;
 
-		IArgument*					m_argCommon;
-		uint32_t					m_samBase;
-		uint32_t					m_matGlobal;
+		IArgument*					m_argument;
+		uint32_t					m_triSamplerLoc;
+		uint32_t					m_triTextureLoc;
+		SamplerState				m_triSampler;
+		ITexture*					m_triTexture;
 
-		IArgument*					m_argInstance;
-		uint32_t					m_matLocal;
+		/*IArgument*					m_argInstance;
+		uint32_t					m_matLocal;*/
 
 		IRenderable*				m_renderable;
 
 		IBuffer*					m_vertexBuffer;
 		IBuffer*					m_indexBuffer;
 
-		IPipeline*					m_pipeline;
-
-		ITexture*					m_texture;
+		IPipeline* m_pipeline;
 
 		//
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve ) {
@@ -107,7 +109,7 @@ namespace Nix {
 			//texFile->read(texFile->size(), texMem);
 			//m_texture = m_context->createTextureKTX(texMem->constData(), texMem->size());
 
-			m_texture = m_context->createTexture(texDesc);
+			m_triTexture = m_context->createTexture(texDesc);
 
 			Nix::IFile* fishPNG = _archieve->open("texture/fish.png");
 			Nix::IFile* memPNG = CreateMemoryBuffer(fishPNG->size());
@@ -123,7 +125,7 @@ namespace Nix {
 			upload.length = x * y * 4;
 			upload.mipCount = 1;
 			upload.mipDataOffsets[0] = 0;
-			m_texture->uploadSubData(upload);
+			m_triTexture->uploadSubData(upload);
 
 			bool rst = false;
 			m_material = m_context->createMaterial(mtlDesc); {
@@ -131,18 +133,20 @@ namespace Nix {
 					m_pipeline = m_material->createPipeline(rpDesc);
 				}
 				{ // arguments
-					m_argCommon = m_material->createArgument(0);
-					rst = m_argCommon->getSampler("samBase", &m_samBase);
-					rst = m_argCommon->getUniformBlock("GlobalArgument", &m_matGlobal);
-					m_argInstance = m_material->createArgument(1);
-					rst = m_argInstance->getUniformBlock("LocalArgument", &m_matLocal);
-					SamplerState ss;
-					m_argCommon->setSampler(m_samBase, ss, m_texture);
+					m_argument = m_material->createArgument(0);
+					rst = m_argument->getSamplerLocation("triSampler", m_triSamplerLoc);
+					rst = m_argument->getTextureLocation("triTexture", m_triTextureLoc);
+					m_argument->bindSampler(m_triSamplerLoc, m_triSampler);
+					m_argument->bindTexture(m_triTextureLoc, m_triTexture);
+					//m_argInstance = m_material->createArgument(1);
+					//rst = m_argInstance->getUniformBlock("LocalArgument", &m_matLocal);
 				}
 				{ // renderable
 					m_renderable = m_material->createRenderable();
-					m_vertexBuffer = m_context->createVertexBuffer(PlaneVertices, sizeof(PlaneVertices));
-					m_indexBuffer = m_context->createIndexBuffer(PlaneIndices, sizeof(PlaneIndices));
+					//m_vertexBuffer = m_context->createVertexBuffer(PlaneVertices, sizeof(PlaneVertices));
+					//m_indexBuffer = m_context->createIndexBuffer(PlaneIndices, sizeof(PlaneIndices));
+					m_vertexBuffer = m_context->createVertexBuffer(nullptr, sizeof(PlaneVertices));
+					m_indexBuffer = m_context->createIndexBuffer(nullptr, sizeof(PlaneIndices));
 					m_renderable->setVertexBuffer(m_vertexBuffer, 0, 0);
 					m_renderable->setIndexBuffer(m_indexBuffer, 0);
 				}
@@ -160,8 +164,8 @@ namespace Nix {
 			ss.origin = { 0, 0 };
 			ss.size = { (int)_width, (int)_height };
 			//
-			m_pipeline->setViewport(vp);
-			m_pipeline->setScissor(ss);
+			m_mainRenderPass->setViewport(vp);
+			m_mainRenderPass->setScissor(ss);
 		}
 
 		virtual void release() {
@@ -179,15 +183,15 @@ namespace Nix {
 
 			if (m_context->beginFrame()) {
 				m_mainRenderPass->begin(m_primQueue); {
-					glm::mat4x4 identity;
+					/*glm::mat4x4 identity;
 					m_argCommon->setUniform(m_matGlobal, 0, &identity, 64);
 					m_argCommon->setUniform(m_matGlobal, 64, &identity, 64);
 					m_argCommon->setUniform(m_matGlobal, 128, &imageIndex, 4);
-					m_argInstance->setUniform(m_matLocal, 0, &identity, 64);
+					m_argInstance->setUniform(m_matLocal, 0, &identity, 64);*/
 					//
 					m_mainRenderPass->bindPipeline(m_pipeline);
-					m_mainRenderPass->bindArgument(m_argCommon);
-					m_mainRenderPass->bindArgument(m_argInstance);
+					m_mainRenderPass->bindArgument(m_argument);
+					//m_mainRenderPass->bindArgument(m_argInstance);
 					//
 					m_mainRenderPass->drawElements(m_renderable, 0, 6);
 				}

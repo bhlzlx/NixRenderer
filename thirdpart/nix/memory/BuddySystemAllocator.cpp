@@ -81,7 +81,7 @@ namespace Nix {
 	}
 
 	bool BuddySystemAllocator::free(uint16_t _id) {
-		_id < m_nodeTable.size();
+		assert(_id < m_nodeTable.size());
 		size_t layer = 0;
 		uint16_t v = _id;
 		while (v != 1) {

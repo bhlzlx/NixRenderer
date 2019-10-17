@@ -45,13 +45,19 @@ namespace Nix {
 	{
 		auto allocation = m_staticBufferAllocator->allocate(_size);
 		BufferVk* buffer = new BufferVk(this, allocation, m_staticBufferAllocator, BufferType::VertexBufferType, m_staticBufferAllocator->getUsage());
+		if (_data) {
+			buffer->uploadDataImmediatly(_data, _size, 0);
+		}
 		return buffer;
 	}
 
-	IBuffer * ContextVk::createIndexBuffer(const void * _data, size_t _size)
+	IBuffer* ContextVk::createIndexBuffer(const void* _data, size_t _size)
 	{
 		auto allocation = m_staticBufferAllocator->allocate(_size);
 		BufferVk* buffer = new BufferVk(this, allocation, m_staticBufferAllocator, BufferType::IndexBufferType, m_staticBufferAllocator->getUsage());
+		if (_data) {
+			buffer->uploadDataImmediatly(_data, _size, 0);
+		}
 		return buffer;
 	}
 
@@ -75,7 +81,7 @@ namespace Nix {
 		_size = (_size + alignment - 1)&~(alignment - 1);
 		_size *= MaxFlightCount;
 		auto allocation = m_uniformBufferAllocator->allocate(_size);
-		BufferVk* buffer = new BufferVk(this, allocation, m_staticBufferAllocator, BufferType::UniformBufferType, m_staticBufferAllocator->getUsage());
+		BufferVk* buffer = new BufferVk(this, allocation, m_uniformBufferAllocator, BufferType::UniformBufferType, m_uniformBufferAllocator->getUsage());
 		return buffer;
 	}
 

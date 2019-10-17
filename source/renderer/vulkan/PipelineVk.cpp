@@ -161,6 +161,7 @@ namespace Nix {
 		assert(shaderStages.size() >= 1);
 		//
 		pipelineCreateInfo.pStages = shaderStages.data();
+		pipelineCreateInfo.stageCount = shaderStages.size();
 		// Assign the pipeline states to the pipeline creation info structure
 		pipelineCreateInfo.pVertexInputState = &vertexInputState;
 		pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;

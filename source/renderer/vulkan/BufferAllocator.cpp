@@ -29,7 +29,8 @@ namespace Nix {
 					VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
 					VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
 					VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
-					VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT;
+					VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT |
+					VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 				bufferInfo.sharingMode = _context->getQueueFamilies().size() > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
 				bufferInfo.queueFamilyIndexCount = static_cast<uint32_t>(_context->getQueueFamilies().size());
 				bufferInfo.pQueueFamilyIndices = _context->getQueueFamilies().data();
@@ -60,7 +61,9 @@ namespace Nix {
 				bufferInfo.flags = 0;
 				bufferInfo.usage =
 					VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |
-					VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
+					VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT | 
+					VK_BUFFER_USAGE_TRANSFER_DST_BIT|
+					VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 				bufferInfo.sharingMode = _context->getQueueFamilies().size() > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
 				bufferInfo.queueFamilyIndexCount = static_cast<uint32_t>(_context->getQueueFamilies().size());
 				bufferInfo.pQueueFamilyIndices = _context->getQueueFamilies().data();
@@ -121,7 +124,7 @@ namespace Nix {
 					allocation.allocationId = allocateId;
 					allocation.offset = offset;
 					allocation.size = _size;
-					allocation.raw = p.raw + allocation.offset;
+					allocation.raw = p.raw ? p.raw + allocation.offset : nullptr;
 					return allocation;
 				}
 			}

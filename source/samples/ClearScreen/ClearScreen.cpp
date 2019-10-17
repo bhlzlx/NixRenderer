@@ -12,10 +12,10 @@
 #endif
 
 #ifdef _WIN32
-#define LoadLibrary( name ) ::LoadLibraryA( name )
+#define OpenLibrary( name ) ::LoadLibraryA( name )
 #define GetExportAddress( libray, function ) ::GetProcAddress( libray, function )
 #else
-#define LoadLibrary( name ) dlopen(name , RTLD_NOW | RTLD_LOCAL)
+#define OpenLibrary( name ) dlopen(name , RTLD_NOW | RTLD_LOCAL)
 #define GetLibraryAddress( libray, function ) dlsym( libray, function )
 #endif
 
@@ -30,9 +30,9 @@ namespace Nix {
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve ) {
 			printf("%s", "APITest is initializing!");
 #ifdef _WIN32
-            auto library = LoadLibrary("NixVulkan.dll");
+            auto library = OpenLibrary("NixVulkan.dll");
 #else
-            auto library = LoadLibrary("libNixVulkan.so");
+            auto library = OpenLibrary("libNixVulkan.so");
 #endif
             
 			assert(library);

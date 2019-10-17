@@ -508,7 +508,8 @@ namespace Nix {
 
 	struct ShaderConfigure {
 		ShaderModuleType	type = ShaderTypeCount;
-		const char *		content = nullptr;
+		char				name[64] = {};
+		NIX_JSON(type, name)
 	};
 
 	struct MaterialDescription {

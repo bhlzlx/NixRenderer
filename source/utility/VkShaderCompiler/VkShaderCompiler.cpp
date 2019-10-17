@@ -431,7 +431,7 @@ namespace Nix {
 			//spirv_cross::Compiler spvCompiler(_spv, _numU32);
 			spirv_cross::Parser parser(_spv, _numU32);
 			parser.parse();
-			set_ir(std::move(parser.get_parsed_ir()));
+			set_ir(parser.get_parsed_ir());
 			//
 			spirv_cross::ShaderResources spvResource = get_shader_resources();
 			// get vertex binding information

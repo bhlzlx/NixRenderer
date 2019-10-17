@@ -61,6 +61,7 @@ namespace Nix {
 			memset(m_colorAttachments, 0, sizeof(m_colorAttachments));
 			memset(m_colorImageLayout, 0, sizeof(m_colorImageLayout));
 			memset(m_clearValues, 0, sizeof(m_clearValues));
+			m_commandBuffer = VK_NULL_HANDLE;
 			m_clearValues[1].depthStencil.depth = 1.0f;
 		}
 		~RenderPassVk();
@@ -121,6 +122,7 @@ namespace Nix {
 			, m_imageIndex(0)
 		{
 			memset(m_clearValues, 0, sizeof(m_clearValues));
+			m_commandBuffer = VK_NULL_HANDLE;
 			m_clearValues[1].depthStencil.depth = 1.0f;
 		}
 		//static IRenderPass* renderPassWithImages(std::vector<VkImage>& _images, uint32_t _width, uint32_t _height, VkFormat _format );

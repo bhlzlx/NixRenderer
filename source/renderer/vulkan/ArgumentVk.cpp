@@ -72,7 +72,7 @@ namespace Nix {
 		uint16_t binding = -1;
 		const ArgumentLayoutExt& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
 		for (; i < argLayout.m_vecStorageBuffer.size(); ++i) {
-			if (strcmp(argLayout.m_vecStorageBuffer[i].name, _name)) {
+			if (strcmp(argLayout.m_vecStorageBuffer[i].name, _name) == 0) {
 				binding = argLayout.m_vecStorageBuffer[i].binding;
 				break;
 			}
@@ -95,7 +95,7 @@ namespace Nix {
 		uint16_t binding = -1;
 		const ArgumentLayoutExt& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
 		for (; i < argLayout.m_vecSampler.size(); ++i) {
-			if (strcmp(argLayout.m_vecSampler[i].name, _name)) {
+			if (strcmp(argLayout.m_vecSampler[i].name, _name) == 0 ) {
 				binding = argLayout.m_vecSampler[i].binding;
 				break;
 			}
@@ -127,7 +127,7 @@ namespace Nix {
 		uint16_t binding = -1;
 		const ArgumentLayoutExt& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
 		for (; i < argLayout.m_vecSampledImage.size(); ++i) {
-			if (strcmp(argLayout.m_vecSampledImage[i].name, _name)) {
+			if (strcmp(argLayout.m_vecSampledImage[i].name, _name) == 0) {
 				binding = argLayout.m_vecSampledImage[i].binding;
 				break;
 			}
@@ -149,7 +149,7 @@ namespace Nix {
 		uint16_t binding = -1;
 		const ArgumentLayoutExt& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
 		for (; i < argLayout.m_vecStorageImage.size(); ++i) {
-			if (strcmp(argLayout.m_vecStorageImage[i].name, _name)) {
+			if (strcmp(argLayout.m_vecStorageImage[i].name, _name) == 0) {
 				binding = argLayout.m_vecStorageImage[i].binding;
 				break;
 			}
@@ -171,7 +171,7 @@ namespace Nix {
 		uint16_t binding = -1;
 		const ArgumentLayoutExt& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
 		for (; i < argLayout.m_vecCombinedImageSampler.size(); ++i) {
-			if (strcmp(argLayout.m_vecCombinedImageSampler[i].name, _name)) {
+			if (strcmp(argLayout.m_vecCombinedImageSampler[i].name, _name) == 0) {
 				binding = argLayout.m_vecCombinedImageSampler[i].binding;
 				break;
 			}
@@ -193,7 +193,7 @@ namespace Nix {
 		uint16_t binding = -1;
 		const ArgumentLayoutExt& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
 		for (; i < argLayout.m_vecUniformBuffer.size(); ++i) {
-			if (strcmp(argLayout.m_vecUniformBuffer[i].name, _name)) {
+			if (strcmp(argLayout.m_vecUniformBuffer[i].name, _name) == 0) {
 				binding = argLayout.m_vecUniformBuffer[i].binding;
 				break;
 			}
@@ -215,7 +215,7 @@ namespace Nix {
 		uint16_t binding = -1;
 		const ArgumentLayoutExt& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
 		for (; i < argLayout.m_vecTexelBuffer.size(); ++i) {
-			if (strcmp(argLayout.m_vecTexelBuffer[i].name, _name)) {
+			if (strcmp(argLayout.m_vecTexelBuffer[i].name, _name) == 0) {
 				binding = argLayout.m_vecTexelBuffer[i].binding;
 				break;
 			}

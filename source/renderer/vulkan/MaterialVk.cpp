@@ -81,8 +81,8 @@ namespace Nix {
 		uint32_t storageBufferSizeTotal = 0;
 
 		for (const auto& shader : materialDesc.shaders) {
-			if (shader.content) {
-				shaderModules[shader.type] = CreateShaderModule(_context, shader.content, shader.type);
+			if (shader.name[0]) {
+				shaderModules[shader.type] = CreateShaderModule(_context, shader.name, shader.type);
 				// 这个switch其实是处理一些需要特殊验证
 				switch (shader.type) {
 				case ShaderModuleType::VertexShader: {
@@ -182,6 +182,9 @@ namespace Nix {
 					argument.m_vecSubpassInput.push_back(attachment);
 				}
 			}
+			else {
+				break;
+			}
 			PushConstants pc;
 			compiler->getPushConstants(&pc.offset, &pc.size);
 			VkPushConstantRange vkpc;
@@ -196,7 +199,9 @@ namespace Nix {
 			};
 			vkpc.stageFlags = shaderStages[shader.type];
 			constantsStageFlags |= vkpc.stageFlags;
-			constantRanges.push_back(vkpc);
+			if (vkpc.size) {
+				constantRanges.push_back(vkpc);
+			}			
 		}
 		//
 		std::vector<VkDescriptorSetLayoutBinding> dynamicBindings;
