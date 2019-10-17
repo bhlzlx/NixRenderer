@@ -476,7 +476,7 @@ namespace Nix {
 		return true;
 	}
 
-	IShaderCompiler* DriverVk::getShaderCompiler() {
+	spvcompiler::IShaderCompiler* DriverVk::getShaderCompiler() {
 		return m_shaderCompiler;
 	}
 }

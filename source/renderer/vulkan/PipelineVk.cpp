@@ -99,7 +99,7 @@ namespace Nix {
 			depthStencilState.flags = 0;
 			depthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 			depthStencilState.depthTestEnable = m_description.renderState.depthState.testable;
-			depthStencilState.depthWriteEnable= m_description.renderState.depthState.writable;
+			depthStencilState.depthWriteEnable = m_description.renderState.depthState.writable;
 			depthStencilState.depthCompareOp = NixCompareOpToVk(m_description.renderState.depthState.cmpFunc);
 			depthStencilState.depthBoundsTestEnable = VK_FALSE;
 			depthStencilState.back.failOp = NixStencilOpToVk(m_description.renderState.stencilState.opFail);
@@ -146,35 +146,19 @@ namespace Nix {
 		vertexInputState.vertexAttributeDescriptionCount = m_description.vertexLayout.attributeCount;
 		vertexInputState.pVertexAttributeDescriptions = vertexInputAttributs.data();
 		// Shaders
-		std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages{};
-		// Vertex shader
-		shaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		// Set pipeline stage for this shader
-		shaderStages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-		// Load binary SPIR-V shader
-		shaderStages[0].module = m_vertexShader;
-		// Main entry point for the shader
-		shaderStages[0].pName = "main";
-
-		assert(shaderStages[0].module != VK_NULL_HANDLE);
-
-		// Fragment shader
-		shaderStages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		// Set pipeline stage for this shader
-		shaderStages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		// Load binary SPIR-V shader
-		if (m_fragmentShader) {
-			shaderStages[1].module = m_fragmentShader;
-			// Main entry point for the shader
-			shaderStages[1].pName = "main";
-			//
-			assert(shaderStages[1].module != VK_NULL_HANDLE);
+		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+		for (uint32_t i = 0; i < ShaderModuleType::ShaderTypeCount; ++i) {
+			if (m_shaderModules[i]) {
+				VkPipelineShaderStageCreateInfo info = {};
+				info.flags = 0;
+				info.pName = "main";
+				info.module = m_shaderModules[i];
+				info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+				info.stage = NixShaderStageToVk(ShaderModuleType(i));
+				shaderStages.push_back(info);
+			}
 		}
-		// Set pipeline shader stage info
-		if (!m_fragmentShader)
-			pipelineCreateInfo.stageCount = 1;
-		else
-			pipelineCreateInfo.stageCount = 2;
+		assert(shaderStages.size() >= 1);
 		//
 		pipelineCreateInfo.pStages = shaderStages.data();
 		// Assign the pipeline states to the pipeline creation info structure
@@ -239,7 +223,7 @@ namespace Nix {
 	PipelineVk::~PipelineVk()
 	{
 		auto device = m_context->getDevice();
-		if ( m_pipeline ) {
+		if (m_pipeline) {
 			vkDestroyPipeline(device, m_pipeline, nullptr);
 		}
 	}

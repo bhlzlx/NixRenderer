@@ -1,21 +1,6 @@
 #include <NixApplication.h>
-#include <NixRenderer.h>
 #include <nix/io/archieve.h>
 #include <cstdio>
-
-
-std::vector< std::vector< char > > sudoMat = 
-{
-	{'5', '3', '.', '.', '7', '.', '.', '.', '.'},
-	{'6', '.', '.', '1', '9', '5', '.', '.', '.'},
-	{'.', '9', '8', '.', '.', '.', '.', '6', '.'},
-	{'8', '.', '.', '.', '6', '.', '.', '.', '3'},
-	{'4', '.', '.', '8', '.', '3', '.', '.', '1'},
-	{'7', '.', '.', '.', '2', '.', '.', '.', '6'},
-	{'.', '6', '.', '.', '.', '.', '2', '8', '.'},
-	{'.', '.', '.', '4', '1', '9', '.', '.', '5'},
-	{'.', '.', '.', '.', '8', '.', '.', '7', '9'}
-};
 
 class HelloWorld : public NixApplication {
 	virtual bool initialize( void* _wnd, Nix::IArchieve* ) {

@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "VkInc.h"
 #include <NixRenderer.h>
 #include <array>
@@ -12,13 +12,16 @@ namespace Nix {
 	class RenderableVk;
 	class ArgumentVk;
 
+	VkShaderStageFlagBits NixShaderStageToVk(ShaderModuleType _stage);
+
 	using namespace Nix::spvcompiler;
 
 	class ArgumentLayoutExt {
 		using ArgumentUniformLayouts = std::vector<std::vector<GLSLStructMember>>;
 		friend class MaterialVk;
-		friend class ArgumentVk;		
-		friend ArgumentAllocator;
+		friend class ArgumentVk;
+		friend class ArgumentPoolChunk;
+		friend class ArgumentAllocator;
 	private:
 		uint32_t									m_setID;
 		VkDescriptorSetLayout						m_setLayout;
@@ -34,29 +37,30 @@ namespace Nix {
 		std::vector<StorageBuffer>					m_vecStorageBuffer; // storage buffer
 		//
 		ArgumentUniformLayouts						m_uniformLayouts; // 
-		
-		// VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER	   Ö»¶Á Texel Buffer£¬
-		// VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER     ¿É¶ÁĞ´ Texel Buffer
-		// VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER		   Ö»¶Á Buffer(¾²Ì¬°ó¶¨)  (X)
-		// VK_DESCRIPTOR_TYPE_STORAGE_BUFFER		   ¿É¶ÁĞ´ Buffer(¾²Ì¬°ó¶¨) (X)
-		// VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC   Ö»¶Á Buffer
-		// VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC   ¿É¶ÁĞ´ Buffer
+
+		// VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER	   åªè¯» Texel Bufferï¼Œ
+		// VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER     å¯è¯»å†™ Texel Buffer
+		// VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER		   åªè¯» Buffer(é™æ€ç»‘å®š)  (X)
+		// VK_DESCRIPTOR_TYPE_STORAGE_BUFFER		   å¯è¯»å†™ Buffer(é™æ€ç»‘å®š) (X)
+		// VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC   åªè¯» Buffer
+		// VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC   å¯è¯»å†™ Buffer
 		std::vector<VkDescriptorBufferInfo>			m_vecDescriptorBufferInfo;
-		// VK_DESCRIPTOR_TYPE_SAMPLER ¾ÍÊÇ²ÉÑùÆ÷ (X)
-		// VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE ¾ÍÊÇÒ»¸ö¿É²ÉÑùµÄÎÆÀí (X)
-		// VK_DESCRIPTOR_TYPE_STORAGE_IMAGE ¾ÍÊÇÒ»¸ö¿ÉĞ´ÎÆÀí
-		// VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER °üº¬Ò»¸ö²ÉÑùÆ÷ºÍÒ»¸öÎÆÀí£¨OpenGL style£©
-		// VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT Ò»¸ö input attachment
+		// VK_DESCRIPTOR_TYPE_SAMPLER å°±æ˜¯é‡‡æ ·å™¨ (X)
+		// VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE å°±æ˜¯ä¸€ä¸ªå¯é‡‡æ ·çš„çº¹ç† (X)
+		// VK_DESCRIPTOR_TYPE_STORAGE_IMAGE å°±æ˜¯ä¸€ä¸ªå¯å†™çº¹ç†
+		// VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER åŒ…å«ä¸€ä¸ªé‡‡æ ·å™¨å’Œä¸€ä¸ªçº¹ç†ï¼ˆOpenGL styleï¼‰
+		// VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT ä¸€ä¸ª input attachment
 		std::vector<VkDescriptorImageInfo>			m_vecDescriptorImageInfo;
 		//
 		uint32_t									m_sizeUniformBuffer;
 		uint32_t									m_sizeStorageBuffer;
+		std::vector<uint32_t>						m_dynamicOffsetIndexTable;
 		// key : binding , value : offset index
-		std::map<uint32_t, uint32_t>				m_offsetTable;
+		//std::map<uint32_t, uint32_t>				m_offsetTable;
 		// offsets passed to the vkBindDescriptorSet
-		std::vector<uint32_t>						m_uniformIndices;
-		std::vector<uint32_t>						m_storageIndices;
-		std::vector<VkDeviceSize>					m_vecBufferBaseOffsets;
+		//std::vector<uint32_t>						m_uniformIndices;
+		//std::vector<uint32_t>						m_storageIndices;
+		//std::vector<VkDeviceSize>					m_vecBufferBaseOffsets;
 	private:
 	public:
 		// image descriptor
@@ -67,18 +71,21 @@ namespace Nix {
 		const SubpassInput* getSubpassInput(const std::string& _name) const;
 		// buffer descriptor
 		const StorageBuffer* getStorageBuffer(const std::string& _name) const;
-		const UniformBuffer* getUniform(const std::string& _name, const std::vector<GLSLStructMember>*& _members, uint32_t& _localOffset ) const;
+		const UniformBuffer* getUniform(const std::string& _name, const std::vector<GLSLStructMember>*& _members) const;
+		uint32_t getDynamicOffsetsIndex(uint32_t _binding) const {
+			return m_dynamicOffsetIndexTable[_binding];
+		}
 		//
-		void updateUniformBufferOffsets(VkDeviceSize _newUniformOffset, std::vector<VkDeviceSize>& _offsets) {
-			for (auto index : m_uniformIndices) {
-				_offsets[index] = m_vecBufferBaseOffsets[index] + _newUniformOffset;
-			}
-		}
-		void updateStorageBufferOffsets(VkDeviceSize _newStorageOffset, std::vector<VkDeviceSize>& _offsets) {
-			for (auto index : m_storageIndices) {
-				_offsets[index] = m_vecBufferBaseOffsets[index] + _newStorageOffset;
-			}
-		}
+		//void updateUniformBufferOffsets(VkDeviceSize _newUniformOffset, std::vector<VkDeviceSize>& _offsets) {
+		//	for (auto index : m_uniformIndices) {
+		//		_offsets[index] = m_vecBufferBaseOffsets[index] + _newUniformOffset;
+		//	}
+		//}
+		//void updateStorageBufferOffsets(VkDeviceSize _newStorageOffset, std::vector<VkDeviceSize>& _offsets) {
+		//	for (auto index : m_storageIndices) {
+		//		_offsets[index] = m_vecBufferBaseOffsets[index] + _newStorageOffset;
+		//	}
+		//}
 	};
 
 	class MaterialVk : public IMaterial {
@@ -96,15 +103,15 @@ namespace Nix {
 		//
 		uint32_t												m_constantsStageFlags;
 	public:
-		MaterialVk() 
-			: m_descriptorSetLayoutCount( 0 )
+		MaterialVk()
+			: m_descriptorSetLayoutCount(0)
 			, m_argumentLayouts()
-			, m_pipelineLayout( VK_NULL_HANDLE )
+			, m_pipelineLayout(VK_NULL_HANDLE)
 		{
 		}
 
-		virtual IArgument* createArgument( uint32_t _index ) override;
-		virtual void destroyArgument( IArgument* _argument ) override;
+		virtual IArgument* createArgument(uint32_t _index) override;
+		virtual void destroyArgument(IArgument* _argument) override;
 
 		virtual IRenderable* createRenderable() override;
 		virtual void destroyRenderable(IRenderable* _renderable) override;
@@ -129,7 +136,7 @@ namespace Nix {
 			return m_constantsStageFlags;
 		}
 		//
-		static MaterialVk* CreateMaterial( ContextVk* _context, const MaterialDescription& _desc );
+		static MaterialVk* CreateMaterial(ContextVk* _context, const MaterialDescription& _desc);
 		static VkShaderModule CreateShaderModule(ContextVk* _context, const char * _shader, ShaderModuleType _type);
 	};
 

@@ -1,8 +1,9 @@
-#pragma once
+﻿#pragma once
 #include <NixRenderer.h>
 #include "VkInc.h"
 #include "SwapchainVk.h"
 #include "DescriptorSetVk.h"
+#include "RingBuffer.h"
 #include "DebuggerVk.h"
 #include "vk_mem_alloc.h"
 #include <nix/io/archieve.h>
@@ -17,21 +18,19 @@ namespace Nix {
 	class BufferVk;
 	class ShaderModuleVk;
 	class SwapchainVk;
+	class BufferAllocatorVk;
 	class DriverVk;
-	class IBufferAllocator;
 	// a context owns a phy/logic device graphics queue,present queue
 	// contexts shares a upload queue
 	class NIX_API_DECL ContextVk : public IContext {
 		friend class DriverVk;
 	private:
-        std::mutex              m_tickMutex;
+		std::mutex              m_tickMutex;
 		DriverVk* m_driver;
 		//
 		VkPhysicalDevice		m_physicalDevice;
 		VkDevice				m_logicalDevice;
 		// Queues
-		//uint32_t				m_graphicQueueID;
-		//uint32_t				m_transferQueueID;
 		std::vector<uint32_t>	m_queueFamilies;
 		GraphicsQueueVk*		m_graphicsQueue;
 		UploadQueueVk*			m_uploadQueue;
@@ -45,20 +44,16 @@ namespace Nix {
 		IArchieve*				m_archieve;
 		//
 		uint64_t				m_frameCounter;
-		//VkCommandBuffer			m_renderCommandBuffer;
 
-		IBufferAllocator*		m_vtxStaticDrawAllocator; // static vertex buffer
-		IBufferAllocator*		m_vtxStreamDrawAllocator; // stream vertex buffer
-		IBufferAllocator*		m_idxStaticDrawAllocator; // index buffer
-		IBufferAllocator*		m_idxStreamDrawAllocator; // index buffer
-		IBufferAllocator*		m_stagingBufferAllocator; // staging buffer
-		IBufferAllocator*		m_uniformAllocator;		  // uniform buffer
+		BufferAllocatorVk*		m_staticBufferAllocator;
+		BufferAllocatorVk*		m_uniformBufferAllocator;
+		BufferAllocatorVk*		m_stagingBufferAllocator;
 	private:
 		VkPipelineCache			m_pipelineCache;
 		std::map< SamplerState, VkSampler > m_samplerMapping;
 		VkSampler createSampler(const SamplerState& _ss);
 	public:
-		ContextVk() : 
+		ContextVk() :
 			m_physicalDevice(VK_NULL_HANDLE),
 			m_logicalDevice(VK_NULL_HANDLE),
 			m_archieve(nullptr),
@@ -69,27 +64,30 @@ namespace Nix {
 		~ContextVk() {
 
 		}
-		virtual IBufferAllocator* createVertexBufferAllocator(size_t _heapSize, size_t _minSize) override;
-		virtual IBufferAllocator* createVertexBufferAllocatorPM(size_t _heapSize, size_t _minSize) override;
-		virtual IBufferAllocator* createIndexBufferAllocator(size_t _heapSize, size_t _minSize) override;
-		virtual IBufferAllocator* createIndexBufferAllocatorPM(size_t _heapSize, size_t _minSize) override;
 
-		virtual IBuffer* createVertexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator = nullptr) override;
-		virtual IBuffer* createVertexBufferPM( size_t _size, IBufferAllocator* _allocator = nullptr) override;
-		virtual IBuffer* createIndexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator = nullptr) override;
-		virtual IBuffer* createIndexBufferPM(size_t _size, IBufferAllocator* _allocator = nullptr) override;
-		virtual IBuffer* createTexelBuffer( size_t _size );
-		virtual IBuffer* createStorageBuffer(size_t _size);
+		virtual IBuffer* createVertexBuffer(const void* _data, size_t _size) override;
+		virtual IBuffer* createIndexBuffer(const void* _data, size_t _size) override;
+		virtual IBuffer* createTexelBuffer(size_t _size) override;
+		virtual IBuffer* createStorageBuffer(size_t _size) override;
+
+		virtual IBuffer* createUniformBuffer(size_t _size) override;
+
+		BufferVk* createStagingBuffer(size_t _size);
+
+
+
+		// staging buffer is an inner buffer type
+		//virtual IBuffer* createStagingBuffer( size_t _size );
 
 		virtual ITexture* createTexture(const TextureDescription& _desc, TextureUsageFlags _usage = TextureUsageNone) override;
 		virtual ITexture* createTextureDDS(const void* _data, size_t _length) override;
 		virtual ITexture* createTextureKTX(const void* _data, size_t _length) override;
-		virtual IAttachment* createAttachment( NixFormat _format, uint32_t _width, uint32_t _height ) override;
+		virtual IAttachment* createAttachment(NixFormat _format, uint32_t _width, uint32_t _height) override;
 		virtual IRenderPass* createRenderPass(const RenderPassDescription& _desc, IAttachment** _colorAttachments, IAttachment* _depthStencil) override;
-		virtual IMaterial* createMaterial( const MaterialDescription& _desc );
+		virtual IMaterial* createMaterial(const MaterialDescription& _desc);
 		virtual NixFormat swapchainColorFormat() const override;
 		virtual NixFormat swapchainDepthFormat() const override;
-		virtual void captureFrame(IFrameCapture * _capture, FrameCaptureCallback _callback) override;
+		//virtual void captureFrame(IFrameCapture * _capture, FrameCaptureCallback _callback) override;
 		//
 		VkSurfaceKHR getSurface() const;
 		VkDevice getDevice() const;
@@ -99,37 +97,21 @@ namespace Nix {
 		GraphicsQueueVk* getGraphicsQueue() const;
 		SwapchainVk* getSwapchain();
 		//
-		VkSampler getSampler( const SamplerState& _samplerState );
+		VkSampler getSampler(const SamplerState& _samplerState);
 		//
 		const std::vector<uint32_t>& getQueueFamilies() const;
 
 		VkPipelineCache getPipelineCache() { return m_pipelineCache; }
 		void savePipelineCache();
 
-		IBufferAllocator* uniformAllocator() {
-			return m_uniformAllocator;
-		}
-		IBufferAllocator* vertexBufferAllocator() {
-			return m_vtxStaticDrawAllocator;
-		}
-		IBufferAllocator* vertexBufferAllocatorPM() {
-			return m_vtxStreamDrawAllocator;
-		}
-		IBufferAllocator* indexBufferAllocator() {
-			return m_idxStaticDrawAllocator;
-		}
-		IBufferAllocator* stagingBufferAllocator() {
-			return m_stagingBufferAllocator;
-		}
-
-		inline ArgumentAllocator& getDescriptorSetPool(){ return m_argumentAllocator; }
-		inline VmaAllocator getVmaAllocator() { return m_vmaAllocator;  }
+		inline ArgumentAllocator& getDescriptorSetPool() { return m_argumentAllocator; }
+		inline VmaAllocator getVmaAllocator() { return m_vmaAllocator; }
 		inline uint64_t getFrameCounter() const { return m_frameCounter; }
 		//
 		VkSemaphore createSemaphore() const;
 		VkFence createFence() const;
-		GraphicsQueueVk* createGraphicsQueue(VkQueue _id, uint32_t _family, uint32_t _index ) const;
-		UploadQueueVk* createUploadQueue(VkQueue _id, uint32_t _family, uint32_t _index ) const;
+		GraphicsQueueVk* createGraphicsQueue(VkQueue _id, uint32_t _family, uint32_t _index) const;
+		UploadQueueVk* createUploadQueue(VkQueue _id, uint32_t _family, uint32_t _index) const;
 		//ShaderModuleVk* createShaderModule(const char * _text, const char * _entryPoint, VkShaderStageFlagBits _stage) const;
 		//BufferVk&& createBuffer( size_t _size, VkBufferUsageFlags _usage ) const;
 		virtual void resize(uint32_t _width, uint32_t _height) override;

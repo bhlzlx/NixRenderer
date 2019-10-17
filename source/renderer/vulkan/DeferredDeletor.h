@@ -1,8 +1,9 @@
-#pragma once
+﻿#pragma once
 #include "VkInc.h"
 #include <NixRenderer.h>
 #include <list>
 #include <array>
+#include "bufferDef.h"
 
 namespace Nix {
 
@@ -11,6 +12,7 @@ namespace Nix {
 	class RenderPassVk;
 	class ArgumentVk;
 	class PipelineVk;
+	class BufferAllocatorVk;
 
 	class QueueAsyncTask
 	{
@@ -21,7 +23,7 @@ namespace Nix {
 	class NIX_API_DECL GraphicsQueueAsyncTaskManager
 	{
 	private:
-		QueueAsyncTask * createDestroyTask( IBufferAllocator* _allocator, const BufferAllocation& _allocation );
+		QueueAsyncTask * createDestroyTask(BufferAllocatorVk* _allocator, const BufferAllocation& _allocation);
 		QueueAsyncTask * createDestroyTask(TextureVk* _texture);
 		QueueAsyncTask * createDestroyTask(RenderPassVk* _renderPass);
 		QueueAsyncTask * createDestroyTask(ArgumentVk* _drawable);

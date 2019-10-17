@@ -79,7 +79,7 @@ namespace Nix {
 			uint16_t binding;
 			char name[MaxDescriptorNameLength];
 		};
-		
+
 
 		class NIX_API_DECL IShaderCompiler {
 		private:
@@ -104,8 +104,8 @@ namespace Nix {
 			// image descriptor
 			virtual uint16_t getSamplers(const SeparateSampler** _samplers) = 0;
 			virtual uint16_t getSampledImages(const SeparateImage** _iamges) = 0;
-			virtual uint16_t getStorageImages(const StorageImage** _images ) = 0;
-			virtual uint16_t getCombinedImageSampler(const CombinedImageSampler** _images ) = 0;
+			virtual uint16_t getStorageImages(const StorageImage** _images) = 0;
+			virtual uint16_t getCombinedImageSampler(const CombinedImageSampler** _images) = 0;
 			virtual uint16_t getInputAttachment(const SubpassInput** _attachments) = 0;
 			// constants
 			virtual void getPushConstants(uint16_t* _offset, uint16_t* _size) = 0;
@@ -114,7 +114,7 @@ namespace Nix {
 			virtual void release() = 0;
 		};
 	}
-	
+
 }
 
 extern "C" {

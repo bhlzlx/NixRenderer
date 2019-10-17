@@ -1,4 +1,4 @@
-#include "RenderableVk.h"
+﻿#include "RenderableVk.h"
 #include "RenderPassVk.h"
 #include "MaterialVk.h"
 #include "BufferVk.h"
@@ -19,10 +19,10 @@ namespace Nix {
 
 	RenderableVk::RenderableVk(MaterialVk* _material)
 		:m_material(_material)
-		,m_context(_material->getContext())
+		, m_context(_material->getContext())
 	{
 		m_vecBuffer.resize(_material->getDescription().vertexLayout.bufferCount);
-		m_vecBufferOffset.resize( m_vecBuffer.size() );
+		m_vecBufferOffset.resize(m_vecBuffer.size());
 	}
 
 	uint32_t RenderableVk::getVertexBufferCount()
@@ -40,46 +40,23 @@ namespace Nix {
 		VkBuffer buffer = VK_NULL_HANDLE;
 		VkDeviceSize offset = 0;
 		auto type = _buffer->getType();
-		switch (type)
-		{
-		case Nix::BufferType::VertexDraw: {
-			VertexBuffer* vertexBuffer = (VertexBuffer*)_buffer;
-			buffer = *vertexBuffer;
-			offset = vertexBuffer->getOffset();
-			break;
-		}
-		case Nix::BufferType::VertexStreamDraw: {
-			VertexBufferPM* vertexBuffer = (VertexBufferPM*)_buffer;
-			buffer = *vertexBuffer;
-			offset = vertexBuffer->getOffset();
-			break;
-		}
-		default:
-			assert(false);
-			break;
-		}
+		assert(type == BufferType::VertexBufferType);
+		BufferVk* bufferVk = (BufferVk*)_buffer;
+		buffer = bufferVk->getHandle();
+		offset = bufferVk->getOffset();
 		m_vecBuffer[_index] = buffer;
 		m_vecBufferOffset[_index] = offset;
 	}
 
-	void RenderableVk::setIndexBuffer(IBuffer* _buffer, size_t _offset )
+	void RenderableVk::setIndexBuffer(IBuffer* _buffer, size_t _offset)
 	{
 		VkBuffer buffer = VK_NULL_HANDLE;
 		VkDeviceSize offset = 0;
 		auto type = _buffer->getType();
-		switch (type)
-		{
-		case Nix::BufferType::IndexDraw:
-		case Nix::BufferType::IndexStreamDraw: {
-			IndexBuffer* indexBuffer = (IndexBuffer*)_buffer;
-			buffer = *indexBuffer;
-			offset = indexBuffer->getOffset();
-			break;
-		}
-		default:
-			assert(false);
-			break;
-		}
+		assert(type == BufferType::IndexBufferType);
+		BufferVk* bufferVk = (BufferVk*)_buffer;
+		buffer = bufferVk->getHandle();
+		offset = bufferVk->getOffset();
 		m_indexBufferPM = buffer;
 		m_indexBufferOffset = offset + _offset;
 	}

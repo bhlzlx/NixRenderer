@@ -1,4 +1,4 @@
-#include "MaterialVk.h"
+ï»¿#include "MaterialVk.h"
 #include "ContextVk.h"
 #include "RenderableVk.h"
 #include "DescriptorSetVk.h"
@@ -36,7 +36,7 @@ namespace Nix {
 			info.pCode = (const uint32_t*)_pCode;
 		}
 		VkShaderModule module;
-		if (VK_SUCCESS != vkCreateShaderModule( _device, &info, nullptr, &module)) {
+		if (VK_SUCCESS != vkCreateShaderModule(_device, &info, nullptr, &module)) {
 			return VK_NULL_HANDLE;
 		}
 		return module;
@@ -73,7 +73,7 @@ namespace Nix {
 		// 3. get the push constants information
 		DriverVk* driver = (DriverVk*)_context->getDriver();
 		auto compiler = driver->getShaderCompiler();
-		
+
 		auto uniformAligment = driver->getPhysicalDeviceProperties().limits.minUniformBufferOffsetAlignment;
 		auto storageAlignMent = driver->getPhysicalDeviceProperties().limits.minStorageBufferOffsetAlignment;
 		//
@@ -83,7 +83,7 @@ namespace Nix {
 		for (const auto& shader : materialDesc.shaders) {
 			if (shader.content) {
 				shaderModules[shader.type] = CreateShaderModule(_context, shader.content, shader.type);
-				// Õâ¸öswitchÆäÊµÊÇ´¦ÀíÒ»Ð©ÐèÒªÌØÊâÑéÖ¤
+				// è¿™ä¸ªswitchå…¶å®žæ˜¯å¤„ç†ä¸€äº›éœ€è¦ç‰¹æ®ŠéªŒè¯
 				switch (shader.type) {
 				case ShaderModuleType::VertexShader: {
 					// validate the vertex layout
@@ -102,7 +102,7 @@ namespace Nix {
 							assert(false && "name does not match!");
 							return nullptr;
 						}
-						if ( compilerAttr.type != descAttr.type ) {
+						if (compilerAttr.type != descAttr.type) {
 							assert(false && "vertex type does not match!");
 							return nullptr;
 						}
@@ -119,14 +119,14 @@ namespace Nix {
 				default: {
 				}
 				}
-				// ´¦Àí descriptor
+				// å¤„ç† descriptor
 				const UniformBuffer* uniforms;
 				uint16_t numUnif = compiler->getUniformBuffers(&uniforms);
 				for (uint16_t i = 0; i < numUnif; ++i) {
 					const UniformBuffer& unif = uniforms[i];
 					auto& argument = argumentLayouts[unif.set];
 					argument.m_vecUniformBuffer.push_back(unif);
-					uniformBufferSizeTotal += (( unif.size+uniformAligment-1) & ~(uniformAligment-1));
+					uniformBufferSizeTotal += ((unif.size + uniformAligment - 1) & ~(uniformAligment - 1));
 				}
 				const StorageBuffer* ssbos;
 				uint16_t numSsbo = compiler->getShaderStorageBuffers(&ssbos);
@@ -159,7 +159,7 @@ namespace Nix {
 					argument.m_vecSampledImage.push_back(sampler);
 				}
 				const StorageImage* stImage; // image1D 2D 3D/imageBuffer
-				uint16_t numImage = compiler->getStorageImages(&stImage);
+				numImage = compiler->getStorageImages(&stImage);
 				for (uint16_t i = 0; i < numImage; ++i) {
 					const StorageImage& sampler = stImage[i];
 					auto& argLayout = materialDesc.argumentLayouts[sampler.set];
@@ -169,12 +169,6 @@ namespace Nix {
 								auto& argument = argumentLayouts[sampler.set];
 								argument.m_vecStorageImage.push_back(sampler);
 								// storage image
-								break;
-							}
-							else {
-								auto& argument = argumentLayouts[sampler.set];
-								argument.m_vecTexelBuffer.push_back(sampler);
-								// texel buffer
 								break;
 							}
 						}
@@ -206,14 +200,16 @@ namespace Nix {
 		}
 		//
 		std::vector<VkDescriptorSetLayoutBinding> dynamicBindings;
+		std::vector<uint32_t> dynamicBindingTable;
 		VkDescriptorSetLayout setLayouts[MaxArgumentCount];
+
 		for (uint32_t setIndex = 0; setIndex < materialDesc.argumentCount; ++setIndex) {
 			std::vector<VkDescriptorSetLayoutBinding> bindings;
 			auto& argument = materialDesc.argumentLayouts[setIndex];
-            for( uint32_t dscIndex = 0; dscIndex < argument.descriptorCount; ++dscIndex){
-                auto& descriptor = argument.descriptors[dscIndex];
+			for (uint32_t dscIndex = 0; dscIndex < argument.descriptorCount; ++dscIndex) {
+				auto& descriptor = argument.descriptors[dscIndex];
 				switch (descriptor.type) {
-				//// ============================= image type =============================
+					//// ============================= image type =============================
 				case SDT_Sampler: {
 					VkDescriptorSetLayoutBinding binding;
 					binding.binding = descriptor.binding;
@@ -273,7 +269,7 @@ namespace Nix {
 					binding.pImmutableSamplers = nullptr;
 					bindings.push_back(binding);
 				}
-				//// ============================= buffer type =============================
+										  //// ============================= buffer type =============================
 				case SDT_UniformBuffer: {
 					VkDescriptorSetLayoutBinding binding;
 					binding.binding = descriptor.binding;
@@ -297,7 +293,7 @@ namespace Nix {
 					break;
 				}
 				}
-            }
+			}
 			std::sort(dynamicBindings.begin(), dynamicBindings.end(), [](const VkDescriptorSetLayoutBinding& _b1, const VkDescriptorSetLayoutBinding& _b2) {
 				return _b1.binding < _b2.binding;
 			});
@@ -315,14 +311,12 @@ namespace Nix {
 			argumentLayouts[setIndex].m_sizeStorageBuffer = storageBufferSizeTotal;
 			argumentLayouts[setIndex].m_sizeUniformBuffer = uniformBufferSizeTotal;
 			for (size_t i = 0; i < dynamicBindings.size(); ++i) {
-				if (dynamicBindings[i].descriptorType == SDT_UniformBuffer) {
-					argumentLayouts[setIndex].m_uniformIndices.push_back(i);
+				if (dynamicBindingTable.size() < dynamicBindings[i].binding + 1) {
+					dynamicBindingTable.resize(dynamicBindings[i].binding + 1);
 				}
-				else {
-					argumentLayouts[setIndex].m_storageIndices.push_back(i);
-				}
-				argumentLayouts[setIndex].m_offsetTable[dynamicBindings[i].binding] = i;
+				dynamicBindingTable[dynamicBindings[i].binding] = i;
 			}
+			argumentLayouts[setIndex].m_dynamicOffsetIndexTable = dynamicBindingTable;
 		}
 		// create pipeline layout
 		VkPipelineLayoutCreateInfo info; {
@@ -345,14 +339,14 @@ namespace Nix {
 		material->m_descriptorSetLayoutCount = (uint32_t)materialDesc.argumentCount;
 		material->m_pipelineLayout = pipelineLayout;
 		material->m_argumentLayouts = argumentLayouts;
-		material->m_topology = NixTopologyToVk( materialDesc.topologyMode );
+		material->m_topology = NixTopologyToVk(materialDesc.topologyMode);
 		material->m_pologonMode = NixPolygonModeToVk(materialDesc.pologonMode);
 		material->m_constantsStageFlags = constantsStageFlags;
 		//
 		return material;
 	}
 
-	VkShaderModule MaterialVk::CreateShaderModule( ContextVk* _context, const char * _shader, ShaderModuleType _type ) {
+	VkShaderModule MaterialVk::CreateShaderModule(ContextVk* _context, const char * _shader, ShaderModuleType _type) {
 		auto length = strlen(_shader);
 		//const char* compileInfo;
 		const uint32_t* spvBytes;
@@ -363,10 +357,10 @@ namespace Nix {
 			// load SPV from disk!
 			auto arch = _context->getDriver()->getArchieve();
 			Nix::IFile * file = arch->open(VULKAN_SHADER_PATH(_shader));
-			if (!file) { 
-                assert(false); 
-                return VK_NULL_HANDLE; 
-            }
+			if (!file) {
+				assert(false);
+				return VK_NULL_HANDLE;
+			}
 			Nix::IFile* mem = CreateMemoryBuffer(file->size() + 1);
 			mem->seek(SeekEnd, -1);
 			char endle = 0;
@@ -388,8 +382,9 @@ namespace Nix {
 				rst = compiler->parseSpvLayout(_type, spvBytes, spvLength);
 				VkShaderModule module = NixCreateShaderModule(device, spvBytes, spvLength * sizeof(uint32_t));
 				return module;
-			} else {
-				auto module = NixCreateShaderModule(device, mem->constData(), mem->size() - 1 );
+			}
+			else {
+				auto module = NixCreateShaderModule(device, mem->constData(), mem->size() - 1);
 				bool rst = compiler->parseSpvLayout(_type, (uint32_t*)mem->constData(), mem->size() / sizeof(uint32_t));
 				mem->release();
 				return module;
@@ -413,13 +408,13 @@ namespace Nix {
 		return VK_NULL_HANDLE;
 	}
 
-	const UniformBuffer * ArgumentLayoutExt::getUniform(const std::string& _name, const std::vector<GLSLStructMember>*& _members, uint32_t& _localOffset) const {
+	const UniformBuffer * ArgumentLayoutExt::getUniform(const std::string& _name, const std::vector<GLSLStructMember>*& _members) const {
 		for (size_t i = 0; i < m_vecUniformBuffer.size(); ++i) {
 			if (m_vecUniformBuffer[i].name == _name) {
 				_members = &m_uniformLayouts[i];
-				auto it = m_offsetTable.find(m_vecUniformBuffer[i].binding);
-				assert(it != m_offsetTable.end());
-				_localOffset = it->second;
+				//auto it = m_offsetTable.find(m_vecUniformBuffer[i].binding);
+				//assert(it != m_offsetTable.end());
+				//_localOffset = it->second;
 				return &m_vecUniformBuffer[i];
 			}
 		}

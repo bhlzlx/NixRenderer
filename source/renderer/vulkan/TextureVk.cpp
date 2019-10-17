@@ -1,20 +1,21 @@
-#include "TextureVk.h"
+﻿#include "TextureVk.h"
 #include "ContextVk.h"
 #include "BufferVk.h"
 #include "QueueVk.h"
 #include "DeferredDeletor.h"
 #include "vkhelper/helper.h"
 #include "TypemappingVk.h"
+#include "BufferAllocator.h"
 #include <cassert>
 
 namespace Nix {
 	//
-	ITexture* ContextVk::createTexture(const TextureDescription& _desc, TextureUsageFlags _usage ) {
-		return TextureVk::createTexture( this, VK_NULL_HANDLE, VK_NULL_HANDLE, _desc, _usage);
+	ITexture* ContextVk::createTexture(const TextureDescription& _desc, TextureUsageFlags _usage) {
+		return TextureVk::createTexture(this, VK_NULL_HANDLE, VK_NULL_HANDLE, _desc, _usage);
 	}
 
 	ITexture* ContextVk::createTextureDDS(const void* _data, size_t _length) {
-		return TextureVk::createTextureDDS( this, _data, _length);
+		return TextureVk::createTextureDDS(this, _data, _length);
 	}
 
 	ITexture* ContextVk::createTextureKTX(const void* _data, size_t _length) {
@@ -31,10 +32,10 @@ namespace Nix {
 		m_context->getUploadQueue()->uploadTexture(this, _upload);
 	}
 
-// 	void TextureVk::setSubData(const void * _data, size_t _length, const TextureRegion& _baseMipRegion, uint32_t _mipCount)
-// 	{
-// 		m_context->getGraphicsQueue()->updateTexture(this, _baseMipRegion, _mipCount, _data, _length);
-// 	}
+	// 	void TextureVk::setSubData(const void * _data, size_t _length, const TextureRegion& _baseMipRegion, uint32_t _mipCount)
+	// 	{
+	// 		m_context->getGraphicsQueue()->updateTexture(this, _baseMipRegion, _mipCount, _data, _length);
+	// 	}
 
 	void TextureVk::release()
 	{
@@ -45,7 +46,7 @@ namespace Nix {
 	TextureVk::~TextureVk()
 	{
 		if (m_ownership& OwnImage) {
-			vmaDestroyImage( m_context->getVmaAllocator(), m_image, m_allocation);
+			vmaDestroyImage(m_context->getVmaAllocator(), m_image, m_allocation);
 		}
 		if (m_ownership& OwnImageView) {
 			vkDestroyImageView(m_context->getDevice(), m_imageView, nullptr);
@@ -234,13 +235,13 @@ namespace Nix {
 		texture->m_accessFlags = 0;
 		texture->m_pipelineStages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 		texture->m_imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		
+
 		if (_usage & TextureUsageColorAttachment || _usage & TextureUsageDepthStencilAttachment) {
 		}
 		else {
 			_context->getUploadQueue()->tranformImageLayout(texture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		}
-		
+
 		return texture;
 	}
 }

@@ -1,15 +1,15 @@
-#pragma once
+﻿#pragma once
 
 #ifdef _WIN32
 
 #pragma warning(disable:4251)
 
 #ifdef NIX_DYNAMIC_LINK
-	#define NIX_API_DECL _declspec(dllexport)
+#define NIX_API_DECL _declspec(dllexport)
 #elif defined NIX_STATIC_LINK
-	#define NIX_API_DECL __declspec(dllimport)
+#define NIX_API_DECL __declspec(dllimport)
 #else
-	#define NIX_API_DECL
+#define NIX_API_DECL
 #endif
 #else
 #define NIX_API_DECL 
@@ -27,7 +27,7 @@ namespace Nix {
 
 	static const uint32_t MaxDescriptorNameLength = 64;
 	static const uint32_t MaxRenderTarget = 4;
-    static const uint32_t MaxVertexAttribute = 16;
+	static const uint32_t MaxVertexAttribute = 16;
 	static const uint32_t MaxVertexBufferBinding = 8;
 	static const uint32_t UniformChunkSize = 1024 * 512; // 512KB
 	static const uint32_t MaxFlightCount = 3;
@@ -63,30 +63,30 @@ namespace Nix {
 		static_assert(sizeof(DEST) == sizeof(SOURCE) * 2, "!");
 	};
 
-    template < class T >
-    struct Point {
-        T x;
-        T y;
-    };
+	template < class T >
+	struct Point {
+		T x;
+		T y;
+	};
 
-    template < class T >
-    struct Size {
-        T width;
-        T height;
-    };
+	template < class T >
+	struct Size {
+		T width;
+		T height;
+	};
 
-    template < class T >
-    struct Size3D {
-        T width;
-        T height;
-        T depth;
-    };
+	template < class T >
+	struct Size3D {
+		T width;
+		T height;
+		T depth;
+	};
 
-    template< class T >
-    struct Rect {
-        Point<T> origin;
-        Size<T> size;
-    };
+	template< class T >
+	struct Rect {
+		Point<T> origin;
+		Size<T> size;
+	};
 
 	template< class T >
 	struct Offset2D {
@@ -98,13 +98,13 @@ namespace Nix {
 		T x, y, z;
 	};
 
-    struct Viewport {
-        float x,y;
-        float width,height;
-        float zNear,zFar;
-    };
+	struct Viewport {
+		float x, y;
+		float width, height;
+		float zNear, zFar;
+	};
 
-    typedef Rect<int> Scissor;
+	typedef Rect<int> Scissor;
 
 	struct TextureRegion {
 		uint32_t mipLevel; // mip map level
@@ -121,14 +121,14 @@ namespace Nix {
 		Size3D<uint32_t> size;
 	};
 
-    enum DriverType {
-        Software = 0,
-        GLES3,
-        Metal,
-        Vulkan,
+	enum DriverType {
+		Software = 0,
+		GLES3,
+		Metal,
+		Vulkan,
 		DX12,
-        OpenGLCore
-    };
+		OpenGLCore
+	};
 
 	enum DeviceType {
 		OtherGPU = 0,
@@ -138,14 +138,14 @@ namespace Nix {
 		CPU,
 	};
 
-    enum ShaderModuleType {
-        VertexShader = 0,
+	enum ShaderModuleType {
+		VertexShader = 0,
 		TessellationShader,
 		GeometryShader,
-        FragmentShader,
-        ComputeShader,
+		FragmentShader,
+		ComputeShader,
 		ShaderTypeCount,
-    };
+	};
 
 	enum NixFormat : uint8_t {
 		NixInvalidFormat,
@@ -176,92 +176,92 @@ namespace Nix {
 		NixPVRTC_LINEAR_RGBA,
 	};
 
-    enum PolygonMode :uint8_t {
-        PMPoint = 0,
-        PMLine,
-        PMFill
-    };
+	enum PolygonMode :uint8_t {
+		PMPoint = 0,
+		PMLine,
+		PMFill
+	};
 
-    enum TopologyMode :uint8_t {
-        TMPoints = 0,
-        TMLineStrip,
-        TMLineList,
+	enum TopologyMode :uint8_t {
+		TMPoints = 0,
+		TMLineStrip,
+		TMLineList,
 		TMTriangleStrip,
 		TMTriangleList,
 		TMTriangleFan,
 		TMCount,
-    };
+	};
 
-    enum CullMode :uint8_t {
-        CullNone = 0,
-        CullBack = 1,
-        CullFront = 2,
+	enum CullMode :uint8_t {
+		CullNone = 0,
+		CullBack = 1,
+		CullFront = 2,
 		CullAll = 3
-    };
+	};
 
-    enum WindingMode : uint8_t {
-        Clockwise = 0,
-        CounterClockwise = 1,
-    };
+	enum WindingMode : uint8_t {
+		Clockwise = 0,
+		CounterClockwise = 1,
+	};
 
-    enum CompareFunction : uint8_t {
-        Never,
-        Less,
-        Equal,
-        LessEqual,
-        Greater,
-        GreaterEqual,
-        Always,
-    };
+	enum CompareFunction : uint8_t {
+		Never,
+		Less,
+		Equal,
+		LessEqual,
+		Greater,
+		GreaterEqual,
+		Always,
+	};
 
-    enum BlendFactor :uint8_t {
-        Zero,
-        One,
-        SourceColor,
-        InvertSourceColor,
-        SourceAlpha,
-        InvertSourceAlpha,
+	enum BlendFactor :uint8_t {
+		Zero,
+		One,
+		SourceColor,
+		InvertSourceColor,
+		SourceAlpha,
+		InvertSourceAlpha,
 		SourceAlphaSat,
-        //
-        DestinationColor,
-        InvertDestinationColor,
-        DestinationAlpha,
-        InvertDestinationAlpha,
-    };
+		//
+		DestinationColor,
+		InvertDestinationColor,
+		DestinationAlpha,
+		InvertDestinationAlpha,
+	};
 
-    enum BlendOperation :uint8_t {
-        BlendOpAdd,
-        BlendOpSubtract,
-        BlendOpRevsubtract,
-    };
+	enum BlendOperation :uint8_t {
+		BlendOpAdd,
+		BlendOpSubtract,
+		BlendOpRevsubtract,
+	};
 
-    enum StencilOperation :uint8_t {
-        StencilOpKeep,
-        StencilOpZero,
-        StencilOpReplace,
-        StencilOpIncrSat,
-        StencilOpDecrSat,
-        StencilOpInvert,
-        StencilOpInc,
-        StencilOpDec
-    };
+	enum StencilOperation :uint8_t {
+		StencilOpKeep,
+		StencilOpZero,
+		StencilOpReplace,
+		StencilOpIncrSat,
+		StencilOpDecrSat,
+		StencilOpInvert,
+		StencilOpInc,
+		StencilOpDec
+	};
 
-    enum AddressMode :uint8_t {
-        AddressModeWrap,
-        AddressModeClamp,
-        AddressModeMirror,
-    };
+	enum AddressMode :uint8_t {
+		AddressModeWrap,
+		AddressModeClamp,
+		AddressModeMirror,
+	};
 
-    enum TextureFilter :uint8_t {
-        TexFilterNone,
-        TexFilterPoint,
-        TexFilterLinear
-    };
+	enum TextureFilter :uint8_t {
+		TexFilterNone,
+		TexFilterPoint,
+		TexFilterLinear
+	};
 
-    enum TextureCompareMode :uint8_t {
-        RefNone = 0,
-        RefToTexture = 1
-    };
+	enum TextureCompareMode :uint8_t {
+		RefNone = 0,
+		RefToTexture = 1
+	};
 
 	enum VertexType :uint8_t {
 		VertexTypeFloat,
@@ -309,15 +309,14 @@ namespace Nix {
 		AOU_Present,
 	};
 
-	enum class BufferType : uint8_t {
-		VertexDraw,
-		VertexStreamDraw,
-		IndexDraw,
-		IndexStreamDraw,
-		UniformStreamDraw,
-		ShaderStorageBuffer,
-		TexelBuffer,
-		StagingBuffer,
+	enum BufferType : uint8_t {
+		VertexBufferType = 0x1 << 0,
+		IndexBufferType = 0x1 << 1,
+		ShaderStorageBufferType = 0x1 << 2,
+		TexelBufferType = 0x1 << 3,
+		UniformBufferType = 0x1 << 4,
+		StagingBufferType = 0x1 << 5,
+		InvalidBufferType = 0
 	};
 
 	enum MultiSampleType {
@@ -336,55 +335,55 @@ namespace Nix {
 
 #pragma pack(push)
 #pragma pack(1)
-    struct SamplerState {
-        AddressMode u : 8;
-        AddressMode v : 8;
-        AddressMode w : 8;
-        TextureFilter min : 8;
-        TextureFilter mag : 8;
-        TextureFilter mip :8 ;
-        //
-        TextureCompareMode compareMode : 8;
-        CompareFunction compareFunction : 8;
-        bool operator < ( const SamplerState& _ss ) const {
-            return *(uint64_t*)this < *(uint64_t*)&_ss;
-        }
-    };
+	struct SamplerState {
+		AddressMode u : 8;
+		AddressMode v : 8;
+		AddressMode w : 8;
+		TextureFilter min : 8;
+		TextureFilter mag : 8;
+		TextureFilter mip : 8;
+		//
+		TextureCompareMode compareMode : 8;
+		CompareFunction compareFunction : 8;
+		bool operator < (const SamplerState& _ss) const {
+			return *(uint64_t*)this < *(uint64_t*)&_ss;
+		}
+	};
 #pragma pack(pop)
 
-    struct VertexAttribueDescription {
+	struct VertexAttribueDescription {
 		char		name[MaxNameLength];
-        uint32_t    bufferIndex;
-        uint32_t    offset;
-        VertexType  type;
-        VertexAttribueDescription() : 
-            bufferIndex(0),
-            offset(0),
-            type(VertexTypeFloat){
-            }
-		NIX_JSON( name, bufferIndex, offset, type )
-    };
+		uint32_t    bufferIndex;
+		uint32_t    offset;
+		VertexType  type;
+		VertexAttribueDescription() :
+			bufferIndex(0),
+			offset(0),
+			type(VertexTypeFloat) {
+		}
+		NIX_JSON(name, bufferIndex, offset, type)
+	};
 
-    struct VertexBufferDescription {
-        uint32_t stride;
-        uint32_t instanceMode;
-        VertexBufferDescription():
-        stride(0),
-        instanceMode(0)
+	struct VertexBufferDescription {
+		uint32_t stride;
+		uint32_t instanceMode;
+		VertexBufferDescription() :
+			stride(0),
+			instanceMode(0)
 		{
-        }
-		NIX_JSON( stride, instanceMode )
-    };
+		}
+		NIX_JSON(stride, instanceMode)
+	};
 
-    struct VertexLayout {
-        uint32_t                    attributeCount;
-        VertexAttribueDescription   attributes[MaxVertexAttribute];
-        uint32_t                    bufferCount;
-        VertexBufferDescription     buffers[MaxVertexBufferBinding];
-        VertexLayout(): attributeCount(0), bufferCount(0) {
-        }
+	struct VertexLayout {
+		uint32_t                    attributeCount;
+		VertexAttribueDescription   attributes[MaxVertexAttribute];
+		uint32_t                    bufferCount;
+		VertexBufferDescription     buffers[MaxVertexBufferBinding];
+		VertexLayout() : attributeCount(0), bufferCount(0) {
+		}
 		NIX_JSON(attributeCount, attributes, bufferCount, buffers)
-    };
+	};
 
 	struct DepthState {
 		uint8_t             writable = 1;
@@ -415,14 +414,14 @@ namespace Nix {
 		NIX_JSON(enable, opFail, opZFail, opPass, enableCCW, opFailCCW, opZFailCCW, opPassCCW, cmpFunc, mask)
 	};
 
-    enum ColorMask {
-        MaskRed = 1,
-        MaskGreen = 2,
-        MaskBlue = 4,
-        MaskAlpha = 8
-    };
+	enum ColorMask {
+		MaskRed = 1,
+		MaskGreen = 2,
+		MaskBlue = 4,
+		MaskAlpha = 8
+	};
 
-    struct RenderState {
+	struct RenderState {
 		uint8_t				writeMask;
 		CullMode            cullMode = CullMode::CullNone;
 		WindingMode         windingMode = Clockwise;
@@ -431,20 +430,20 @@ namespace Nix {
 		BlendState			blendState;
 		StencilState		stencilState;
 		//
-		NIX_JSON(writeMask, cullMode, windingMode, scissorEnable, depthState, blendState, stencilState )
-    };
+		NIX_JSON(writeMask, cullMode, windingMode, scissorEnable, depthState, blendState, stencilState)
+	};
 
 	typedef uint8_t TextureUsageFlags;
 
-    struct TextureDescription {
+	struct TextureDescription {
 		TextureType type;
-        NixFormat format;
-        uint32_t mipmapLevel;
+		NixFormat format;
+		uint32_t mipmapLevel;
 		//
-        uint32_t width;
-        uint32_t height;
-        uint32_t depth;
-    };
+		uint32_t width;
+		uint32_t height;
+		uint32_t depth;
+	};
 
 	// RenderPassDescription describe the 
 	// load action
@@ -497,7 +496,7 @@ namespace Nix {
 		char					name[MaxNameLength];
 		ShaderModuleType		shaderStage;
 		uint32_t				dataSize;
-		NIX_JSON( type, binding, name, shaderStage, dataSize)
+		NIX_JSON(type, binding, name, shaderStage, dataSize)
 	};
 
 	struct ArgumentDescription {
@@ -538,63 +537,39 @@ namespace Nix {
 		uint64_t						mipDataOffsets[MaxMipLevelCount];
 	};
 
-    class NIX_API_DECL ITexture {
+	class NIX_API_DECL ITexture {
 	public:
-        virtual const TextureDescription& getDesc() const = 0;
-        virtual void updateSubData( const void * _data, size_t _length, const TextureRegion& _region ) = 0;
-		virtual void uploadSubData( const BufferImageUpload& _upload ) = 0;
-        virtual void release() = 0;
-    };
-
-	struct BufferAllocation {
-		uint64_t	buffer;
-		size_t		offset;
-		size_t		size;
-		uint16_t	allocationId;
-		uint8_t*	raw;
-		BufferAllocation()
-		: buffer(0)
-		, offset(0)
-		, size(0)
-		, allocationId(-1)
-		, raw(nullptr){
-		}
+		virtual const TextureDescription& getDesc() const = 0;
+		virtual void updateSubData(const void * _data, size_t _length, const TextureRegion& _region) = 0;
+		virtual void uploadSubData(const BufferImageUpload& _upload) = 0;
+		virtual void release() = 0;
 	};
 
-	class IBuffer;
-
-	class IBufferAllocator {
-	public:
-		virtual BufferAllocation allocate(size_t _size) = 0;
-		virtual void free( const BufferAllocation& ) = 0;
-		virtual BufferType type() = 0;
-	};
-
-    class NIX_API_DECL IBuffer {
+	class NIX_API_DECL IBuffer {
 	protected:
 		BufferType m_type;
-    public:
-		IBuffer(BufferType _type) : m_type(_type) {}
+	public:
+		IBuffer(BufferType _type) noexcept : m_type(_type) {}
 		//
-        virtual size_t getSize() = 0;
-		virtual void setData(const void * _data, size_t _size, size_t _offset) = 0;
+		virtual size_t getSize() = 0;
+		virtual void initData(const void * _data, size_t _size, size_t _offset) = 0;
+		virtual void updateData(const void * _data, size_t _size, size_t _offset) = 0;
 		virtual void release() = 0;
-		virtual IBufferAllocator* getAllocator() = 0;
 		// don't re-implement this method
 		virtual BufferType getType() final {
 			return m_type;
 		}
 		virtual ~IBuffer() {
 		}
-    };
+	};
 
-    class NIX_API_DECL IAttachment {
-    public:
-        virtual const ITexture* getTexture() const = 0;
+	class NIX_API_DECL IAttachment {
+	public:
+		virtual const ITexture* getTexture() const = 0;
 		virtual void release() = 0;
 		virtual NixFormat getFormat() const = 0;
-    };
-    //
+	};
+	//
 
 	enum RenderPassType {
 		MainRenderPass,
@@ -610,15 +585,15 @@ namespace Nix {
 	class IArgument;
 	class IRenderable;
 	class IPipeline;
-    class NIX_API_DECL IRenderPass {
-    private:
-    public:
-        virtual bool begin( IGraphicsQueue* _queue = nullptr ) = 0;
-        virtual void end() = 0;
+	class NIX_API_DECL IRenderPass {
+	private:
+	public:
+		virtual bool begin(IGraphicsQueue* _queue = nullptr) = 0;
+		virtual void end() = 0;
 		virtual void setViewport(const Viewport& _viewport) = 0;
 		virtual void setScissor(const Scissor& _scissor) = 0;
 		virtual void release() = 0;
-		virtual void setClear( const RpClear& _clear ) = 0;
+		virtual void setClear(const RpClear& _clear) = 0;
 		virtual void resize(uint32_t _width, uint32_t _height) = 0;
 		// -------------------------------------------------------------
 		// binding
@@ -636,7 +611,7 @@ namespace Nix {
 		// destroy
 		// -------------------------------------------------------------
 		virtual RenderPassType type() = 0;
-    };
+	};
 
 	typedef union {
 		// opengl slot
@@ -646,7 +621,7 @@ namespace Nix {
 			uint32_t vkSet;
 			uint32_t vkBinding;
 		};
-	} SamplerSlot ;
+	} SamplerSlot;
 
 	typedef union {
 		// opengl slot
@@ -669,25 +644,27 @@ namespace Nix {
 	class NIX_API_DECL IArgument {
 	private:
 	public:
-		virtual bool getUniformBlock( const char * _name, uint32_t* offset_, const GLSLStructMember** members_, uint32_t* numMember_ ) = 0;
-		virtual bool getStorageBuffer( const char* _name, uint32_t* id_  ) = 0;
+		virtual bool getUniformBlockLayout(const char * _name, const GLSLStructMember** _members, uint32_t* _numMember) = 0;
 		//
-		virtual bool getSampler(const char* _name, uint32_t* id_ ) = 0; // sampler object
-		virtual bool getTexture(const char* _name, uint32_t* id_) = 0; // sampled image
-		virtual bool getCombinedImageSampler(const char* _name, uint32_t* id_) = 0; // combined image sampler
-		virtual bool getStorageImage(const char* _name, uint32_t* id_) = 0; // storage image
-		virtual bool getTexelBuffer(const char * _name, uint32_t* id_) = 0; // texel buffer
+		virtual bool getSamplerLocation(const char* _name, uint32_t& _loc) = 0; // sampler object
+		virtual bool getTextureLocation(const char* _name, uint32_t& _loc) = 0; // sampled image
+		virtual bool getStorageImageLocation(const char* _name, uint32_t& _loc) = 0; // storage image
+		virtual bool getCombinedImageSamplerLocation(const char* _name, uint32_t& _loc) = 0; // combined image sampler
+		virtual bool getUniformBlockLocation(const char* _name, uint32_t& _loc) = 0;
+		virtual bool getStorageBufferLocation(const char* _name, uint32_t& _loc) = 0;
+		virtual bool getTexelBufferLocation(const char * _name, uint32_t& _loc) = 0; // texel buffer
+
+																						  // all possible functions that will update the descriptor set
+		virtual void bindSampler(uint32_t _id, const SamplerState& _sampler) = 0;
+		virtual void bindTexture(uint32_t _id, ITexture* _texture) = 0;
+		virtual void bindStorageImage(uint32_t _id, ITexture* _texture) = 0;
+		virtual void bindCombinedImageSampler(uint32_t _id, const SamplerState& _sampler, ITexture* _texture) = 0;
+		virtual void bindStorageBuffer(uint32_t _id, IBuffer* _buffer) = 0;
+		virtual void bindUniformBuffer(uint32_t _id, IBuffer* _buffer) = 0;
+		virtual void bindTexelBuffer(uint32_t _id, IBuffer* _buffer) = 0;
 		//
-		virtual void setUniform( uint32_t _offset, const void * _data, uint32_t _size ) = 0;
-		virtual void setStorageBuffer( uint32_t _offset, const void * _data, uint32_t _size ) = 0;
-		//
-		virtual void setSampler(uint32_t _id, const SamplerState& _sampler ) = 0;
-		virtual void setTexture(uint32_t _id, ITexture* _texture) = 0;
-		virtual void setStorageImage(uint32_t _idj, ITexture* _texture) = 0;
-		virtual void setTexelBuffer(uint32_t _id, ITexture* _texture) = 0;
-		virtual void setCombinedImageSampler(uint32_t _id, const SamplerState& _sampler, ITexture* _texture);
-		//
-		virtual void setShaderCache( uint32_t _offset, const void* _data, uint32_t _size ) = 0;
+		virtual void updateUniformBuffer(IBuffer* _buffer, const void* _data, uint32_t _offset, uint32_t _length) = 0;
+		virtual void setShaderCache(uint32_t _offset, const void* _data, uint32_t _size) = 0;
 		//
 		virtual void release() = 0;
 	};
@@ -696,44 +673,44 @@ namespace Nix {
 	public:
 		virtual uint32_t getVertexBufferCount() = 0;
 		virtual TopologyMode getTopologyMode() = 0;
-		virtual void setVertexBuffer( IBuffer* _buffer, size_t _offset, uint32_t _index ) = 0;
-		virtual void setIndexBuffer( IBuffer* _buffer, size_t _offset ) = 0;
-        virtual void release() = 0;
+		virtual void setVertexBuffer(IBuffer* _buffer, size_t _offset, uint32_t _index) = 0;
+		virtual void setIndexBuffer(IBuffer* _buffer, size_t _offset) = 0;
+		virtual void release() = 0;
 	};
 
 	class NIX_API_DECL IPipeline {
 	public:
-        //virtual void setViewport( const Viewport& _vp ) = 0;
+		//virtual void setViewport( const Viewport& _vp ) = 0;
 		//virtual void setScissor(const Scissor& _scissor) = 0;
-        virtual void setPolygonOffset(float _constantBias, float _slopeScaleBias) = 0;
-        virtual void release() = 0;
+		virtual void setPolygonOffset(float _constantBias, float _slopeScaleBias) = 0;
+		virtual void release() = 0;
 	};
 
 	class NIX_API_DECL IMaterial {
 	public:
-		virtual IArgument* createArgument( uint32_t _index ) = 0;
+		virtual IArgument* createArgument(uint32_t _index) = 0;
 		virtual void destroyArgument(IArgument* _argument) = 0;
 		virtual IRenderable* createRenderable() = 0;
 		virtual void destroyRenderable(IRenderable* _renderable) = 0;
 		//
-        virtual IPipeline* createPipeline(const RenderPassDescription& _renderPass) = 0;
-        virtual void release() = 0;
+		virtual IPipeline* createPipeline(const RenderPassDescription& _renderPass) = 0;
+		virtual void release() = 0;
 	};
 
 	class IFrameCapture;
 	typedef void(*FrameCaptureCallback) (IFrameCapture* _userData);
 	class IFrameCapture {
 	public:
-		virtual void onCapture( void* _data, size_t _length ) = 0;
+		virtual void onCapture(void* _data, size_t _length) = 0;
 		virtual void* rawData() = 0;
 		virtual size_t rawSize() = 0;
 	};
 
 	class ILogger {
 	public:
-		virtual void debug( const char * _text ) = 0;
-		virtual void warning( const char* _text ) = 0;
-		virtual void error( const char* _text ) = 0;
+		virtual void debug(const char * _text) = 0;
+		virtual void warning(const char* _text) = 0;
+		virtual void error(const char* _text) = 0;
 	};
 
 	class IContext;
@@ -752,55 +729,50 @@ namespace Nix {
 	//
 	class NIX_API_DECL IDriver {
 	public:
-		virtual bool initialize( Nix::IArchieve* _arch, DeviceType _type) = 0;
+		virtual bool initialize(Nix::IArchieve* _arch, DeviceType _type) = 0;
 		virtual void release() = 0;
 		virtual IContext* createContext(void* _hwnd) = 0;
 		virtual IArchieve* getArchieve() = 0;
 		virtual ILogger* getLogger() = 0;
 		virtual NixFormat selectDepthFormat(bool _highP = true) = 0;
-		virtual bool checkFormatSupport( NixFormat _format, FormatFeatureFlags _flags ) = 0;
+		virtual bool checkFormatSupport(NixFormat _format, FormatFeatureFlags _flags) = 0;
 	};
 
-    class NIX_API_DECL IContext {
+	class NIX_API_DECL IContext {
 	public:
 		// for android platform
 		virtual bool resume(void* _wnd, uint32_t _width, uint32_t _height) = 0;
 		virtual bool suspend() = 0;
 		//
-		virtual IBufferAllocator* createVertexBufferAllocator( size_t _heapSize, size_t _minSize ) = 0;
-		virtual IBufferAllocator* createVertexBufferAllocatorPM(size_t _heapSize, size_t _minSize) = 0;
-		virtual IBufferAllocator* createIndexBufferAllocator(size_t _heapSize, size_t _minSize) = 0;
-		virtual IBufferAllocator* createIndexBufferAllocatorPM(size_t _heapSize, size_t _minSize) = 0;
+		virtual IBuffer* createVertexBuffer(const void* _data, size_t _size) = 0;
+		virtual IBuffer* createIndexBuffer(const void* _data, size_t _size) = 0;
+		virtual IBuffer* createTexelBuffer(size_t _size) = 0;
+		virtual IBuffer* createStorageBuffer(size_t _size) = 0;
 		//
-		virtual IBuffer* createVertexBuffer( const void * _data, size_t _size, IBufferAllocator* _allocator = nullptr ) = 0;
-		virtual IBuffer* createVertexBufferPM(  size_t _size, IBufferAllocator* _allocator = nullptr) = 0;
-		virtual IBuffer* createIndexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator = nullptr ) = 0;
-		virtual IBuffer* createIndexBufferPM(size_t _size, IBufferAllocator* _allocator = nullptr) = 0;
-
-		//virtual IUniformBuffer* createUniformBuffer(size_t _size) = 0;
-        virtual ITexture* createTexture(const TextureDescription& _desc, TextureUsageFlags _usage = TextureUsageNone ) = 0;
-		virtual ITexture* createTextureDDS( const void* _data, size_t _length ) = 0;
+		virtual IBuffer* createUniformBuffer(size_t _size) = 0;
+		virtual ITexture* createTexture(const TextureDescription& _desc, TextureUsageFlags _usage = TextureUsageNone) = 0;
+		virtual ITexture* createTextureDDS(const void* _data, size_t _length) = 0;
 		virtual ITexture* createTextureKTX(const void* _data, size_t _length) = 0;
-		virtual IAttachment* createAttachment(NixFormat _format,uint32_t _width, uint32_t _height ) = 0;
-        virtual IRenderPass* createRenderPass( const RenderPassDescription& _desc, IAttachment** _colorAttachments, IAttachment* _depthStencil ) = 0;
-		virtual IMaterial* createMaterial( const MaterialDescription& _desc ) = 0;
-        //virtual IPipeline* createPipeline( const MaterialDescription& _desc ) = 0;
+		virtual IAttachment* createAttachment(NixFormat _format, uint32_t _width, uint32_t _height) = 0;
+		virtual IRenderPass* createRenderPass(const RenderPassDescription& _desc, IAttachment** _colorAttachments, IAttachment* _depthStencil) = 0;
+		virtual IMaterial* createMaterial(const MaterialDescription& _desc) = 0;
+		//virtual IPipeline* createPipeline( const MaterialDescription& _desc ) = 0;
 		virtual NixFormat swapchainColorFormat() const = 0;
 		virtual NixFormat swapchainDepthFormat() const = 0;
-		virtual void captureFrame(IFrameCapture * _capture, FrameCaptureCallback _callback ) = 0;
+		//virtual void captureFrame(IFrameCapture * _capture, FrameCaptureCallback _callback) = 0;
 		//
 		virtual void resize(uint32_t _width, uint32_t _height) = 0;
 		virtual bool beginFrame() = 0;
 		virtual void endFrame() = 0;
-		virtual IGraphicsQueue* getGraphicsQueue( uint32_t index = 0) = 0;
+		virtual IGraphicsQueue* getGraphicsQueue(uint32_t index = 0) = 0;
 		virtual IRenderPass* getRenderPass() = 0;
 		virtual IDriver* getDriver() = 0;
 		virtual uint32_t getMaxFlightCount() = 0;
 		virtual void release() = 0;
-        virtual ~IContext() { }
-    };
- }
+		virtual ~IContext() { }
+	};
+}
 
- extern "C" {
-	 NIX_API_DECL Nix::IDriver* createDriver();
- }
+extern "C" {
+	NIX_API_DECL Nix::IDriver* createDriver();
+}

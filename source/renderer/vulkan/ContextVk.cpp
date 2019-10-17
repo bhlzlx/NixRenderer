@@ -1,4 +1,4 @@
-#include "ContextVk.h"
+﻿#include "ContextVk.h"
 #include "DriverVk.h"
 #include "BufferVk.h"
 #include "BufferAllocator.h"
@@ -56,7 +56,7 @@ namespace Nix {
 		return createInfos;
 	}
 
-	Nix::IContext* DriverVk::createContext( void* _hwnd ){
+	Nix::IContext* DriverVk::createContext(void* _hwnd) {
 		VkResult rst = VK_SUCCESS;
 		//
 		ContextVk* context = new ContextVk();
@@ -71,12 +71,12 @@ namespace Nix {
 		auto queueInfo = createDeviceQueueCreateInfo(requestedQueues);
 		context->m_logicalDevice = createDevice(queueInfo);
 		VkQueue graphicsQueue, uploadQueue;
-		vkGetDeviceQueue( context->m_logicalDevice, graphicQueueReq.family, graphicQueueReq.index, &graphicsQueue);
-		vkGetDeviceQueue( context->m_logicalDevice, uploadQueueReq.family, uploadQueueReq.index, &uploadQueue);
+		vkGetDeviceQueue(context->m_logicalDevice, graphicQueueReq.family, graphicQueueReq.index, &graphicsQueue);
+		vkGetDeviceQueue(context->m_logicalDevice, uploadQueueReq.family, uploadQueueReq.index, &uploadQueue);
 		// queue families
 		for (auto& req : requestedQueues) {
 			auto queueFamily = req.family;
-			if (std::find( context->m_queueFamilies.begin(), context->m_queueFamilies.end(), queueFamily) == context->m_queueFamilies.end()) {
+			if (std::find(context->m_queueFamilies.begin(), context->m_queueFamilies.end(), queueFamily) == context->m_queueFamilies.end()) {
 				context->m_queueFamilies.push_back(queueFamily);
 			}
 		}
@@ -99,19 +99,15 @@ namespace Nix {
 		if (rst != VK_SUCCESS)
 			return nullptr;
 		//DVBOVk::Initialize();
+		context->m_staticBufferAllocator = createStaticBufferAllocator(context);
+		context->m_uniformBufferAllocator = createDynamicBufferAllocator(context);
+		context->m_stagingBufferAllocator = createStagingBufferAllocator(context);
 		context->m_argumentAllocator.initialize(context);
-		//
-		context->m_vtxStaticDrawAllocator = createVertexBufferGeneralAllocator(context);
-		context->m_vtxStreamDrawAllocator = createVertexBufferGeneralAllocatorPM(context);
-		context->m_idxStaticDrawAllocator = createIndexBufferGeneralAllocator(context);
-		context->m_idxStreamDrawAllocator = createIndexBufferGeneralAllocatorPM(context);
-		context->m_uniformAllocator = createUniformBufferGeneralAllocator(context);
-		context->m_stagingBufferAllocator = createStagingBufferGeneralAllocator(context);
 		// Initialize glslang library.
 		//glslang::InitializeProcess();
 		//
 		// read pipeline cache from disk
-		IFile* pcFile = m_archieve->open( std::string(PIPELINE_CACHE_FILENAME) );
+		IFile* pcFile = m_archieve->open(std::string(PIPELINE_CACHE_FILENAME));
 		VkPipelineCacheCreateInfo cacheInfo = {};
 		cacheInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
 		cacheInfo.pNext = NULL;
@@ -128,7 +124,7 @@ namespace Nix {
 			pcFile->release();
 			pcMem->release();
 		}
-		vkCreatePipelineCache( context->m_logicalDevice, &cacheInfo, nullptr, &context->m_pipelineCache);
+		vkCreatePipelineCache(context->m_logicalDevice, &cacheInfo, nullptr, &context->m_pipelineCache);
 		//
 		return context;
 	}
@@ -172,7 +168,7 @@ namespace Nix {
 
 	void ContextVk::release()
 	{
-		vkDeviceWaitIdle( m_logicalDevice );
+		vkDeviceWaitIdle(m_logicalDevice);
 		savePipelineCache();
 		//
 		m_renderPass->release();
@@ -183,20 +179,20 @@ namespace Nix {
 		delete this;
 	}
 
-	bool ContextVk::resume(void* _wnd, uint32_t _width, uint32_t _height )
+	bool ContextVk::resume(void* _wnd, uint32_t _width, uint32_t _height)
 	{
-        m_tickMutex.lock();
+		m_tickMutex.lock();
 
-        if( m_surface ) {
-            return true;
-        }
+		if (m_surface) {
+			return true;
+		}
 		m_surface = m_driver->createSurface(_wnd);
 		if (!m_surface) {
 			return false;
 		}
 		m_swapchain.resize(_width, _height);
 
-        m_tickMutex.unlock();
+		m_tickMutex.unlock();
 		return true;
 	}
 
@@ -315,39 +311,39 @@ namespace Nix {
 			info.unnormalizedCoordinates = 0;
 		}
 		VkSampler sampler;
-		vkCreateSampler( m_logicalDevice, &info, nullptr, &sampler);
+		vkCreateSampler(m_logicalDevice, &info, nullptr, &sampler);
 		return sampler;
 	}
 
-	void ContextVk::captureFrame(IFrameCapture * _capture, FrameCaptureCallback _callback) {
-		RenderPassSwapchainVk* rp = (RenderPassSwapchainVk*)m_swapchain.renderPass();
-		TextureVk* texture = rp->colorAttachment(m_swapchain.getFlightIndex());
-		m_graphicsQueue->captureScreen(texture, _capture->rawData(), _capture->rawSize(), _callback, _capture);
-	}
+	//void ContextVk::captureFrame(IFrameCapture * _capture, FrameCaptureCallback _callback) {
+	//	RenderPassSwapchainVk* rp = (RenderPassSwapchainVk*)m_swapchain.renderPass();
+	//	TextureVk* texture = rp->colorAttachment(m_swapchain.getFlightIndex());
+	//	m_graphicsQueue->captureScreen(texture, _capture->rawData(), _capture->rawSize(), _callback, _capture);
+	//}
 
 	void ContextVk::resize(uint32_t _width, uint32_t _height)
 	{
-	    m_tickMutex.lock();
-	    if( m_surface ) {
-		    m_swapchain.resize(_width, _height);
-	    }
-	    m_tickMutex.unlock();
+		m_tickMutex.lock();
+		if (m_surface) {
+			m_swapchain.resize(_width, _height);
+		}
+		m_tickMutex.unlock();
 	}
 
 	bool ContextVk::beginFrame()
 	{
-        m_tickMutex.lock();
+		m_tickMutex.lock();
 
 		if (!m_surface) {
-            m_tickMutex.unlock();
+			m_tickMutex.unlock();
 			return false;
 		}
-		if (!m_swapchain.acquireNextImage()){
-            m_tickMutex.unlock();
+		if (!m_swapchain.acquireNextImage()) {
+			m_tickMutex.unlock();
 			return false;
-        }
-		m_graphicsQueue->beginFrame( m_swapchain.getFlightIndex());
-		GetDeferredDeletor().tick( m_swapchain.getFlightIndex());
+		}
+		m_graphicsQueue->beginFrame(m_swapchain.getFlightIndex());
+		GetDeferredDeletor().tick(m_swapchain.getFlightIndex());
 		++m_frameCounter;
 		return true;
 	}
@@ -356,59 +352,9 @@ namespace Nix {
 	{
 		m_graphicsQueue->endFrame();
 		m_swapchain.present();
-        //
-        m_tickMutex.unlock();
+		//
+		m_tickMutex.unlock();
 	}
-
-	IBufferAllocator* ContextVk::createVertexBufferAllocator(size_t _heapSize, size_t _minSize) {
-		if (!_heapSize || !_minSize) {
-			return this->m_vtxStaticDrawAllocator;
-		}
-		IBufferAllocator* allocator = Nix::createVertexBufferAllocator(this, _heapSize, _minSize);
-		return allocator;
-	}
-	IBufferAllocator* ContextVk::createVertexBufferAllocatorPM(size_t _heapSize, size_t _minSize) {
-		if (!_heapSize || !_minSize) {
-			return this->m_vtxStreamDrawAllocator;
-		}
-		IBufferAllocator* allocator = Nix::createVertexBufferAllocatorPM(this, _heapSize, _minSize);
-		return allocator;
-	}
-	IBufferAllocator* ContextVk::createIndexBufferAllocator(size_t _heapSize, size_t _minSize) {
-		if (!_heapSize || !_minSize) {
-			return this->m_idxStaticDrawAllocator;
-		}
-		IBufferAllocator* allocator = Nix::createIndexBufferAllocator(this, _heapSize, _minSize);
-		return allocator;
-	}
-
-	IBufferAllocator* ContextVk::createIndexBufferAllocatorPM(size_t _heapSize, size_t _minSize) {
-		if (!_heapSize || !_minSize) {
-			return m_idxStreamDrawAllocator;
-		}
-		IBufferAllocator* allocator = Nix::createIndexBufferAllocatorPM(this, _heapSize, _minSize);
-		return allocator;
-	}
-
-	//IBuffer* ContextVk::createVertexBuffer(const void* _data, size_t _size, IBufferAllocator* _allocator)
-	//{
-	//	if (!_allocator) {
-	//		_allocator = this->m_vtxStaticDrawAllocator;
-	//	}
-	//	BufferAllocation allocation = _allocator->allocate(_size);
-	//	BufferVk b(this, allocation, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-	//	return new VertexBuffer(std::move(b));
-	//}
-	//
-	//IBuffer* ContextVk::createVertexBufferPM(const void* _data, size_t _size, IBufferAllocator* _allocator)
-	//{
-	//	if (!_allocator) {
-	//		_allocator = this->m_vtxStreamDrawAllocator;
-	//	}
-	//	BufferAllocation allocation = _allocator->allocate(_size*3);
-	//	BufferVk b(this, allocation, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-	//	return new VertexBufferPM(std::move(b));
-	//}
 
 	IGraphicsQueue* ContextVk::getGraphicsQueue(uint32_t _index) {
 		return m_graphicsQueue;

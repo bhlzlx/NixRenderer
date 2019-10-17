@@ -1,4 +1,4 @@
-#include "VkShaderCompiler.h"
+ï»¿#include "VkShaderCompiler.h"
 #include <glslang/Public/ShaderLang.h>
 #include <SPIRV/GlslangToSpv.h>
 #include <StandAlone/DirStackFileIncluder.h>
@@ -28,7 +28,7 @@ namespace Nix {
 			std::vector<uint16_t>							m_vecSetID;			// stores the set id
 			std::map<uint16_t, std::vector<uint16_t>>		m_bindingMap;		// set as key, binding as value
 			std::map < uint32_t, std::vector<GLSLStructMember>>
-															m_UBOMemberInfo;	
+				m_UBOMemberInfo;
 			std::vector<StageIOAttribute>					m_vecStageInput;
 			std::vector<StageIOAttribute>					m_vecStageOutput;
 			PushConstants									m_pushConstants;
@@ -69,15 +69,15 @@ namespace Nix {
 					compilerInstance = nullptr;
 				}
 			}
-			// ³õÊ¼»¯/ÇåÀí Éú²ú»·¾³
+			// åˆå§‹åŒ–/æ¸…ç† ç”Ÿäº§ç¯å¢ƒ
 			bool initializeEnvironment();
 			void finalizeEnvironment();
-			// ½« GLSL ±àÒë³É SPV
+			// å°† GLSL ç¼–è¯‘æˆ SPV
 			bool compile(Nix::ShaderModuleType _type, const char* _text);
 			bool getCompiledSpv(const uint32_t** _spv, size_t* _numU32) const;
-			// ½âÎöSPV
+			// è§£æSPV
 			bool parseSpvLayout(Nix::ShaderModuleType _type, const uint32_t* _spv, size_t _numU32);
-			// »ñÈ¡ĞÅÏ¢
+			// è·å–ä¿¡æ¯
 			uint16_t getDescriptorSetCount() {
 				return (uint16_t)m_vecSetID.size();
 			}

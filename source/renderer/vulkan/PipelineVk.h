@@ -44,7 +44,7 @@ namespace Nix {
 			return m_pipeline;
 		}
 		//
-		void setStencilReference( uint32_t _stencilReference );
+		void setStencilReference(uint32_t _stencilReference);
 		void setBlendFactor(const float* _blendFactors);
 		void setDynamicalStates(VkCommandBuffer _commandBuffer);
 	public:

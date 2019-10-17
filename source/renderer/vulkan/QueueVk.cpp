@@ -1,4 +1,4 @@
-#include "QueueVk.h"
+﻿#include "QueueVk.h"
 #include "ContextVk.h"
 #include "RenderPassVk.h"
 #include "BufferVk.h"
@@ -13,7 +13,7 @@
 
 namespace Nix {
 
-	GraphicsQueueVk* ContextVk::createGraphicsQueue( VkQueue _id, uint32_t _family, uint32_t _index ) const {
+	GraphicsQueueVk* ContextVk::createGraphicsQueue(VkQueue _id, uint32_t _family, uint32_t _index) const {
 		GraphicsQueueVk* queue = new GraphicsQueueVk();
 		queue->m_context = const_cast<ContextVk*>(this);
 		// assign queue object
@@ -28,7 +28,7 @@ namespace Nix {
 		poolInfo.queueFamilyIndex = queue->m_queueFamily;
 		VkCommandPool commandPool;
 		// assign command pool object
-		if (VK_SUCCESS != vkCreateCommandPool( m_logicalDevice, &poolInfo, nullptr, &commandPool)) {
+		if (VK_SUCCESS != vkCreateCommandPool(m_logicalDevice, &poolInfo, nullptr, &commandPool)) {
 			return nullptr;
 		}
 		queue->m_commandPool = commandPool;
@@ -70,7 +70,7 @@ namespace Nix {
 		return queue;
 	}
 
-	UploadQueueVk* ContextVk::createUploadQueue(VkQueue _id, uint32_t _family, uint32_t _index ) const {
+	UploadQueueVk* ContextVk::createUploadQueue(VkQueue _id, uint32_t _family, uint32_t _index) const {
 		UploadQueueVk* queue = new UploadQueueVk();
 		queue->m_context = const_cast<ContextVk*>(this);
 		queue->m_uploadQueue = _id;
@@ -84,7 +84,7 @@ namespace Nix {
 		poolInfo.queueFamilyIndex = _family;
 		VkCommandPool commandPool;
 		// assign command pool object
-		if (VK_SUCCESS != vkCreateCommandPool( m_logicalDevice, &poolInfo, nullptr, &commandPool)) {
+		if (VK_SUCCESS != vkCreateCommandPool(m_logicalDevice, &poolInfo, nullptr, &commandPool)) {
 			return nullptr;
 		}
 		queue->m_uploadCommandPool = commandPool;
@@ -132,8 +132,9 @@ namespace Nix {
 			vkQueueSubmit(m_queue, 1, &submit, m_updatingFences[m_flightIndex]);
 			m_updatingFencesActived[m_flightIndex] = VK_TRUE;
 			m_updatingBuffersActived[m_flightIndex] = VK_FALSE;
-		} else {
-			if ( m_updatingFencesActived[m_flightIndex] ) {
+		}
+		else {
+			if (m_updatingFencesActived[m_flightIndex]) {
 				vkWaitForFences(m_device, 1, &m_updatingFences[m_flightIndex], VK_TRUE, uint64_t(-1));
 				vkResetFences(m_device, 1, &m_updatingFences[m_flightIndex]);
 				m_updatingFencesActived[m_flightIndex] = VK_FALSE;
@@ -147,11 +148,11 @@ namespace Nix {
 			rst = vkResetFences(device, 1, &m_renderFences[_flightIndex]);
 		}
 
-		if (m_screenCapture.capture && m_screenCapture.invokeFrameCount == m_context->getFrameCounter() ) {
-			vkWaitForFences(device, 1, &m_screenCapture.completeFence, VK_TRUE, uint64_t(-1));
-			m_screenCapture.completeCapture();
-			m_screenCapture.reset();
-		}
+		//if (m_screenCapture.capture && m_screenCapture.invokeFrameCount == m_context->getFrameCounter()) {
+		//	vkWaitForFences(device, 1, &m_screenCapture.completeFence, VK_TRUE, uint64_t(-1));
+		//	m_screenCapture.completeCapture();
+		//	m_screenCapture.reset();
+		//}
 
 		auto cmdbuff = this->commandBuffer();
 		cmdbuff->begin();
@@ -168,7 +169,7 @@ namespace Nix {
 	{
 		std::vector< VkSemaphore > semaphoresToWait;
 		std::vector< VkSemaphore > semaphoresToSignal;
-		for ( auto& swapchain : m_swapchains ) {
+		for (auto& swapchain : m_swapchains) {
 			semaphoresToWait.push_back(swapchain->getImageAvailSemaphore());
 		}
 		for (auto& swapchain : m_swapchains) {
@@ -190,18 +191,18 @@ namespace Nix {
 		submit.pWaitDstStageMask = &pipelineStageFlag;
 		submit.pWaitSemaphores = semaphoresToWait.data();
 		submit.waitSemaphoreCount = 1;// static_cast<uint32_t>(m_semaphoresToWait.size());
-		if (m_screenCapture.capture && !m_screenCapture.submitted ) {
-			semaphoresToSignal.push_back(m_screenCapture.waitSemaphore);
-			submit.pSignalSemaphores = semaphoresToSignal.data();
-			submit.signalSemaphoreCount = (uint32_t)semaphoresToSignal.size();
-			vkQueueSubmit(m_queue, 1, &submit, m_renderFences[m_flightIndex]);
-			m_screenCapture.submitCommand(m_queue);
-		}
-		else {
-			submit.pSignalSemaphores = semaphoresToSignal.data();
-			submit.signalSemaphoreCount = (uint32_t)semaphoresToSignal.size();
-			vkQueueSubmit(m_queue, 1, &submit, m_renderFences[m_flightIndex]);
-		}
+		//if (m_screenCapture.capture && !m_screenCapture.submitted) {
+		//	semaphoresToSignal.push_back(m_screenCapture.waitSemaphore);
+		//	submit.pSignalSemaphores = semaphoresToSignal.data();
+		//	submit.signalSemaphoreCount = (uint32_t)semaphoresToSignal.size();
+		//	vkQueueSubmit(m_queue, 1, &submit, m_renderFences[m_flightIndex]);
+		//	m_screenCapture.submitCommand(m_queue);
+		//}
+		//else {
+		submit.pSignalSemaphores = semaphoresToSignal.data();
+		submit.signalSemaphoreCount = (uint32_t)semaphoresToSignal.size();
+		vkQueueSubmit(m_queue, 1, &submit, m_renderFences[m_flightIndex]);
+		//}
 
 		m_renderFencesActived[m_flightIndex] = true;
 		//
@@ -212,7 +213,7 @@ namespace Nix {
 	}
 
 	void GraphicsQueueVk::updateBuffer(BufferVk* _buffer, size_t _offset, const void * _data, size_t _length) {
-		if (!m_readyForRendering) 
+		if (!m_readyForRendering)
 		{
 			auto& cmdbuff = m_updatingBuffers[m_flightIndex];
 
@@ -235,25 +236,25 @@ namespace Nix {
 		}
 	}
 
-// 	void GraphicsQueueVk::updateTexture(TextureVk* _texture, const ImageRegion& _region, const void * _data, size_t _length) {
-// 		if (!m_readyForRendering)
-// 		{
-// 			auto& cmdbuff = m_updatingBuffers[m_flightIndex];
-// 			if (!m_updatingBuffersActived[m_flightIndex]) {
-// 				cmdbuff.begin();
-// 				m_updatingBuffersActived[m_flightIndex] = VK_TRUE;
-// 			}
-// 			if (m_updatingFencesActived[m_flightIndex]) {
-// 				vkWaitForFences(m_device, 1, &m_updatingFences[m_flightIndex], VK_TRUE, uint64_t(-1));
-// 				m_updatingFencesActived[m_flightIndex] = VK_FALSE;
-// 			}
-// 			cmdbuff.updateTexture(_texture, _data, _length, _region);
-// 		}
-// 		else
-// 		{
-// 			m_renderBuffers[m_flightIndex].updateTexture(_texture, _data, _length, _region);
-// 		}
-// 	}
+	// 	void GraphicsQueueVk::updateTexture(TextureVk* _texture, const ImageRegion& _region, const void * _data, size_t _length) {
+	// 		if (!m_readyForRendering)
+	// 		{
+	// 			auto& cmdbuff = m_updatingBuffers[m_flightIndex];
+	// 			if (!m_updatingBuffersActived[m_flightIndex]) {
+	// 				cmdbuff.begin();
+	// 				m_updatingBuffersActived[m_flightIndex] = VK_TRUE;
+	// 			}
+	// 			if (m_updatingFencesActived[m_flightIndex]) {
+	// 				vkWaitForFences(m_device, 1, &m_updatingFences[m_flightIndex], VK_TRUE, uint64_t(-1));
+	// 				m_updatingFencesActived[m_flightIndex] = VK_FALSE;
+	// 			}
+	// 			cmdbuff.updateTexture(_texture, _data, _length, _region);
+	// 		}
+	// 		else
+	// 		{
+	// 			m_renderBuffers[m_flightIndex].updateTexture(_texture, _data, _length, _region);
+	// 		}
+	// 	}
 
 	void GraphicsQueueVk::updateTexture(TextureVk* _texture, const TextureRegion& _region, const void * _data, size_t _length)
 	{
@@ -276,31 +277,31 @@ namespace Nix {
 		}
 	}
 
-// 	void GraphicsQueueVk::updateTexture(TextureVk* _texture, const TextureRegion& _region, uint32_t _mipCount, const void * _data, size_t _length) 
-// 	{
-// 		if (!m_readyForRendering)
-// 		{
-// 			auto& cmdbuff = m_updatingBuffers[m_flightIndex];
-// 			if (!m_updatingBuffersActived[m_flightIndex]) {
-// 				cmdbuff.begin();
-// 				m_updatingBuffersActived[m_flightIndex] = VK_TRUE;
-// 			}
-// 			if (m_updatingFencesActived[m_flightIndex]) {
-// 				vkWaitForFences(m_device, 1, &m_updatingFences[m_flightIndex], VK_TRUE, uint64_t(-1));
-// 				m_updatingFencesActived[m_flightIndex] = VK_FALSE;
-// 			}
-// 			cmdbuff.updateTexture(_texture, _data, _length, _region, _mipCount);
-// 		}
-// 		else
-// 		{
-// 			m_renderBuffers[m_flightIndex].updateTexture(_texture, _data, _length, _region, _mipCount);
-// 		}
-// 	}
+	// 	void GraphicsQueueVk::updateTexture(TextureVk* _texture, const TextureRegion& _region, uint32_t _mipCount, const void * _data, size_t _length) 
+	// 	{
+	// 		if (!m_readyForRendering)
+	// 		{
+	// 			auto& cmdbuff = m_updatingBuffers[m_flightIndex];
+	// 			if (!m_updatingBuffersActived[m_flightIndex]) {
+	// 				cmdbuff.begin();
+	// 				m_updatingBuffersActived[m_flightIndex] = VK_TRUE;
+	// 			}
+	// 			if (m_updatingFencesActived[m_flightIndex]) {
+	// 				vkWaitForFences(m_device, 1, &m_updatingFences[m_flightIndex], VK_TRUE, uint64_t(-1));
+	// 				m_updatingFencesActived[m_flightIndex] = VK_FALSE;
+	// 			}
+	// 			cmdbuff.updateTexture(_texture, _data, _length, _region, _mipCount);
+	// 		}
+	// 		else
+	// 		{
+	// 			m_renderBuffers[m_flightIndex].updateTexture(_texture, _data, _length, _region, _mipCount);
+	// 		}
+	// 	}
 
-	void GraphicsQueueVk::captureScreen(TextureVk* _texture, void * _raw, size_t _length, FrameCaptureCallback _callback, IFrameCapture* _capture )
-	{
-		m_screenCapture.initialize( m_context, m_commandPool, _texture, _raw, _length, _callback, _capture);
-	}
+	//void GraphicsQueueVk::captureScreen(TextureVk* _texture, void * _raw, size_t _length, FrameCaptureCallback _callback, IFrameCapture* _capture)
+	//{
+	//	m_screenCapture.initialize(m_context, m_commandPool, _texture, _raw, _length, _callback, _capture);
+	//}
 
 	void GraphicsQueueVk::waitForIdle() const
 	{
@@ -320,12 +321,10 @@ namespace Nix {
 
 	void CommandBufferVk::updateBuffer(BufferVk* _buffer, size_t _offset, size_t _size, const void* _data)
 	{
-		IBufferAllocator* allocator = m_contextVk->stagingBufferAllocator();
-		BufferAllocation stagingBufferAllocation = allocator->allocate(_size);
-		BufferVk stagingBuffer( m_contextVk,  stagingBufferAllocation, allocator, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
-		stagingBuffer.writeDataImmediatly(_data,_size,0);
+		BufferVk* staging = m_contextVk->createStagingBuffer(_size);
+		staging->updateData(_data, _size, 0);
 		VkBufferCopy copy;
-		copy.srcOffset = stagingBufferAllocation.offset;
+		copy.srcOffset = staging->getOffset();
 		copy.dstOffset = _offset + _buffer->m_allocation.offset;
 		copy.size = _size;
 		VkBufferMemoryBarrier barrierBefore; {
@@ -354,16 +353,14 @@ namespace Nix {
 			0, nullptr,
 			1, &barrierBefore,
 			0, nullptr);
-		VkBuffer dst = *_buffer;
-		VkBuffer src = stagingBuffer;
+		VkBuffer dst = _buffer->getHandle();
+		VkBuffer src = staging->getHandle();
 		vkCmdCopyBuffer(m_commandBuffer, src, dst, 1, &copy);
 		vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 			0, nullptr,
 			1, &barrierAfter,
 			0, nullptr);
-		//
-		auto deletor = GetDeferredDeletor();
-		deletor.destroyResource(&stagingBuffer);
+		staging->release();
 	}
 	/*
 	void CommandBufferVk::updateTexture(TextureVk* _texture, const void* _data, size_t _length, const ImageRegion& _region) const
@@ -465,10 +462,8 @@ namespace Nix {
 	void CommandBufferVk::updateTexture(TextureVk* _texture, const void* _data, size_t _length, const TextureRegion& _region) const
 	{
 		//_length = _length < 64 ? 64 : _length;
-		IBufferAllocator* allocator = m_contextVk->stagingBufferAllocator();
-		BufferAllocation stagingBufferAllocation = allocator->allocate(_length);
-		BufferVk stagingBuffer(m_contextVk, stagingBufferAllocation, allocator, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
-		stagingBuffer.writeDataImmediatly(_data, _length, 0);
+		BufferVk* staging = m_contextVk->createStagingBuffer(_length);
+		staging->updateData(_data, _length, 0);
 		uint32_t width = _region.size.width, height = _region.size.height;
 		int32_t offsetx = _region.offset.x, offsety = _region.offset.y;
 
@@ -485,7 +480,7 @@ namespace Nix {
 				_region.baseLayer,
 				_region.size.depth
 			};
-			copy.bufferOffset = stagingBufferAllocation.offset;
+			copy.bufferOffset = staging->getOffset();
 			copy.bufferImageHeight = 0;
 			copy.bufferRowLength = 0;
 		}
@@ -529,7 +524,7 @@ namespace Nix {
 			m_commandBuffer, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 			0, nullptr, 0, nullptr,
 			1, &barrierBefore);
-		vkCmdCopyBufferToImage(m_commandBuffer, (const VkBuffer&)stagingBuffer, _texture->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+		vkCmdCopyBufferToImage(m_commandBuffer, staging->getHandle(), _texture->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
 		//
 		vkCmdPipelineBarrier(
 			m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
@@ -537,16 +532,12 @@ namespace Nix {
 			1, &barrierAfter);
 		//
 		_texture->setImageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		//
-		auto deletor = GetDeferredDeletor();
-		deletor.destroyResource(&stagingBuffer);
+		staging->release();
 	}
 
-	void CommandBufferVk::updateTexture(TextureVk* _texture, BufferImageUpload _upload ) const {
-		IBufferAllocator* allocator = m_contextVk->stagingBufferAllocator();
-		BufferAllocation stagingBufferAllocation = allocator->allocate(_upload.length);
-		BufferVk stagingBuffer(m_contextVk, stagingBufferAllocation, allocator, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
-		stagingBuffer.writeDataImmediatly(_upload.data, _upload.length, 0);
+	void CommandBufferVk::updateTexture(TextureVk* _texture, BufferImageUpload _upload) const {
+		BufferVk* staging = m_contextVk->createStagingBuffer(_upload.length);
+		staging->updateData(_upload.data, _upload.length, 0);
 
 		uint32_t baseWidth = _upload.baseMipRegion.size.width, baseHeight = _upload.baseMipRegion.size.height;
 		uint32_t baseOffsetX = _upload.baseMipRegion.offset.x, baseOffsetY = _upload.baseMipRegion.offset.y;
@@ -581,7 +572,7 @@ namespace Nix {
 						_upload.baseMipRegion.size.depth
 					};
 				}
-				
+
 				copy.bufferOffset = _upload.mipDataOffsets[miplevel];
 				copy.bufferImageHeight = 0;
 				copy.bufferRowLength = 0;
@@ -629,7 +620,7 @@ namespace Nix {
 			m_commandBuffer, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 			0, nullptr, 0, nullptr,
 			1, &barrierBefore);
-		vkCmdCopyBufferToImage(m_commandBuffer, (const VkBuffer&)stagingBuffer, _texture->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, static_cast<uint32_t>(copies.size()), copies.data());
+		vkCmdCopyBufferToImage(m_commandBuffer, staging->getHandle(), _texture->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, static_cast<uint32_t>(copies.size()), copies.data());
 		// for none compressed format, we only provide raw-data for one mip level
 		// so, we have to generate other mipmap levels when the raw-data not provided
 		auto format = NixFormatToVk(_texture->getDesc().format);
@@ -645,7 +636,7 @@ namespace Nix {
 			vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 				0, nullptr, 0, nullptr,
 				1, &brrSrc);
-			for (uint32_t mipLevel = 0; mipLevel < _texture->getDesc().mipmapLevel-1; ++mipLevel) {
+			for (uint32_t mipLevel = 0; mipLevel < _texture->getDesc().mipmapLevel - 1; ++mipLevel) {
 				VkImageBlit blit = {
 					{
 						VK_IMAGE_ASPECT_COLOR_BIT,	// aspectMask 
@@ -654,7 +645,7 @@ namespace Nix {
 						copies[0].imageSubresource.layerCount // layerCount
 					},
 					{
-						{ (int)baseOffsetX >> mipLevel, (int)baseOffsetY>>mipLevel, 0 },
+						{ (int)baseOffsetX >> mipLevel, (int)baseOffsetY >> mipLevel, 0 },
 						{ (int32_t)baseWidth >> mipLevel, (int32_t)baseHeight >> mipLevel, 1 }
 					},
 					{
@@ -664,7 +655,7 @@ namespace Nix {
 						copies[0].imageSubresource.layerCount // layerCount
 					},
 					{
-						{ (int)baseOffsetX >> (mipLevel+1), (int)baseOffsetY >> (mipLevel+1), 0 },
+						{ (int)baseOffsetX >> (mipLevel + 1), (int)baseOffsetY >> (mipLevel + 1), 0 },
 						{ (int32_t)baseWidth >> (mipLevel + 1), (int32_t)baseHeight >> (mipLevel + 1), 1 }
 					}
 				};
@@ -689,8 +680,7 @@ namespace Nix {
 		//
 		_texture->setImageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		//
-		auto deletor = GetDeferredDeletor();
-		deletor.destroyResource(&stagingBuffer);
+		staging->release();
 	}
 
 	void CommandBufferVk::getFramePixels(TextureVk* _texture, BufferVk& _stagingBuffer)
@@ -738,7 +728,7 @@ namespace Nix {
 		return rst == VK_SUCCESS;
 	}
 
-	/*void CommandBufferVk::endEncoding() 
+	/*void CommandBufferVk::endEncoding()
 	{
 	vkEndCommandBuffer(m_commandBuffer);
 	}*/
@@ -748,7 +738,7 @@ namespace Nix {
 		vkEndCommandBuffer(m_commandBuffer);
 	}
 
-	void UploadQueueVk::uploadBuffer( BufferVk* _buffer, size_t _offset, size_t _size, const void * _data)
+	void UploadQueueVk::uploadBuffer(BufferVk* _buffer, size_t _offset, size_t _size, const void * _data)
 	{
 		m_uploadMutex.lock();
 		m_commandBuffer.begin();
@@ -769,7 +759,7 @@ namespace Nix {
 		m_uploadMutex.unlock();
 	}
 
-	void UploadQueueVk::uploadTexture(TextureVk* _texture, const BufferImageUpload& _upload )
+	void UploadQueueVk::uploadTexture(TextureVk* _texture, const BufferImageUpload& _upload)
 	{
 		m_uploadMutex.lock();
 		m_commandBuffer.begin();
@@ -793,7 +783,7 @@ namespace Nix {
 	void UploadQueueVk::tranformImageLayout(TextureVk* _texture, VkImageLayout _newLayout)
 	{
 		m_uploadMutex.lock();
-		if ( _texture->getImageLayout() == _newLayout) {
+		if (_texture->getImageLayout() == _newLayout) {
 			return;
 		}
 		m_commandBuffer.begin();
@@ -821,22 +811,22 @@ namespace Nix {
 		vkDestroyCommandPool(m_context->getDevice(), m_uploadCommandPool, nullptr);
 	}
 
-	ScreenCapture::ScreenCapture() :
-		texture(nullptr)
-		, raw(nullptr)
-		, length(0)
-		, stagingBuffer(nullptr)
-		, completeFence(VK_NULL_HANDLE)
-		, waitSemaphore(VK_NULL_HANDLE)
-		, commandBuffer(CommandBufferVk())
-		, capture(nullptr)
-		, callback(nullptr)
-		, submitted( false )
-	{
+	//ScreenCapture::ScreenCapture() :
+	//	texture(nullptr)
+	//	, raw(nullptr)
+	//	, length(0)
+	//	, stagingBuffer(nullptr)
+	//	, completeFence(VK_NULL_HANDLE)
+	//	, waitSemaphore(VK_NULL_HANDLE)
+	//	, commandBuffer(CommandBufferVk())
+	//	, capture(nullptr)
+	//	, callback(nullptr)
+	//	, submitted(false)
+	//{
+	//
+	//}
 
-	}
-
-	void ScreenCapture::initialize(ContextVk* _context, VkCommandPool _pool, TextureVk* _texture, void* _raw, size_t _length, FrameCaptureCallback _callback, IFrameCapture* _capture )
+	/*void ScreenCapture::initialize(ContextVk* _context, VkCommandPool _pool, TextureVk* _texture, void* _raw, size_t _length, FrameCaptureCallback _callback, IFrameCapture* _capture)
 	{
 		if (!_texture) {
 			return;
@@ -864,9 +854,7 @@ namespace Nix {
 		auto bytesTotal = NixFormatBits(texture->getDesc().format) * texture->getDesc().width * texture->getDesc().height / 8;
 		assert(bytesTotal <= _length);
 
-		IBufferAllocator* allocator = _context->stagingBufferAllocator();
-		BufferAllocation stagingBufferAllocation = allocator->allocate(bytesTotal);
-		BufferVk stagingBuffer(_context, stagingBufferAllocation, allocator, VK_BUFFER_USAGE_TRANSFER_SRC_BIT|VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+		BufferVk* staging = _context->createStagingBuffer();
 		realLength = bytesTotal;
 		this->commandBuffer.getFramePixels(texture, stagingBuffer);
 		invokeFrameCount = context->getFrameCounter() + MaxFlightCount;
@@ -891,7 +879,7 @@ namespace Nix {
 		submit.waitSemaphoreCount = 1;
 		submit.pSignalSemaphores = nullptr;
 		submit.signalSemaphoreCount = 0;
-		vkQueueSubmit(_queue, 1, &submit, completeFence );
+		vkQueueSubmit(_queue, 1, &submit, completeFence);
 		submitted = true;
 	}
 
@@ -899,7 +887,7 @@ namespace Nix {
 	{
 		memcpy(raw, stagingBuffer->raw(), stagingBuffer->size());
 		capture->onCapture(raw, realLength);
-		if( callback )
+		if (callback)
 			callback(capture);
 	}
 
@@ -914,5 +902,5 @@ namespace Nix {
 		callback = nullptr;
 		submitted = false;
 	}
-
+	*/
 }

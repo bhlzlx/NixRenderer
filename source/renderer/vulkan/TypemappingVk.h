@@ -290,8 +290,15 @@ namespace Nix {
 		case VertexTypeFloat2: return VK_FORMAT_R32G32_SFLOAT;
 		case VertexTypeFloat3: return VK_FORMAT_R32G32B32_SFLOAT;
 		case VertexTypeFloat4: return VK_FORMAT_R32G32B32A32_SFLOAT;
+		//
 		case VertexTypeUint: return VK_FORMAT_R32_UINT;
+		case VertexTypeUint2: return VK_FORMAT_R32G32_UINT;
+		case VertexTypeUint3: return VK_FORMAT_R32G32B32_UINT;
+		case VertexTypeUint4: return VK_FORMAT_R32G32B32A32_UINT;
+		//
+		case VertexTypeHalf: return VK_FORMAT_R16_SFLOAT;
 		case VertexTypeHalf2: return VK_FORMAT_R16G16_SFLOAT;
+		case VertexTypeHalf3: return VK_FORMAT_R16G16B16_SFLOAT;
 		case VertexTypeHalf4: return VK_FORMAT_R16G16B16A16_SFLOAT;
 		case VertexTypeUByte4: return VK_FORMAT_R8G8B8A8_UINT;
 		case VertexTypeUByte4N: return VK_FORMAT_R8G8B8A8_UNORM;

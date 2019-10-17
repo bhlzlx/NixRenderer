@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <NixRenderer.h>
 #include "VkInc.h"
@@ -15,7 +15,7 @@ namespace Nix {
 	class SwapchainVk;
 	class BufferVk;
 	class TextureVk;
-    class ContextVk;
+	class ContextVk;
 
 	class NIX_API_DECL CommandBufferVk
 	{
@@ -41,7 +41,7 @@ namespace Nix {
 		void updateBuffer(BufferVk* _buffer, size_t _offset, size_t _size, const void* _data);
 		//
 		void updateTexture(TextureVk* _texture, const void* _data, size_t _length, const TextureRegion& _region) const;
-		void updateTexture(TextureVk* _texture, BufferImageUpload _upload ) const;
+		void updateTexture(TextureVk* _texture, BufferImageUpload _upload) const;
 		void getFramePixels(TextureVk* _texture, BufferVk& _stagingBuffer);
 		//
 		void setViewport(VkViewport _vp);
@@ -57,6 +57,7 @@ namespace Nix {
 	//
 	class AttachmentVk;
 	class BufferVk;
+	/*
 	struct ScreenCapture {
 		//
 		ContextVk*		context;
@@ -79,11 +80,13 @@ namespace Nix {
 
 		ScreenCapture();
 
-		void initialize( ContextVk* _context, VkCommandPool _pool, TextureVk* _texture, void* _raw, size_t _length, FrameCaptureCallback _callback, IFrameCapture* _userData );
-		void submitCommand( VkQueue _queue );
+		void initialize(ContextVk* _context, VkCommandPool _pool, TextureVk* _texture, void* _raw, size_t _length, FrameCaptureCallback _callback, IFrameCapture* _userData);
+		void submitCommand(VkQueue _queue);
 		void completeCapture();
 		void reset();
 	};
+
+	*/
 
 	class NIX_API_DECL GraphicsQueueVk : public IGraphicsQueue
 	{
@@ -111,7 +114,7 @@ namespace Nix {
 		VkBool32					m_readyForRendering;
 		// 
 		std::vector<SwapchainVk*>	m_swapchains;
-		ScreenCapture				m_screenCapture;
+		//ScreenCapture				m_screenCapture;
 	private:
 		GraphicsQueueVk(const GraphicsQueueVk&) {
 		}
@@ -122,23 +125,24 @@ namespace Nix {
 			m_queue(VK_NULL_HANDLE)
 			, m_commandPool(VK_NULL_HANDLE)
 			, m_flightIndex(0)
-			, m_readyForRendering( VK_FALSE)
+			, m_readyForRendering(VK_FALSE)
 		{
 			memset(m_renderFences, 0, sizeof(m_renderFences));
 			memset(m_renderFencesActived, 0, sizeof(m_renderFencesActived));
 			memset(m_renderBuffers, 0, sizeof(m_renderBuffers));
-			memset(m_updatingBuffersActived, 0, sizeof(m_updatingBuffersActived));		}
+			memset(m_updatingBuffersActived, 0, sizeof(m_updatingBuffersActived));
+		}
 		//
 		operator const VkQueue& () const {
 			return m_queue;
 		}
-		bool attachSwapchains( std::vector<SwapchainVk*> _swapchains );
+		bool attachSwapchains(std::vector<SwapchainVk*> _swapchains);
 		void beginFrame(uint32_t _flightIndex);
-		void updateBuffer( BufferVk* _buffer, size_t _offset, const void * _data, size_t _length );
+		void updateBuffer(BufferVk* _buffer, size_t _offset, const void * _data, size_t _length);
 		//void updateTexture(TextureVk* _texture, const ImageRegion& _region, const void * _data, size_t _length);
 		void updateTexture(TextureVk* _texture, const TextureRegion& _region, const void * _data, size_t _length);
 		//void updateTexture(TextureVk* _texture, const TextureRegion& _region, uint32_t _mipCount, const void * _data, size_t _length);
-		void captureScreen(TextureVk* _texture, void * raw_, size_t _length, FrameCaptureCallback _callback, IFrameCapture* _capture);
+		//void captureScreen(TextureVk* _texture, void * raw_, size_t _length, FrameCaptureCallback _callback, IFrameCapture* _capture);
 		const CommandBufferVk* commandBuffer() const;
 		void endFrame();
 		void waitForIdle() const;
@@ -163,9 +167,9 @@ namespace Nix {
 		UploadQueueVk() {
 		}
 		//
-		void uploadBuffer( BufferVk* _buffer, size_t _offset, size_t _size, const void * _data);
-		void uploadTexture(TextureVk* _texture, const BufferImageUpload& _upload );
-		void tranformImageLayout( TextureVk* _texture, VkImageLayout _newLayout );
+		void uploadBuffer(BufferVk* _buffer, size_t _offset, size_t _size, const void * _data);
+		void uploadTexture(TextureVk* _texture, const BufferImageUpload& _upload);
+		void tranformImageLayout(TextureVk* _texture, VkImageLayout _newLayout);
 		~UploadQueueVk();
 	};
 }

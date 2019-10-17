@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #define VMA_STATIC_VULKAN_FUNCTIONS 1
 #define VK_NO_PROTOTYPES
 #include <vulkan/vulkan_core.h>
@@ -14,14 +14,4 @@ enum DeviceType {
 	DeviceTypeDiscrete,
 	DeviceTypeVirtual,
 	DeviceTypeCPU
-};
-
-namespace Ks {
-	class BufferVk;
-}
-
-struct UBOAllocation {
-	Ks::BufferVk* buffer;
-	size_t offset;
-	size_t capacity;
 };

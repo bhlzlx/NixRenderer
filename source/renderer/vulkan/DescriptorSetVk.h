@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <NixRenderer.h>
 #include "VkInc.h"
 #include <vector>
@@ -16,14 +16,14 @@ namespace Nix {
 	class BufferVk;
 
 	constexpr VkDescriptorPoolSize DescriptorSetPoolConstruction[] = {
-		{ VK_DESCRIPTOR_TYPE_SAMPLER					, 0						},
+		{ VK_DESCRIPTOR_TYPE_SAMPLER					, 128 * MaxFlightCount },
 		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER		, 128 * MaxFlightCount	},
-		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE				, 0						},
-		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE				, 0						},
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER		, 0						},
-		{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER		, 0						},
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER				, 0						},
-		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER				, 0						},
+		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE				, 128 * MaxFlightCount },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE				, 128 * MaxFlightCount },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER		, 0 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER		, 128 * MaxFlightCount },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER				, 0 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER				, 0 },
 		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC		, 512 * MaxFlightCount	},
 		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC		, 16 * MaxFlightCount	},
 		{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT			, 16 * MaxFlightCount	},
@@ -36,10 +36,10 @@ namespace Nix {
 		VkDescriptorPoolSize		m_freeTable[VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT + 1];
 	public:
 		ArgumentPoolChunk();
-		void initialize( VkDevice _device, const VkDescriptorPoolSize* _pools, uint32_t _poolCount );
+		void initialize(VkDevice _device, const VkDescriptorPoolSize* _pools, uint32_t _poolCount);
 		void cleanup();
-		VkDescriptorSet allocate( VkDevice _device, MaterialVk* _material, uint32_t _argumentIndex );
-		void free( VkDevice _device, VkDescriptorSet _descSet );
+		VkDescriptorSet allocate(VkDevice _device, MaterialVk* _material, uint32_t _argumentIndex);
+		void free(VkDevice _device, VkDescriptorSet _descSet);
 		~ArgumentPoolChunk();
 	};
 
@@ -52,14 +52,14 @@ namespace Nix {
 		VkDescriptorSet allocateDescriptorSet(MaterialVk* _material, uint32_t _index, uint32_t& _poolIndex);
 	public:
 		ArgumentAllocator()
-			:m_context( nullptr )
+			:m_context(nullptr)
 		{
 		}
 		void initialize(ContextVk* _context);
 		void cleanup();
 		//
 		ArgumentVk* allocateArgument(MaterialVk* _material, uint32_t _descIndex);
-		void free( ArgumentVk* _argument );
+		void free(ArgumentVk* _argument);
 
 		~ArgumentAllocator();
 	};

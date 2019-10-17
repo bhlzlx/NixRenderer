@@ -1,4 +1,4 @@
-#include "DescriptorSetVk.h"
+﻿#include "DescriptorSetVk.h"
 #include "ContextVk.h"
 #include "MaterialVk.h"
 #include "BufferVk.h"
@@ -10,7 +10,7 @@
 
 namespace Nix {
 
-	VkDescriptorSet ArgumentAllocator::allocateDescriptorSet( MaterialVk* _material, uint32_t _index, uint32_t& _poolIndex ) {
+	VkDescriptorSet ArgumentAllocator::allocateDescriptorSet(MaterialVk* _material, uint32_t _index, uint32_t& _poolIndex) {
 		const ArgumentLayoutExt& layout = _material->getDescriptorSetLayout(_index);
 		if (layout.m_setLayout == VK_NULL_HANDLE) {
 			return VK_NULL_HANDLE;
@@ -33,10 +33,10 @@ namespace Nix {
 		{
 			m_descriptorChunks.push_back(ArgumentPoolChunk());
 			auto& pool = m_descriptorChunks.back();
-			pool.initialize( m_context->getDevice(), &DescriptorSetPoolConstruction[0], sizeof(DescriptorSetPoolConstruction) / sizeof(VkDescriptorPoolSize));
+			pool.initialize(m_context->getDevice(), &DescriptorSetPoolConstruction[0], sizeof(DescriptorSetPoolConstruction) / sizeof(VkDescriptorPoolSize));
 			set = pool.allocate(m_context->getDevice(), _material, _index);
 			_poolIndex = (uint32_t)m_descriptorChunks.size() - 1;
-			assert( (set != VK_NULL_HANDLE) && "must be true!" );
+			assert((set != VK_NULL_HANDLE) && "must be true!");
 		}
 		return set;
 	}
@@ -51,9 +51,9 @@ namespace Nix {
 		argument->m_activeIndex = 0;
 		argument->m_material = _material;
 		argument->m_context = _material->getContext();
-		
+
 		const ArgumentLayoutExt& argLayout = _material->m_argumentLayouts[_descIndex];
-		
+
 		uint32_t bufferCounter = 0, imageCounter = 0;
 		/*
 		VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
@@ -63,11 +63,14 @@ namespace Nix {
 		*/
 		bufferCounter += (uint32_t)argLayout.m_vecUniformBuffer.size();
 		bufferCounter += (uint32_t)argLayout.m_vecStorageBuffer.size();
-		//
-		imageCounter += (uint32_t)argLayout.m_vecTBO.size();
+		bufferCounter += (uint32_t)argLayout.m_vecTexelBuffer.size();
+
+		imageCounter += (uint32_t)argLayout.m_vecCombinedImageSampler.size();
+		imageCounter += (uint32_t)argLayout.m_vecSampledImage.size();
+		imageCounter += (uint32_t)argLayout.m_vecStorageImage.size();
 		imageCounter += (uint32_t)argLayout.m_vecSampler.size();
 		imageCounter += (uint32_t)argLayout.m_vecSubpassInput.size();
-		
+
 		argument->m_vecBufferInfo.resize(bufferCounter);
 		/*
 		VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE
@@ -81,17 +84,17 @@ namespace Nix {
 		//
 		bufferCounter = 0, imageCounter = 0;
 		uint32_t writeCounter = 0;
-		
-		for ( auto& uniform : argLayout.m_vecUniformBuffer )
+
+		for (auto& uniform : argLayout.m_vecUniformBuffer)
 		{
-			argument->m_vecDescriptorWrites[writeCounter] = {};{
+			argument->m_vecDescriptorWrites[writeCounter] = {}; {
 				argument->m_vecDescriptorWrites[writeCounter].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 				argument->m_vecDescriptorWrites[writeCounter].pNext = nullptr;
 				argument->m_vecDescriptorWrites[writeCounter].dstSet = argument->m_descriptorSets[0];
 				argument->m_vecDescriptorWrites[writeCounter].dstArrayElement = 0;
 				argument->m_vecDescriptorWrites[writeCounter].descriptorCount = 1;
 				argument->m_vecDescriptorWrites[writeCounter].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-				argument->m_vecDescriptorWrites[writeCounter].pBufferInfo = &argument->m_uniformBufferInfo[bufferCounter];
+				argument->m_vecDescriptorWrites[writeCounter].pBufferInfo = &argument->m_vecBufferInfo[bufferCounter];
 				argument->m_vecDescriptorWrites[writeCounter].pImageInfo = nullptr;
 				argument->m_vecDescriptorWrites[writeCounter].pTexelBufferView = nullptr;
 				argument->m_vecDescriptorWrites[writeCounter].dstBinding = uniform.binding;
@@ -99,8 +102,8 @@ namespace Nix {
 			++bufferCounter;
 			++writeCounter;
 		}
-		
-		for (auto& ssbo : argLayout.m_storageBufferDescriptor)
+
+		for (auto& ssbo : argLayout.m_vecStorageBuffer)
 		{
 			argument->m_vecDescriptorWrites[writeCounter] = {}; {
 				argument->m_vecDescriptorWrites[writeCounter].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -109,7 +112,7 @@ namespace Nix {
 				argument->m_vecDescriptorWrites[writeCounter].dstArrayElement = 0;
 				argument->m_vecDescriptorWrites[writeCounter].descriptorCount = 1;
 				argument->m_vecDescriptorWrites[writeCounter].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-				argument->m_vecDescriptorWrites[writeCounter].pBufferInfo = &argument->m_vecDescriptorBufferInfo[bufferCounter];
+				argument->m_vecDescriptorWrites[writeCounter].pBufferInfo = &argument->m_vecBufferInfo[bufferCounter];
 				argument->m_vecDescriptorWrites[writeCounter].pImageInfo = nullptr;
 				argument->m_vecDescriptorWrites[writeCounter].pTexelBufferView = nullptr;
 				argument->m_vecDescriptorWrites[writeCounter].dstBinding = ssbo.binding;
@@ -117,8 +120,26 @@ namespace Nix {
 			++bufferCounter;
 			++writeCounter;
 		}
-		
-		for (auto& sampler : argLayout.m_samplerImageDescriptor)
+
+		for (auto& tbo : argLayout.m_vecTexelBuffer)
+		{
+			argument->m_vecDescriptorWrites[writeCounter] = {}; {
+				argument->m_vecDescriptorWrites[writeCounter].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				argument->m_vecDescriptorWrites[writeCounter].pNext = nullptr;
+				argument->m_vecDescriptorWrites[writeCounter].dstSet = argument->m_descriptorSets[0];
+				argument->m_vecDescriptorWrites[writeCounter].dstArrayElement = 0;
+				argument->m_vecDescriptorWrites[writeCounter].descriptorCount = 1;
+				argument->m_vecDescriptorWrites[writeCounter].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+				argument->m_vecDescriptorWrites[writeCounter].pBufferInfo = &argument->m_vecBufferInfo[bufferCounter];
+				argument->m_vecDescriptorWrites[writeCounter].pImageInfo = nullptr;
+				argument->m_vecDescriptorWrites[writeCounter].pTexelBufferView = nullptr;
+				argument->m_vecDescriptorWrites[writeCounter].dstBinding = tbo.binding;
+			};
+			++bufferCounter;
+			++writeCounter;
+		}
+
+		for (auto& sampler : argLayout.m_vecCombinedImageSampler)
 		{
 			argument->m_vecDescriptorWrites[writeCounter] = {}; {
 				argument->m_vecDescriptorWrites[writeCounter].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -128,7 +149,7 @@ namespace Nix {
 				argument->m_vecDescriptorWrites[writeCounter].descriptorCount = 1;
 				argument->m_vecDescriptorWrites[writeCounter].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 				argument->m_vecDescriptorWrites[writeCounter].pBufferInfo = nullptr;
-				argument->m_vecDescriptorWrites[writeCounter].pImageInfo = &argument->m_vecSamplerImageInfo[imageCounter];
+				argument->m_vecDescriptorWrites[writeCounter].pImageInfo = &argument->m_vecImageInfo[imageCounter];
 				argument->m_vecDescriptorWrites[writeCounter].pTexelBufferView = nullptr;
 				argument->m_vecDescriptorWrites[writeCounter].dstBinding = sampler.binding;
 			};
@@ -136,30 +157,85 @@ namespace Nix {
 			++writeCounter;
 		}
 
-// 		for (auto& sampler : argLayout.m_texelBufferDescriptor)
-// 		{
-// 			argument->m_vecDescriptorWrites[writeCounter] = {}; {
-// 				argument->m_vecDescriptorWrites[writeCounter].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-// 				argument->m_vecDescriptorWrites[writeCounter].pNext = nullptr;
-// 				argument->m_vecDescriptorWrites[writeCounter].dstSet = argument->m_descriptorSets[0];
-// 				argument->m_vecDescriptorWrites[writeCounter].dstArrayElement = 0;
-// 				argument->m_vecDescriptorWrites[writeCounter].descriptorCount = 1;
-// 				argument->m_vecDescriptorWrites[writeCounter].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
-// 				argument->m_vecDescriptorWrites[writeCounter].pBufferInfo = nullptr;
-// 				argument->m_vecDescriptorWrites[writeCounter].pImageInfo = &argument->m_vecSamplerImageInfo[imageCounter];
-// 				argument->m_vecDescriptorWrites[writeCounter].pTexelBufferView = nullptr;
-// 				argument->m_vecDescriptorWrites[writeCounter].dstBinding = sampler.binding;
-// 			};
-// 			++imageCounter;
-// 			++writeCounter;
-// 		}
+		for (auto& sampler : argLayout.m_vecSampler)
+		{
+			argument->m_vecDescriptorWrites[writeCounter] = {}; {
+				argument->m_vecDescriptorWrites[writeCounter].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				argument->m_vecDescriptorWrites[writeCounter].pNext = nullptr;
+				argument->m_vecDescriptorWrites[writeCounter].dstSet = argument->m_descriptorSets[0];
+				argument->m_vecDescriptorWrites[writeCounter].dstArrayElement = 0;
+				argument->m_vecDescriptorWrites[writeCounter].descriptorCount = 1;
+				argument->m_vecDescriptorWrites[writeCounter].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+				argument->m_vecDescriptorWrites[writeCounter].pBufferInfo = nullptr;
+				argument->m_vecDescriptorWrites[writeCounter].pImageInfo = &argument->m_vecImageInfo[imageCounter];
+				argument->m_vecDescriptorWrites[writeCounter].pTexelBufferView = nullptr;
+				argument->m_vecDescriptorWrites[writeCounter].dstBinding = sampler.binding;
+			};
+			++imageCounter;
+			++writeCounter;
+		}
+
+		for (auto& sampler : argLayout.m_vecSampledImage)
+		{
+			argument->m_vecDescriptorWrites[writeCounter] = {}; {
+				argument->m_vecDescriptorWrites[writeCounter].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				argument->m_vecDescriptorWrites[writeCounter].pNext = nullptr;
+				argument->m_vecDescriptorWrites[writeCounter].dstSet = argument->m_descriptorSets[0];
+				argument->m_vecDescriptorWrites[writeCounter].dstArrayElement = 0;
+				argument->m_vecDescriptorWrites[writeCounter].descriptorCount = 1;
+				argument->m_vecDescriptorWrites[writeCounter].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+				argument->m_vecDescriptorWrites[writeCounter].pBufferInfo = nullptr;
+				argument->m_vecDescriptorWrites[writeCounter].pImageInfo = &argument->m_vecImageInfo[imageCounter];
+				argument->m_vecDescriptorWrites[writeCounter].pTexelBufferView = nullptr;
+				argument->m_vecDescriptorWrites[writeCounter].dstBinding = sampler.binding;
+			};
+			++imageCounter;
+			++writeCounter;
+		}
+
+
+		for (auto& sampler : argLayout.m_vecStorageImage)
+		{
+			argument->m_vecDescriptorWrites[writeCounter] = {}; {
+				argument->m_vecDescriptorWrites[writeCounter].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				argument->m_vecDescriptorWrites[writeCounter].pNext = nullptr;
+				argument->m_vecDescriptorWrites[writeCounter].dstSet = argument->m_descriptorSets[0];
+				argument->m_vecDescriptorWrites[writeCounter].dstArrayElement = 0;
+				argument->m_vecDescriptorWrites[writeCounter].descriptorCount = 1;
+				argument->m_vecDescriptorWrites[writeCounter].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+				argument->m_vecDescriptorWrites[writeCounter].pBufferInfo = nullptr;
+				argument->m_vecDescriptorWrites[writeCounter].pImageInfo = &argument->m_vecImageInfo[imageCounter];
+				argument->m_vecDescriptorWrites[writeCounter].pTexelBufferView = nullptr;
+				argument->m_vecDescriptorWrites[writeCounter].dstBinding = sampler.binding;
+			};
+			++imageCounter;
+			++writeCounter;
+		}
+
+		for (auto& sampler : argLayout.m_vecSubpassInput)
+		{
+			argument->m_vecDescriptorWrites[writeCounter] = {}; {
+				argument->m_vecDescriptorWrites[writeCounter].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				argument->m_vecDescriptorWrites[writeCounter].pNext = nullptr;
+				argument->m_vecDescriptorWrites[writeCounter].dstSet = argument->m_descriptorSets[0];
+				argument->m_vecDescriptorWrites[writeCounter].dstArrayElement = 0;
+				argument->m_vecDescriptorWrites[writeCounter].descriptorCount = 1;
+				argument->m_vecDescriptorWrites[writeCounter].descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+				argument->m_vecDescriptorWrites[writeCounter].pBufferInfo = nullptr;
+				argument->m_vecDescriptorWrites[writeCounter].pImageInfo = &argument->m_vecImageInfo[imageCounter];
+				argument->m_vecDescriptorWrites[writeCounter].pTexelBufferView = nullptr;
+				argument->m_vecDescriptorWrites[writeCounter].dstBinding = sampler.binding;
+			};
+			++imageCounter;
+			++writeCounter;
+		}
 		return argument;
 	}
 
 	void ArgumentAllocator::free(ArgumentVk* _argument)
 	{
 		for (uint32_t i = 0; i < MaxFlightCount; ++i) {
-			m_descriptorChunks[_argument->m_descriptorSetPools[i]].free(m_context->getDevice(), _argument->m_descriptorSets[i] );
+			m_descriptorChunks[_argument->m_descriptorSetPools[i]].free(m_context->getDevice(), _argument->m_descriptorSets[i]);
 		}
 		delete _argument;
 	}
@@ -171,7 +247,7 @@ namespace Nix {
 	inline ArgumentPoolChunk::ArgumentPoolChunk() : m_pool(VK_NULL_HANDLE) {
 	}
 
-	void ArgumentPoolChunk::initialize( VkDevice _device, const VkDescriptorPoolSize* _pools, uint32_t _poolCount)
+	void ArgumentPoolChunk::initialize(VkDevice _device, const VkDescriptorPoolSize* _pools, uint32_t _poolCount)
 	{
 		std::vector<VkDescriptorPoolSize> pools;
 		for (uint32_t i = 0; i < _poolCount; ++i) {
@@ -191,7 +267,7 @@ namespace Nix {
 		if (rst != VK_SUCCESS) {
 			assert(false);
 		}
-		for ( uint32_t i = 0; i<_poolCount; ++i ) {
+		for (uint32_t i = 0; i < _poolCount; ++i) {
 			m_freeTable[_pools[i].type].descriptorCount = _pools[i].descriptorCount;
 			m_freeTable[_pools[i].type].type = _pools[i].type;
 		}
@@ -206,12 +282,19 @@ namespace Nix {
 	VkDescriptorSet ArgumentPoolChunk::allocate(VkDevice _device, MaterialVk* _material, uint32_t _argumentIndex) {
 		VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 		VkResult rst = VK_ERROR_OUT_OF_HOST_MEMORY;
-		const ArgumentLayout& argumentLayout = _material->getDescriptorSetLayout(_argumentIndex);
-		if ( m_freeTable[VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC].descriptorCount >= argumentLayout.m_uniformBlockDescriptor.size()
-			&& m_freeTable[VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC].descriptorCount >= argumentLayout.m_storageBufferDescriptor.size()
-			&& m_freeTable[VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER].descriptorCount >= argumentLayout.m_samplerImageDescriptor.size()
-			//&& m_freeTable[VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER].descriptorCount >= argumentLayout.m_texelBufferDescriptor.size()
-		)
+		const ArgumentLayoutExt& argumentLayout = _material->getDescriptorSetLayout(_argumentIndex);
+		if (
+			// 3 type of buffer descriptor
+			m_freeTable[VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC].descriptorCount >= argumentLayout.m_vecUniformBuffer.size()
+			&& m_freeTable[VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC].descriptorCount >= argumentLayout.m_vecStorageBuffer.size()
+			&& m_freeTable[VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER].descriptorCount >= argumentLayout.m_vecTexelBuffer.size()
+			// 5 type of image descriptor
+			&& m_freeTable[VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER].descriptorCount >= argumentLayout.m_vecCombinedImageSampler.size()
+			&& m_freeTable[VK_DESCRIPTOR_TYPE_SAMPLER].descriptorCount >= argumentLayout.m_vecSampler.size()
+			&& m_freeTable[VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE].descriptorCount >= argumentLayout.m_vecSampledImage.size()
+			&& m_freeTable[VK_DESCRIPTOR_TYPE_STORAGE_IMAGE].descriptorCount >= argumentLayout.m_vecStorageImage.size()
+			&& m_freeTable[VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT].descriptorCount >= argumentLayout.m_vecSubpassInput.size()
+			)
 		{
 			// setup create info
 			VkDescriptorSetAllocateInfo inf = {}; {
@@ -219,15 +302,21 @@ namespace Nix {
 				inf.pNext = nullptr;
 				inf.descriptorPool = m_pool;
 				inf.descriptorSetCount = 1;
-				inf.pSetLayouts = &argumentLayout.m_descriptorSetLayout;
+				inf.pSetLayouts = &argumentLayout.m_setLayout;
 			}
 			// allocate!!!
 			rst = vkAllocateDescriptorSets(_device, &inf, &descriptorSet);
 			// get the result
 			if (rst == VK_SUCCESS) {
-				m_freeTable[VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC].descriptorCount -= (uint32_t)argumentLayout.m_uniformBlockDescriptor.size();
-				m_freeTable[VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC].descriptorCount -= (uint32_t)argumentLayout.m_storageBufferDescriptor.size();
-				m_freeTable[VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER].descriptorCount -= (uint32_t)argumentLayout.m_samplerImageDescriptor.size();
+				m_freeTable[VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC].descriptorCount -= (uint32_t)argumentLayout.m_vecUniformBuffer.size();
+				m_freeTable[VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC].descriptorCount -= (uint32_t)argumentLayout.m_vecStorageBuffer.size();
+				m_freeTable[VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER].descriptorCount -= (uint32_t)argumentLayout.m_vecTexelBuffer.size();
+				//
+				m_freeTable[VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER].descriptorCount -= (uint32_t)argumentLayout.m_vecCombinedImageSampler.size();
+				m_freeTable[VK_DESCRIPTOR_TYPE_SAMPLER].descriptorCount -= (uint32_t)argumentLayout.m_vecSampler.size();
+				m_freeTable[VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE].descriptorCount -= (uint32_t)argumentLayout.m_vecSampledImage.size();
+				m_freeTable[VK_DESCRIPTOR_TYPE_STORAGE_IMAGE].descriptorCount -= (uint32_t)argumentLayout.m_vecStorageImage.size();
+				m_freeTable[VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT].descriptorCount -= (uint32_t)argumentLayout.m_vecSubpassInput.size();
 				//m_freeTable[VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER].descriptorCount -= (uint32_t)argumentLayout.m_texelBufferDescriptor.size();
 				return descriptorSet;
 			}
@@ -242,8 +331,8 @@ namespace Nix {
 
 	}
 
-	void ArgumentPoolChunk::free( VkDevice _device, VkDescriptorSet _descSet) {
-		VkResult rst = vkFreeDescriptorSets( _device, m_pool, 1, &_descSet );
+	void ArgumentPoolChunk::free(VkDevice _device, VkDescriptorSet _descSet) {
+		VkResult rst = vkFreeDescriptorSets(_device, m_pool, 1, &_descSet);
 		assert(rst == VK_SUCCESS);
 	}
 

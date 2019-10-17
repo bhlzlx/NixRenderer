@@ -1,9 +1,10 @@
-#include "DeferredDeletor.h"
+﻿#include "DeferredDeletor.h"
 #include "BufferVk.h"
 #include "TextureVk.h"
 #include "RenderPassVk.h"
 #include "PipelineVk.h"
 #include "ArgumentVk.h"
+#include "BufferAllocator.h"
 
 namespace Nix {
 
@@ -20,11 +21,11 @@ namespace Nix {
 	struct BufferDeleteItem : public QueueAsyncTask {
 	private:
 		BufferAllocation m_allocation;
-		IBufferAllocator* m_allocator;
+		BufferAllocatorVk* m_allocator;
 	public:
-		BufferDeleteItem( IBufferAllocator* _allocator, BufferAllocation _allocation) 
-		: m_allocator( _allocator )
-		, m_allocation( _allocation){
+		BufferDeleteItem(BufferAllocatorVk* _allocator, BufferAllocation _allocation)
+			: m_allocator(_allocator)
+			, m_allocation(_allocation) {
 		}
 		//
 		virtual void execute() {
@@ -93,9 +94,9 @@ namespace Nix {
 		}
 	};
 
-	Nix::QueueAsyncTask * GraphicsQueueAsyncTaskManager::createDestroyTask(IBufferAllocator* _allocator, const BufferAllocation& _allocation)
+	Nix::QueueAsyncTask * GraphicsQueueAsyncTaskManager::createDestroyTask(BufferAllocatorVk* _allocator, const BufferAllocation& _allocation)
 	{
-		return new BufferDeleteItem( _allocator, _allocation );
+		return new BufferDeleteItem(_allocator, _allocation);
 	}
 
 	Nix::QueueAsyncTask * GraphicsQueueAsyncTaskManager::createDestroyTask(TextureVk* _texture)

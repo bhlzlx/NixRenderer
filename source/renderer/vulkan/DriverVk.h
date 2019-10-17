@@ -57,7 +57,7 @@ namespace Nix {
 		//
 		void*								m_compilerLibrary;
 		PFN_GETSHADERCOMPILER				m_getShaderCompiler;
-		IShaderCompiler*					m_shaderCompiler;
+		spvcompiler::IShaderCompiler*		m_shaderCompiler;
 	public:
 		DriverVk() :
 			m_instance(VK_NULL_HANDLE)
@@ -90,6 +90,6 @@ namespace Nix {
 		bool validatePipelineCache(const void * _data, size_t _length);
 		inline VkInstance getInstance() { return m_instance; }
 		inline const VkPhysicalDeviceProperties& getPhysicalDeviceProperties() { return m_deviceProps; }
-		IShaderCompiler* getShaderCompiler();
+		spvcompiler::IShaderCompiler* getShaderCompiler();
 	};
 }

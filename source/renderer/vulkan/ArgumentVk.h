@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <NixRenderer.h>
 #include <vector>
 #include "VkInc.h"
@@ -7,8 +7,9 @@ namespace Nix {
 	class PipelineVk;
 	class ContextVk;
 	class TextureVk;
+	class BufferVk;
 	class MaterialVk;
-	
+
 	// `ArgumentVk` is a wrapper class for VkDescriptorSet
 
 	class NIX_API_DECL ArgumentVk : public IArgument
@@ -18,7 +19,6 @@ namespace Nix {
 		friend class ArgumentAllocator;
 	private:
 		std::vector<std::pair<TextureVk*, SamplerState>>		m_textures;
-		std::vector< uint32_t >									m_dynamicalOffsets[MaxFlightCount];
 		//
 		uint32_t												m_descriptorSetIndex;
 		VkDescriptorSet											m_descriptorSets[MaxFlightCount];			//
@@ -29,13 +29,17 @@ namespace Nix {
 		MaterialVk*												m_material;
 		//
 		std::vector<VkDescriptorBufferInfo>						m_vecBufferInfo;
+		std::vector<BufferVk*>									m_vecBuffer;
 		std::vector<VkDescriptorImageInfo>						m_vecImageInfo; // sampler/image
 		//
 		std::vector<VkWriteDescriptorSet>						m_vecDescriptorWrites;
+		std::vector<uint32_t>									m_vecDynamicOffsetIndices;
+		// uniform buffers use the dynamic offsets
+		// storage buffer / texel buffer use the static offsets
+		std::vector<uint32_t>									m_dynamicalOffsets[MaxFlightCount];
 		//
 		bool													m_needUpdate;
 		//
-		std::vector<unsigned char>								m_uniformCache;
 		uint32_t												m_constantsShaderStages;
 	public:
 		ArgumentVk();
@@ -43,30 +47,27 @@ namespace Nix {
 
 		void bind(VkCommandBuffer _commandBuffer);
 
-		virtual bool getUniformBlock(const char * _name, uint32_t* offset_, const GLSLStructMember** _members, uint32_t* _numMember) override;
-		virtual void setUniform(uint32_t _offset, const void* _data, uint32_t _size) override;
+		virtual bool getUniformBlockLayout(const char * _name, const GLSLStructMember** _members, uint32_t* _numMember) override;
+		//
+		virtual bool getSamplerLocation(const char* _name, uint32_t& _loc) override; // sampler object
+		virtual bool getTextureLocation(const char* _name, uint32_t& _loc) override; // sampled image
+		virtual bool getStorageImageLocation(const char* _name, uint32_t& _loc) override; // storage image
+		virtual bool getCombinedImageSamplerLocation(const char* _name, uint32_t& _loc) override; // combined image sampler
+		virtual bool getUniformBlockLocation(const char* _name, uint32_t& _loc) override;
+		virtual bool getStorageBufferLocation(const char* _name, uint32_t& _loc) override;
+		virtual bool getTexelBufferLocation(const char * _name, uint32_t& _loc) override; // texel buffer
 
-		virtual bool getStorageBuffer(const char* _name, uint32_t* id_) override;
+		// all possible functions that will update the descriptor set
+		virtual void bindSampler(uint32_t _id, const SamplerState& _sampler) override;
+		virtual void bindTexture(uint32_t _id, ITexture* _texture) override;
+		virtual void bindStorageImage(uint32_t _id, ITexture* _texture) override;
+		virtual void bindCombinedImageSampler(uint32_t _id, const SamplerState& _sampler, ITexture* _texture);
+		virtual void bindStorageBuffer(uint32_t _id, IBuffer* _buffer) override;
+		virtual void bindUniformBuffer(uint32_t _id, IBuffer* _buffer) override;
+		virtual void bindTexelBuffer(uint32_t _id, IBuffer* _buffer) override;
 		//
-		virtual bool getSampler(const char* _name, uint32_t* id_) override; // sampler object
-		virtual bool getTexture(const char* _name, uint32_t* id_) override; // sampled image
-		virtual bool getStorageImage(const char* _name, uint32_t* id_) override; // storage image
-		virtual bool getCombinedImageSampler(const char* _name, uint32_t* id_) override; // combined image sampler
-		virtual bool getTexelBuffer(const char * _name, uint32_t* id_) override; // texel buffer
-																		   //
-		virtual void setStorageBuffer(uint32_t _offset, const void * _data, uint32_t _size) override;
-		//
-		virtual void setSampler(uint32_t _id, const SamplerState& _sampler) override;
-		// ÕâÀï×¢ÒâÒ»ÏÂ£¬setTexture/setStorageImageÊµ¼ÊÉÏÉèÖÃÁ÷³Ì¶¼Ò»ÑùµÄ£¬ÐèÒªµÄÊÇ VkImage / VkImageView
-		virtual void setTexture(uint32_t _id, ITexture* _texture) override;
-		virtual void setStorageImage(uint32_t _id, ITexture* _texture) override;
-		// ¶ø setTexelBuffer ÐèÒªµÄÊÇ VkImage / VkBufferView
-		virtual void setTexelBuffer(uint32_t _id, ITexture* _texture) override;
-		virtual void setCombinedImageSampler(uint32_t _id, const SamplerState& _sampler, ITexture* _texture);
+		virtual void updateUniformBuffer(IBuffer* _buffer, const void* _data, uint32_t _offset, uint32_t _length) override;
 		virtual void setShaderCache(uint32_t _offset, const void* _data, uint32_t _size) override;
 		virtual void release() override;
-		//
-	public:
-		void assignUniformChunks();
 	};
 }

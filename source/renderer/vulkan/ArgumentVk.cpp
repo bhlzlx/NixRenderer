@@ -1,4 +1,4 @@
-#include "ArgumentVk.h"
+ï»¿#include "ArgumentVk.h"
 #include "TextureVk.h"
 #include "SwapchainVk.h"
 #include "BufferVk.h"
@@ -14,7 +14,6 @@ namespace Nix {
 	IArgument* MaterialVk::createArgument(uint32_t _index) {
 		ArgumentAllocator& allocator = m_context->getDescriptorSetPool();
 		ArgumentVk* argument = allocator.allocateArgument(this, _index);
-		argument->assignUniformChunks();
 		return argument;
 	}
 
@@ -32,7 +31,7 @@ namespace Nix {
 		// do nothing
 	}
 
-	void ArgumentVk::bind( VkCommandBuffer _commandBuffer )
+	void ArgumentVk::bind(VkCommandBuffer _commandBuffer)
 	{
 		if (m_needUpdate) {
 			++m_activeIndex;
@@ -55,41 +54,33 @@ namespace Nix {
 		);
 	}
 
-	bool ArgumentVk::getUniformBlock(const char * _name, uint32_t* offset_, const GLSLStructMember** _members, uint32_t* _numMember)
+	bool ArgumentVk::getUniformBlockLayout(const char * _name, const GLSLStructMember ** _members, uint32_t * _numMember)
 	{
 		const ArgumentLayoutExt& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
 		const std::vector<GLSLStructMember>* members;
 		uint32_t localOffset = 0;
-		const UniformBuffer* buffer = argLayout.getUniform(std::string(_name), members, localOffset);
+		const UniformBuffer* buffer = argLayout.getUniform(std::string(_name), members);
 		if (!buffer) {
 			return false;
 		}
-		*offset_ = localOffset;
 		return true;
 	}
 
-	bool ArgumentVk::getStorageBuffer(const char * _name, uint32_t * id_)
-	{
-		const ArgumentLayoutExt& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
-		auto storageBuffer = argLayout.getStorageBuffer(std::string(_name));
-	}
-
-	// Êµ¼ÊÉÏÕâ¸ö [id] ÊÇ m_vecDescriptorWrites µÄÏÂ±ê
-	bool ArgumentVk::getSampler(const char* _name, uint32_t* id_)
+	bool ArgumentVk::getStorageBufferLocation(const char * _name, uint32_t& id_)
 	{
 		uint32_t i = 0;
 		uint16_t binding = -1;
 		const ArgumentLayoutExt& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
-		for (; i < argLayout.m_vecSampler.size(); ++i) {
-			if ( strcmp(argLayout.m_vecSampler[i].name, _name)) {
-				binding = argLayout.m_vecSampler[i].binding;
+		for (; i < argLayout.m_vecStorageBuffer.size(); ++i) {
+			if (strcmp(argLayout.m_vecStorageBuffer[i].name, _name)) {
+				binding = argLayout.m_vecStorageBuffer[i].binding;
 				break;
 			}
 		}
 		if (binding != -1) {
 			for (i = 0; i < m_vecDescriptorWrites.size(); ++i) {
 				if (m_vecDescriptorWrites[i].dstBinding == binding) {
-					*id_ = i;
+					id_ = i;
 					return true;
 				}
 			}
@@ -97,7 +88,30 @@ namespace Nix {
 		return false;
 	}
 
-	void ArgumentVk::setSampler(uint32_t _id, const SamplerState& _sampler)
+	// å®žé™…ä¸Šè¿™ä¸ª [id] æ˜¯ m_vecDescriptorWrites çš„ä¸‹æ ‡
+	bool ArgumentVk::getSamplerLocation(const char* _name, uint32_t& id_)
+	{
+		uint32_t i = 0;
+		uint16_t binding = -1;
+		const ArgumentLayoutExt& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
+		for (; i < argLayout.m_vecSampler.size(); ++i) {
+			if (strcmp(argLayout.m_vecSampler[i].name, _name)) {
+				binding = argLayout.m_vecSampler[i].binding;
+				break;
+			}
+		}
+		if (binding != -1) {
+			for (i = 0; i < m_vecDescriptorWrites.size(); ++i) {
+				if (m_vecDescriptorWrites[i].dstBinding == binding) {
+					id_ = i;
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	void ArgumentVk::bindSampler(uint32_t _id, const SamplerState& _sampler)
 	{
 		auto& write = m_vecDescriptorWrites[_id];
 		VkDescriptorImageInfo* imageInfo = const_cast<VkDescriptorImageInfo*>(write.pImageInfo);
@@ -107,7 +121,7 @@ namespace Nix {
 		m_needUpdate = true;
 	}
 
-	bool ArgumentVk::getTexture(const char* _name, uint32_t* id_)
+	bool ArgumentVk::getTextureLocation(const char* _name, uint32_t& id_)
 	{
 		uint32_t i = 0;
 		uint16_t binding = -1;
@@ -121,7 +135,7 @@ namespace Nix {
 		if (binding != -1) {
 			for (i = 0; i < m_vecDescriptorWrites.size(); ++i) {
 				if (m_vecDescriptorWrites[i].dstBinding == binding) {
-					*id_ = i;
+					id_ = i;
 					return true;
 				}
 			}
@@ -129,7 +143,7 @@ namespace Nix {
 		return false;
 	}
 
-	bool ArgumentVk::getStorageImage(const char* _name, uint32_t* id_)
+	bool ArgumentVk::getStorageImageLocation(const char* _name, uint32_t& id_)
 	{
 		uint32_t i = 0;
 		uint16_t binding = -1;
@@ -143,7 +157,7 @@ namespace Nix {
 		if (binding != -1) {
 			for (i = 0; i < m_vecDescriptorWrites.size(); ++i) {
 				if (m_vecDescriptorWrites[i].dstBinding == binding) {
-					*id_ = i;
+					id_ = i;
 					return true;
 				}
 			}
@@ -151,7 +165,7 @@ namespace Nix {
 		return false;
 	}
 
-	bool ArgumentVk::getCombinedImageSampler(const char* _name, uint32_t* id_)
+	bool ArgumentVk::getCombinedImageSamplerLocation(const char* _name, uint32_t& id_)
 	{
 		uint32_t i = 0;
 		uint16_t binding = -1;
@@ -165,7 +179,7 @@ namespace Nix {
 		if (binding != -1) {
 			for (i = 0; i < m_vecDescriptorWrites.size(); ++i) {
 				if (m_vecDescriptorWrites[i].dstBinding == binding) {
-					*id_ = i;
+					id_ = i;
 					return true;
 				}
 			}
@@ -173,7 +187,29 @@ namespace Nix {
 		return false;
 	}
 
-	bool ArgumentVk::getTexelBuffer(const char* _name, uint32_t* id_)
+	bool ArgumentVk::getUniformBlockLocation(const char * _name, uint32_t & _loc)
+	{
+		uint32_t i = 0;
+		uint16_t binding = -1;
+		const ArgumentLayoutExt& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
+		for (; i < argLayout.m_vecUniformBuffer.size(); ++i) {
+			if (strcmp(argLayout.m_vecUniformBuffer[i].name, _name)) {
+				binding = argLayout.m_vecUniformBuffer[i].binding;
+				break;
+			}
+		}
+		if (binding != -1) {
+			for (i = 0; i < m_vecDescriptorWrites.size(); ++i) {
+				if (m_vecDescriptorWrites[i].dstBinding == binding) {
+					_loc = i;
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	bool ArgumentVk::getTexelBufferLocation(const char* _name, uint32_t& id_)
 	{
 		uint32_t i = 0;
 		uint16_t binding = -1;
@@ -187,7 +223,7 @@ namespace Nix {
 		if (binding != -1) {
 			for (i = 0; i < m_vecDescriptorWrites.size(); ++i) {
 				if (m_vecDescriptorWrites[i].dstBinding == binding) {
-					*id_ = i;
+					id_ = i;
 					return true;
 				}
 			}
@@ -195,7 +231,7 @@ namespace Nix {
 		return false;
 	}
 
-	void ArgumentVk::setTexture( uint32_t _id, ITexture* _texture )
+	void ArgumentVk::bindTexture(uint32_t _id, ITexture* _texture)
 	{
 		auto& write = m_vecDescriptorWrites[_id];
 		TextureVk* tex = (TextureVk*)_texture;
@@ -206,7 +242,7 @@ namespace Nix {
 		m_needUpdate = true;
 	}
 
-	void ArgumentVk::setStorageImage(uint32_t _id, ITexture* _texture)
+	void ArgumentVk::bindStorageImage(uint32_t _id, ITexture* _texture)
 	{
 		auto& write = m_vecDescriptorWrites[_id];
 		TextureVk* tex = (TextureVk*)_texture;
@@ -219,25 +255,27 @@ namespace Nix {
 
 
 
-	void ArgumentVk::setUniform( uint32_t _offset, const void * _data, uint32_t _size) {
-		unsigned char* ptr = m_uniformCache.data();
-		memcpy(ptr + _offset, _data, _size );
-	}
-
-	void ArgumentVk::setTexelBuffer(uint32_t _id, ITexture* _texture)
+	void ArgumentVk::bindTexelBuffer(uint32_t _id, IBuffer* _buffer)
 	{
-		auto& write = m_vecDescriptorWrites[_id];
-		TextureVk* tex = (TextureVk*)_texture;
-		VkDescriptorImageInfo* imageInfo = const_cast<VkDescriptorImageInfo*>(write.pImageInfo);
-		imageInfo->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-		imageInfo->imageView = tex->getImageView();
-		imageInfo->sampler = VK_NULL_HANDLE;
-		//VkBufferView
-		//write.pTexelBufferView = VkBufferView
+		VkWriteDescriptorSet& write = m_vecDescriptorWrites[_id];
+		BufferVk* buffer = (BufferVk*)_buffer;
+		VkDescriptorBufferInfo* bufferInfo = const_cast<VkDescriptorBufferInfo*>(write.pBufferInfo);
+		bufferInfo->offset = buffer->getOffset();
+		bufferInfo->buffer = buffer->getHandle();
+		bufferInfo->range = buffer->getSize();
+		write.pTexelBufferView = VK_NULL_HANDLE;
+
+		const ArgumentLayoutExt& layout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
+		uint32_t index = layout.getDynamicOffsetsIndex(write.dstBinding);
+		for (uint32_t i = 0; i < MaxFlightCount; ++i) {
+			m_dynamicalOffsets[i][index] = 0;
+		}
+
+		assert(false);
 		m_needUpdate = true;
 	}
 
-	void ArgumentVk::setCombinedImageSampler(uint32_t _id, const SamplerState& _sampler, ITexture* _texture)
+	void ArgumentVk::bindCombinedImageSampler(uint32_t _id, const SamplerState& _sampler, ITexture* _texture)
 	{
 		auto& write = m_vecDescriptorWrites[_id];
 		TextureVk* tex = (TextureVk*)_texture;
@@ -246,6 +284,45 @@ namespace Nix {
 		imageInfo->imageView = tex->getImageView();
 		imageInfo->sampler = m_context->getSampler(_sampler);
 		m_needUpdate = true;
+	}
+
+	void ArgumentVk::bindStorageBuffer(uint32_t _id, IBuffer * _buffer)
+	{
+		auto& write = m_vecDescriptorWrites[_id];
+		BufferVk* buf = (BufferVk*)_buffer;
+		VkDescriptorBufferInfo* bufferInfo = const_cast<VkDescriptorBufferInfo*>(write.pBufferInfo);
+		bufferInfo->buffer = buf->getHandle();
+		bufferInfo->offset = buf->getOffset();
+		bufferInfo->range = buf->getSize();
+		//
+		const ArgumentLayoutExt& layout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
+		uint32_t index = layout.getDynamicOffsetsIndex(write.dstBinding);
+		for (uint32_t i = 0; i < MaxFlightCount; ++i) {
+			m_dynamicalOffsets[i][index] = 0;
+		}
+		m_needUpdate = true;
+	}
+
+	void ArgumentVk::bindUniformBuffer(uint32_t _id, IBuffer * _buffer)
+	{
+		auto& write = m_vecDescriptorWrites[_id];
+		BufferVk* buf = (BufferVk*)_buffer;
+		VkDescriptorBufferInfo* bufferInfo = const_cast<VkDescriptorBufferInfo*>(write.pBufferInfo);
+		bufferInfo->buffer = buf->getHandle();
+		bufferInfo->offset = buf->getOffset();
+		bufferInfo->range = buf->getSize();
+		//
+		const ArgumentLayoutExt& layout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
+		uint32_t index = layout.getDynamicOffsetsIndex(write.dstBinding);
+		for (uint32_t i = 0; i < MaxFlightCount; ++i) {
+			m_dynamicalOffsets[i][index] = (buf->getSize() / MaxFlightCount) * i;
+		}
+		m_needUpdate = true;
+	}
+
+	void ArgumentVk::updateUniformBuffer(IBuffer* _buffer, const void* _data, uint32_t _offset, uint32_t _length)
+	{
+		_buffer->updateData(_data, _length, _offset + _buffer->getSize() / MaxFlightCount * m_activeIndex);
 	}
 
 	void ArgumentVk::setShaderCache(uint32_t _offset, const void* _data, uint32_t _size)
@@ -261,56 +338,6 @@ namespace Nix {
 	void ArgumentVk::release()
 	{
 		m_material->destroyArgument(this);
-	}
-
-	void ArgumentVk::assignUniformChunks()
-	{
-		const auto& descriptorSetLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
-		// get all uniform block size & binding slot);
-		ContextVk* context = m_material->getContext();
-		auto& dynamicalBindings = m_material->getDescriptorSetLayout(m_descriptorSetIndex).m_dynamicalBindings;
-		//
-		for (auto& dynamcalOffset : m_dynamicalOffsets) {
-			dynamcalOffset.resize(dynamicalBindings.size());
-		}
-
-		for (auto& uniformBlockDescriptor : descriptorSetLayout.m_uniformBlockDescriptor) {
-			IBufferAllocator* allocator = context->uniformAllocator();
-			BufferAllocation allocation = allocator->allocate(uniformBlockDescriptor.dataSize);
-			m_uniformBlocks.push_back(allocation);
-			//
-			VkDescriptorBufferInfo * bufferInfo = nullptr;
-			for (uint32_t i = 0; i < descriptorSetLayout.m_dynamicalBindings.size(); ++i) {
-				if (descriptorSetLayout.m_dynamicalBindings[i] == uniformBlockDescriptor.binding) {
-					bufferInfo = &m_vecDescriptorBufferInfo[i];
-					break;
-				}
-			}
-			assert(bufferInfo);
-			bufferInfo->buffer = (VkBuffer)allocation.buffer;
-			bufferInfo->offset = allocation.offset;
-			bufferInfo->range = allocation.size / MaxFlightCount;
-
-			VkWriteDescriptorSet writeDescriptorSet = {}; {
-				writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				writeDescriptorSet.pNext = nullptr;
-				writeDescriptorSet.dstSet = m_descriptorSets[m_activeIndex];
-				writeDescriptorSet.dstArrayElement = 0;
-				writeDescriptorSet.descriptorCount = 1;
-				writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-				writeDescriptorSet.pBufferInfo = bufferInfo;
-				writeDescriptorSet.pImageInfo = nullptr;
-				writeDescriptorSet.pTexelBufferView = nullptr;
-				writeDescriptorSet.dstBinding = uniformBlockDescriptor.binding;
-			}
-			// update dynamical offset
-			auto iter = std::find( dynamicalBindings.begin(), dynamicalBindings.end(), uniformBlockDescriptor.binding);
-			assert(iter != dynamicalBindings.end());
-			size_t idx = iter - dynamicalBindings.begin();
-			for (uint32_t flightIndex = 0; flightIndex < MaxFlightCount; ++flightIndex) {
-				m_dynamicalOffsets[flightIndex][idx] = (uint32_t)allocation.size / MaxFlightCount * flightIndex + (uint32_t)allocation.offset;
-			}
-		}
 	}
 
 }

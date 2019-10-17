@@ -58,7 +58,7 @@ else()
 		add_subdirectory( TextAPITest )
 		add_subdirectory( VkCompiler )
 
-        #SET_PROPERTY(TARGET HelloWorld PROPERTY FOLDER "Samples")
+        SET_PROPERTY(TARGET HelloWorld PROPERTY FOLDER "Samples")
         #SET_PROPERTY(TARGET ClearScreen PROPERTY FOLDER "Samples")
         #SET_PROPERTY(TARGET Triangle PROPERTY FOLDER "Samples")
         #SET_PROPERTY(TARGET WavefrontModel PROPERTY FOLDER "Samples")

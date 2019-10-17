@@ -27,9 +27,11 @@ set( RendererSource
 
     ${CMAKE_CURRENT_SOURCE_DIR}/BufferVk.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/BufferVk.h
-
-	#${CMAKE_CURRENT_SOURCE_DIR}/BuddySystemAllocator.cpp
-    #${CMAKE_CURRENT_SOURCE_DIR}/BuddySystemAllocator.h
+	${CMAKE_CURRENT_SOURCE_DIR}/VertexBufferVk.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/VertexBufferVk.h
+	${CMAKE_CURRENT_SOURCE_DIR}/IndexBufferVk.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/IndexBufferVk.h
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/BufferAllocator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/BufferAllocator.h
 
@@ -39,16 +41,12 @@ set( RendererSource
     ${CMAKE_CURRENT_SOURCE_DIR}/PipelineVk.h
     ${CMAKE_CURRENT_SOURCE_DIR}/QueueVk.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/QueueVk.h
-    #${CMAKE_CURRENT_SOURCE_DIR}/ShaderVk.cpp
-    #${CMAKE_CURRENT_SOURCE_DIR}/ShaderVk.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorSetVk.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorSetVk.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ArgumentVk.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/ArgumentVk.h
     ${CMAKE_CURRENT_SOURCE_DIR}/RingBuffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/RingBuffer.h
-	#${CMAKE_CURRENT_SOURCE_DIR}/UniformVk.cpp
-    #${CMAKE_CURRENT_SOURCE_DIR}/UniformVk.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DeferredDeletor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/DeferredDeletor.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DebuggerVk.cpp
@@ -56,14 +54,6 @@ set( RendererSource
     # helper
     ${CMAKE_CURRENT_SOURCE_DIR}/vkhelper/helper.h
     ${CMAKE_CURRENT_SOURCE_DIR}/vkhelper/helper.cpp
-    # glsl compiler
-    #${CMAKE_CURRENT_SOURCE_DIR}/compiler/SPIRVReflection.cpp
-    #${CMAKE_CURRENT_SOURCE_DIR}/compiler/SPIRVReflection.h
-    #${CMAKE_CURRENT_SOURCE_DIR}/compiler/ResourceLimits.cpp
-    #${CMAKE_CURRENT_SOURCE_DIR}/compiler/ResourceLimits.h
-    #${CMAKE_CURRENT_SOURCE_DIR}/compiler/GLSLCompiler.cpp
-    #${CMAKE_CURRENT_SOURCE_DIR}/compiler/GLSLCompiler.h
-    #${CMAKE_CURRENT_SOURCE_DIR}/compiler/VEZ.h
 	# compress texture format 
 	${CMAKE_CURRENT_SOURCE_DIR}/DDSLoader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/DDSLoader.h
