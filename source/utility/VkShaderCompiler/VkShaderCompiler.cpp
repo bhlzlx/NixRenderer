@@ -428,6 +428,7 @@ namespace Nix {
 
 		//>! 
 		bool VkShaderCompiler::parseSpvLayout(Nix::ShaderModuleType _type, const uint32_t * _spv, size_t _numU32) {
+			clearResourceInfo();
 			//spirv_cross::Compiler spvCompiler(_spv, _numU32);
 			spirv_cross::Parser parser(_spv, _numU32);
 			parser.parse();

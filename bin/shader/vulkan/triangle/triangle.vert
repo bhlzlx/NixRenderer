@@ -11,14 +11,14 @@ out gl_PerVertex
 {
     vec4 gl_Position;   
 };
-/*
-layout( set = 0, binding = 0 ) uniform GlobalArgument {
 
-};*/
+layout( set = 0, binding = 0 ) uniform Argument1 {
+	mat4 transform;
+};
 
 void main() 
 {
-	gl_Position = vec4(vert_position, 1.0f);
+	gl_Position = transform * vec4(vert_position, 1.0f);
 	frag_uv = vert_uv;
 	gl_Position.y *= -1;
 }

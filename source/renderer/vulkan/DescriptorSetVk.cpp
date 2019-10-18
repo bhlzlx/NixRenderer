@@ -229,6 +229,9 @@ namespace Nix {
 			++imageCounter;
 			++writeCounter;
 		}
+		for (auto& dynamicOffsets : argument->m_dynamicalOffsets) {
+			dynamicOffsets.resize(bufferCounter);
+		}
 		return argument;
 	}
 

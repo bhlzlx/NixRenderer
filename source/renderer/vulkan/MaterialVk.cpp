@@ -101,7 +101,7 @@ namespace Nix {
 					// validate the vertex layout
 					const StageIOAttribute* vertexInputs = nullptr;
 					uint16_t vertexAttrCount = compiler->getStageInput(&vertexInputs);
-					if (vertexAttrCount != _desc.vertexLayout.attributeCount) {
+					if (vertexAttrCount != materialDesc.vertexLayout.attributeCount) {
 						assert(false && "layout does not match!");
 						return nullptr;
 					}

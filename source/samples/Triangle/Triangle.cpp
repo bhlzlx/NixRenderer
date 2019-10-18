@@ -45,8 +45,10 @@ namespace Nix {
 		IArgument*					m_argument;
 		uint32_t					m_triSamplerLoc;
 		uint32_t					m_triTextureLoc;
+		uint32_t					m_triTransformLoc;
 		SamplerState				m_triSampler;
 		ITexture*					m_triTexture;
+		IBuffer*					m_triTransformMatrix;
 
 		/*IArgument*					m_argInstance;
 		uint32_t					m_matLocal;*/
@@ -110,6 +112,7 @@ namespace Nix {
 			//m_texture = m_context->createTextureKTX(texMem->constData(), texMem->size());
 
 			m_triTexture = m_context->createTexture(texDesc);
+			m_triTransformMatrix = m_context->createUniformBuffer(64);
 
 			Nix::IFile* fishPNG = _archieve->open("texture/fish.png");
 			Nix::IFile* memPNG = CreateMemoryBuffer(fishPNG->size());
@@ -136,8 +139,10 @@ namespace Nix {
 					m_argument = m_material->createArgument(0);
 					rst = m_argument->getSamplerLocation("triSampler", m_triSamplerLoc);
 					rst = m_argument->getTextureLocation("triTexture", m_triTextureLoc);
+					rst = m_argument->getUniformBlockLocation("Argument1", m_triTransformLoc);
 					m_argument->bindSampler(m_triSamplerLoc, m_triSampler);
 					m_argument->bindTexture(m_triTextureLoc, m_triTexture);
+					m_argument->bindUniformBuffer(m_triTransformLoc, m_triTransformMatrix);
 					//m_argInstance = m_material->createArgument(1);
 					//rst = m_argInstance->getUniformBlock("LocalArgument", &m_matLocal);
 				}
@@ -189,6 +194,8 @@ namespace Nix {
 					m_argCommon->setUniform(m_matGlobal, 128, &imageIndex, 4);
 					m_argInstance->setUniform(m_matLocal, 0, &identity, 64);*/
 					//
+					glm::mat4 transMat = glm::rotate<float>(glm::mat4(), tickCounter % 3600 / 10.0f, glm::vec3(0, 0, 1));
+					m_argument->updateUniformBuffer(m_triTransformMatrix, &transMat, 0, 64);
 					m_mainRenderPass->bindPipeline(m_pipeline);
 					m_mainRenderPass->bindArgument(m_argument);
 					//m_mainRenderPass->bindArgument(m_argInstance);
