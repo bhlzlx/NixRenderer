@@ -8,6 +8,21 @@
 
 namespace Nix {
 
+	void copyDescriptorSetLayoutToMaterial(std::array<ArgumentLayoutExt, MaxArgumentCount>& _layouts, MaterialDescription& _description) {
+		uint32_t descriptorSetCounter = 0;
+		for (uint32_t setId = 0; setId < MaxArgumentCount; ++setId) {
+			auto& argument = _layouts[setId];
+			const auto& descriptors = argument.getDescriptors();
+			if (descriptors.size()) {
+				_description.argumentLayouts[descriptorSetCounter].index = setId;
+				_description.argumentLayouts[descriptorSetCounter].descriptorCount = descriptors.size();
+				memcpy(_description.argumentLayouts[descriptorSetCounter].descriptors, descriptors.data(), descriptors.size() * sizeof(ShaderDescriptor));
+				++descriptorSetCounter;
+			}
+		}
+		_description.argumentCount = descriptorSetCounter;
+	}
+
 	VkShaderStageFlagBits NixShaderStageToVk(ShaderModuleType _stage) {
 		switch (_stage)
 		{
@@ -76,9 +91,6 @@ namespace Nix {
 
 		auto uniformAligment = driver->getPhysicalDeviceProperties().limits.minUniformBufferOffsetAlignment;
 		auto storageAlignMent = driver->getPhysicalDeviceProperties().limits.minStorageBufferOffsetAlignment;
-		//
-		uint32_t uniformBufferSizeTotal = 0;
-		uint32_t storageBufferSizeTotal = 0;
 
 		for (const auto& shader : materialDesc.shaders) {
 			if (shader.name[0]) {
@@ -126,7 +138,14 @@ namespace Nix {
 					const UniformBuffer& unif = uniforms[i];
 					auto& argument = argumentLayouts[unif.set];
 					argument.m_vecUniformBuffer.push_back(unif);
-					uniformBufferSizeTotal += ((unif.size + uniformAligment - 1) & ~(uniformAligment - 1));
+					Nix::ShaderDescriptor descriptor = {}; {
+						descriptor.binding = unif.binding;
+						descriptor.dataSize = unif.size;
+						descriptor.shaderStage = shader.type;
+						strcpy(descriptor.name, unif.name);
+						descriptor.type = SDT_UniformBuffer;
+					}
+					argument.m_vecShaderDescriptor.push_back(descriptor);
 				}
 				const StorageBuffer* ssbos;
 				uint16_t numSsbo = compiler->getShaderStorageBuffers(&ssbos);
@@ -134,7 +153,14 @@ namespace Nix {
 					const StorageBuffer& ssbo = ssbos[i];
 					auto& argument = argumentLayouts[ssbo.set];
 					argument.m_vecStorageBuffer.push_back(ssbo);
-					storageBufferSizeTotal += ((ssbo.size + storageAlignMent - 1) & ~(storageAlignMent - 1));
+					Nix::ShaderDescriptor descriptor = {}; {
+						descriptor.binding = ssbo.binding;
+						descriptor.dataSize = ssbo.size;
+						descriptor.shaderStage = shader.type;
+						strcpy(descriptor.name, ssbo.name);
+						descriptor.type = SDT_StorageBuffer;
+					}
+					argument.m_vecShaderDescriptor.push_back(descriptor);
 				}
 				//
 				const SeparateSampler* ssampler = nullptr;
@@ -143,6 +169,14 @@ namespace Nix {
 					const SeparateSampler& sampler = ssampler[i];
 					auto& argument = argumentLayouts[sampler.set];
 					argument.m_vecSampler.push_back(sampler);
+					Nix::ShaderDescriptor descriptor = {}; {
+						descriptor.binding = sampler.binding;
+						descriptor.dataSize = 0;
+						descriptor.shaderStage = shader.type;
+						strcpy(descriptor.name, sampler.name);
+						descriptor.type = SDT_Sampler;
+					}
+					argument.m_vecShaderDescriptor.push_back(descriptor);
 				}
 				const CombinedImageSampler* csamplers;
 				numSampler = compiler->getCombinedImageSampler(&csamplers);
@@ -150,6 +184,14 @@ namespace Nix {
 					const CombinedImageSampler& sampler = csamplers[i];
 					auto& argument = argumentLayouts[sampler.set];
 					argument.m_vecCombinedImageSampler.push_back(sampler);
+					Nix::ShaderDescriptor descriptor = {}; {
+						descriptor.binding = sampler.binding;
+						descriptor.dataSize = 0;
+						descriptor.shaderStage = shader.type;
+						strcpy(descriptor.name, sampler.name);
+						descriptor.type = SDT_SamplerImage;
+					}
+					argument.m_vecShaderDescriptor.push_back(descriptor);
 				}
 				const SeparateImage* simage;
 				uint16_t numImage = compiler->getSampledImages(&simage);
@@ -157,22 +199,29 @@ namespace Nix {
 					const SeparateImage& sampler = simage[i];
 					auto& argument = argumentLayouts[sampler.set];
 					argument.m_vecSampledImage.push_back(sampler);
+					Nix::ShaderDescriptor descriptor = {}; {
+						descriptor.binding = sampler.binding;
+						descriptor.dataSize = 0;
+						descriptor.shaderStage = shader.type;
+						strcpy(descriptor.name, sampler.name);
+						descriptor.type = SDT_SampledImage;
+					}
+					argument.m_vecShaderDescriptor.push_back(descriptor);
 				}
 				const StorageImage* stImage; // image1D 2D 3D/imageBuffer
 				numImage = compiler->getStorageImages(&stImage);
 				for (uint16_t i = 0; i < numImage; ++i) {
 					const StorageImage& sampler = stImage[i];
-					auto& argLayout = materialDesc.argumentLayouts[sampler.set];
-					for (size_t n = 0; n < argLayout.descriptorCount; ++n) {
-						if (argLayout.descriptors[n].binding == sampler.binding) {
-							if (argLayout.descriptors[n].type == SDT_StorageImage) {
-								auto& argument = argumentLayouts[sampler.set];
-								argument.m_vecStorageImage.push_back(sampler);
-								// storage image
-								break;
-							}
-						}
+					auto& argument = argumentLayouts[sampler.set];
+					argument.m_vecStorageImage.push_back(sampler);
+					Nix::ShaderDescriptor descriptor = {}; {
+						descriptor.binding = sampler.binding;
+						descriptor.dataSize = 0;
+						descriptor.shaderStage = shader.type;
+						strcpy(descriptor.name, sampler.name);
+						descriptor.type = SDT_StorageImage;
 					}
+					argument.m_vecShaderDescriptor.push_back(descriptor);
 				}
 				const SubpassInput* subpassInputs;
 				uint16_t numSubpass = compiler->getInputAttachment(&subpassInputs);
@@ -180,6 +229,14 @@ namespace Nix {
 					const SubpassInput& attachment = subpassInputs[i];
 					auto& argument = argumentLayouts[attachment.set];
 					argument.m_vecSubpassInput.push_back(attachment);
+					Nix::ShaderDescriptor descriptor = {}; {
+						descriptor.binding = attachment.binding;
+						descriptor.dataSize = 0;
+						descriptor.shaderStage = shader.type;
+						strcpy(descriptor.name, attachment.name);
+						descriptor.type = SDT_InputAttachment;
+					}
+					argument.m_vecShaderDescriptor.push_back(descriptor);
 				}
 			}
 			else {
@@ -201,15 +258,18 @@ namespace Nix {
 			constantsStageFlags |= vkpc.stageFlags;
 			if (vkpc.size) {
 				constantRanges.push_back(vkpc);
-			}			
+			}
 		}
 		//
 		std::vector<VkDescriptorSetLayoutBinding> dynamicBindings;
 		std::vector<uint32_t> dynamicBindingTable;
 		VkDescriptorSetLayout setLayouts[MaxArgumentCount];
 
+		copyDescriptorSetLayoutToMaterial(argumentLayouts, materialDesc);
+
 		for (uint32_t setIndex = 0; setIndex < materialDesc.argumentCount; ++setIndex) {
 			std::vector<VkDescriptorSetLayoutBinding> bindings;
+			//auto argument = argumentLayouts[setIndex];
 			auto& argument = materialDesc.argumentLayouts[setIndex];
 			for (uint32_t dscIndex = 0; dscIndex < argument.descriptorCount; ++dscIndex) {
 				auto& descriptor = argument.descriptors[dscIndex];
@@ -313,8 +373,6 @@ namespace Nix {
 			vkCreateDescriptorSetLayout(device, &layoutCreateInfo, nullptr, &setLayouts[setIndex]);
 			argumentLayouts[setIndex].m_setLayout = setLayouts[setIndex];
 			argumentLayouts[setIndex].m_setID = setIndex;
-			argumentLayouts[setIndex].m_sizeStorageBuffer = storageBufferSizeTotal;
-			argumentLayouts[setIndex].m_sizeUniformBuffer = uniformBufferSizeTotal;
 			for (size_t i = 0; i < dynamicBindings.size(); ++i) {
 				if (dynamicBindingTable.size() < dynamicBindings[i].binding + 1) {
 					dynamicBindingTable.resize(dynamicBindings[i].binding + 1);

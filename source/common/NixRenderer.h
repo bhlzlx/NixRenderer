@@ -482,10 +482,10 @@ namespace Nix {
 		SDT_Sampler,			// sampler object
 		SDT_SampledImage,		// image can be sampled
 		SDT_StorageImage,		// writable image
-		SDT_TexelBuffer,		// texel buffer
 		SDT_SamplerImage,		// sampler & image
 		SDT_InputAttachment,	// input attachment
 		//
+		SDT_TexelBuffer,		// texel buffer
 		SDT_UniformBuffer,		// uniform block
 		SDT_StorageBuffer,		// ssbo
 	};

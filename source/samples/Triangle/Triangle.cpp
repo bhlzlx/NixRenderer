@@ -1,4 +1,4 @@
-#define NIX_JP_IMPLEMENTATION
+﻿#define NIX_JP_IMPLEMENTATION
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
@@ -17,7 +17,7 @@
 #include <cassert>
 
 #ifdef _WIN32
-    #include <Windows.h>
+#include <Windows.h>
 #endif
 
 namespace Nix {
@@ -59,13 +59,13 @@ namespace Nix {
 		IPipeline* m_pipeline;
 
 		//
-		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve ) {
+		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve) {
 			printf("%s", "Triangle is initializing!");
 
 			HMODULE library = ::LoadLibraryA("NixVulkan.dll");
 			assert(library);
 
-			typedef IDriver*(* PFN_CREATE_DRIVER )();
+			typedef IDriver*(*PFN_CREATE_DRIVER)();
 
 			PFN_CREATE_DRIVER createDriver = reinterpret_cast<PFN_CREATE_DRIVER>(::GetProcAddress(library, "createDriver"));
 
@@ -74,7 +74,7 @@ namespace Nix {
 			m_driver->initialize(_archieve, DeviceType::DiscreteGPU);
 			// \ 2. create context
 			m_context = m_driver->createContext(_wnd);
-			
+
 			m_mainRenderPass = m_context->getRenderPass();
 			m_primQueue = m_context->getGraphicsQueue(0);
 
@@ -100,7 +100,7 @@ namespace Nix {
 			texDesc.format = NixRGBA8888_UNORM;
 			texDesc.height = 64;
 			texDesc.width = 64;
-			texDesc.mipmapLevel = 4;
+			texDesc.mipmapLevel = 1;
 			texDesc.type = Nix::TextureType::Texture2D;
 
 			//Nix::IFile * texFile = _archieve->open("texture/texture_bc3.ktx");
@@ -114,7 +114,7 @@ namespace Nix {
 			Nix::IFile* fishPNG = _archieve->open("texture/fish.png");
 			Nix::IFile* memPNG = CreateMemoryBuffer(fishPNG->size());
 			fishPNG->read(fishPNG->size(), memPNG);
-			
+
 			int x, y, channel = 4;
 			auto rawData = stbi_load_from_memory((const stbi_uc*)memPNG->constData(), memPNG->size(), &x, &y, &channel, 4);
 			BufferImageUpload upload;
@@ -143,10 +143,10 @@ namespace Nix {
 				}
 				{ // renderable
 					m_renderable = m_material->createRenderable();
-					//m_vertexBuffer = m_context->createVertexBuffer(PlaneVertices, sizeof(PlaneVertices));
-					//m_indexBuffer = m_context->createIndexBuffer(PlaneIndices, sizeof(PlaneIndices));
-					m_vertexBuffer = m_context->createVertexBuffer(nullptr, sizeof(PlaneVertices));
-					m_indexBuffer = m_context->createIndexBuffer(nullptr, sizeof(PlaneIndices));
+					m_vertexBuffer = m_context->createVertexBuffer(PlaneVertices, sizeof(PlaneVertices));
+					m_indexBuffer = m_context->createIndexBuffer(PlaneIndices, sizeof(PlaneIndices));
+					//m_vertexBuffer = m_context->createVertexBuffer(nullptr, sizeof(PlaneVertices));
+					//m_indexBuffer = m_context->createIndexBuffer(nullptr, sizeof(PlaneIndices));
 					m_renderable->setVertexBuffer(m_vertexBuffer, 0, 0);
 					m_renderable->setIndexBuffer(m_indexBuffer, 0);
 				}
@@ -198,7 +198,7 @@ namespace Nix {
 				m_mainRenderPass->end();
 
 				m_context->endFrame();
-			}			
+			}
 		}
 
 		virtual const char * title() {
@@ -214,5 +214,5 @@ namespace Nix {
 Nix::Triangle theapp;
 
 NixApplication* GetApplication() {
-    return &theapp;
+	return &theapp;
 }

@@ -35,6 +35,8 @@ namespace Nix {
 		//
 		std::vector<UniformBuffer>					m_vecUniformBuffer; // uniform buffer
 		std::vector<StorageBuffer>					m_vecStorageBuffer; // storage buffer
+
+		std::vector<ShaderDescriptor>				m_vecShaderDescriptor;
 		//
 		ArgumentUniformLayouts						m_uniformLayouts; // 
 
@@ -51,9 +53,6 @@ namespace Nix {
 		// VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER 包含一个采样器和一个纹理（OpenGL style）
 		// VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT 一个 input attachment
 		std::vector<VkDescriptorImageInfo>			m_vecDescriptorImageInfo;
-		//
-		uint32_t									m_sizeUniformBuffer;
-		uint32_t									m_sizeStorageBuffer;
 		std::vector<uint32_t>						m_dynamicOffsetIndexTable;
 		// key : binding , value : offset index
 		//std::map<uint32_t, uint32_t>				m_offsetTable;
@@ -63,6 +62,11 @@ namespace Nix {
 		//std::vector<VkDeviceSize>					m_vecBufferBaseOffsets;
 	private:
 	public:
+		ArgumentLayoutExt()
+			: m_setID(-1)
+			, m_setLayout(VK_NULL_HANDLE)
+		{
+		}
 		// image descriptor
 		const SeparateSampler* getSampler(const std::string& _name) const;
 		const SeparateImage* getSampledImage(const std::string& _name) const;
@@ -74,6 +78,15 @@ namespace Nix {
 		const UniformBuffer* getUniform(const std::string& _name, const std::vector<GLSLStructMember>*& _members) const;
 		uint32_t getDynamicOffsetsIndex(uint32_t _binding) const {
 			return m_dynamicOffsetIndexTable[_binding];
+		}
+		const std::vector<ShaderDescriptor>& getDescriptors() const {
+			return m_vecShaderDescriptor;
+		}
+		uint32_t getSetID() const {
+			return m_setID;
+		}
+		VkDescriptorSetLayout getSetLayout() const {
+			return m_setLayout;
 		}
 		//
 		//void updateUniformBufferOffsets(VkDeviceSize _newUniformOffset, std::vector<VkDeviceSize>& _offsets) {
