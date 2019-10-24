@@ -695,6 +695,7 @@ namespace Nix {
 		virtual void destroyRenderable(IRenderable* _renderable) = 0;
 		//
 		virtual IPipeline* createPipeline(const RenderPassDescription& _renderPass) = 0;
+		virtual IPipeline* createComputePipeline() = 0;
 		virtual void release() = 0;
 	};
 
@@ -739,6 +740,19 @@ namespace Nix {
 		virtual bool checkFormatSupport(NixFormat _format, FormatFeatureFlags _flags) = 0;
 	};
 
+	struct ComputeCommand {
+		IPipeline*	computePipeline;
+		IArgument*	argument;
+		uint32_t	constantSize;
+		const void* constants;
+		uint32_t	groupX;
+		uint32_t	groupY;
+		uint32_t	groupZ;
+		//
+		IBuffer*	outputSSBO;
+		ITexture*	outputImage;
+	};
+
 	class NIX_API_DECL IContext {
 	public:
 		// for android platform
@@ -757,7 +771,6 @@ namespace Nix {
 		virtual IAttachment* createAttachment(NixFormat _format, uint32_t _width, uint32_t _height) = 0;
 		virtual IRenderPass* createRenderPass(const RenderPassDescription& _desc, IAttachment** _colorAttachments, IAttachment* _depthStencil) = 0;
 		virtual IMaterial* createMaterial(const MaterialDescription& _desc) = 0;
-		//virtual IPipeline* createPipeline( const MaterialDescription& _desc ) = 0;
 		virtual NixFormat swapchainColorFormat() const = 0;
 		virtual NixFormat swapchainDepthFormat() const = 0;
 		//virtual void captureFrame(IFrameCapture * _capture, FrameCaptureCallback _callback) = 0;
@@ -765,6 +778,7 @@ namespace Nix {
 		virtual void resize(uint32_t _width, uint32_t _height) = 0;
 		virtual bool beginFrame() = 0;
 		virtual void endFrame() = 0;
+		virtual void executeCompute( const ComputeCommand& _command ) = 0;
 		virtual IGraphicsQueue* getGraphicsQueue(uint32_t index = 0) = 0;
 		virtual IRenderPass* getRenderPass() = 0;
 		virtual IDriver* getDriver() = 0;

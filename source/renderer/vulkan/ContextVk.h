@@ -116,6 +116,7 @@ namespace Nix {
 		//BufferVk&& createBuffer( size_t _size, VkBufferUsageFlags _usage ) const;
 		virtual void resize(uint32_t _width, uint32_t _height) override;
 		virtual bool beginFrame() override;
+		virtual void executeCompute(const ComputeCommand& _command) override;
 		virtual void endFrame() override;
 		virtual inline IDriver* getDriver() override { return (IDriver*)m_driver; }
 		virtual IGraphicsQueue* getGraphicsQueue(uint32_t _index) override;

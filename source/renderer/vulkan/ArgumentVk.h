@@ -18,8 +18,6 @@ namespace Nix {
 		friend class PipelineVk;
 		friend class ArgumentAllocator;
 	private:
-		std::vector<std::pair<TextureVk*, SamplerState>>		m_textures;
-		//
 		uint32_t												m_descriptorSetIndex;
 		VkDescriptorSet											m_descriptorSets[MaxFlightCount];			//
 		uint32_t												m_descriptorSetPools[MaxFlightCount];		// pools that holds the descriptor sets
@@ -29,7 +27,6 @@ namespace Nix {
 		MaterialVk*												m_material;
 		//
 		std::vector<VkDescriptorBufferInfo>						m_vecBufferInfo;
-		std::vector<BufferVk*>									m_vecBuffer;
 		std::vector<VkDescriptorImageInfo>						m_vecImageInfo; // sampler/image
 		//
 		std::vector<VkWriteDescriptorSet>						m_vecDescriptorWrites;
@@ -41,6 +38,7 @@ namespace Nix {
 		bool													m_needUpdate;
 		//
 		uint32_t												m_constantsShaderStages;
+
 	public:
 		ArgumentVk();
 		~ArgumentVk();
@@ -68,6 +66,7 @@ namespace Nix {
 		//
 		virtual void updateUniformBuffer(IBuffer* _buffer, const void* _data, uint32_t _offset, uint32_t _length) override;
 		virtual void setShaderCache(uint32_t _offset, const void* _data, uint32_t _size) override;
+
 		virtual void release() override;
 	};
 }

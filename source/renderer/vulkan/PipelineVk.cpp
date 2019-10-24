@@ -181,7 +181,36 @@ namespace Nix {
 		pipeline->m_pipeline = ppl;
 		pipeline->m_renderPass = renderPass;
 		pipeline->m_context = m_context;
+		pipeline->m_pipelineLayout = m_pipelineLayout;
+		return pipeline;
+	}
 
+	IPipeline* MaterialVk::createComputePipeline()
+	{
+		VkPipelineShaderStageCreateInfo stageInfo = {}; {
+			stageInfo.flags = 0;
+			stageInfo.pName = "main";
+			stageInfo.module = m_shaderModules[ShaderModuleType::ComputeShader];
+			stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			stageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+		}
+		VkComputePipelineCreateInfo pipInfo = {}; {
+			pipInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+			pipInfo.pNext = nullptr;
+			pipInfo.flags = 0;
+			pipInfo.stage = stageInfo;
+			pipInfo.layout = m_pipelineLayout;
+			pipInfo.basePipelineHandle = VK_NULL_HANDLE;
+			pipInfo.basePipelineIndex = -1;
+		}
+		auto pplCache = m_context->getPipelineCache();
+		VkPipeline computePipeline;
+		vkCreateComputePipelines(m_context->getDevice(), pplCache, 1, &pipInfo, nullptr, &computePipeline);
+		PipelineVk* pipeline = new PipelineVk();
+		pipeline->m_pipeline = computePipeline;
+		pipeline->m_renderPass = nullptr;
+		pipeline->m_context = m_context;
+		pipeline->m_pipelineLayout = m_pipelineLayout;
 		return pipeline;
 	}
 

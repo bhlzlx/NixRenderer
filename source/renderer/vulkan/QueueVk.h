@@ -96,10 +96,10 @@ namespace Nix {
 		VkQueue						m_queue;
 		uint32_t					m_queueFamily;
 		uint32_t					m_queueIndex;
-		VkCommandPool				m_commandPool; // one command pool per queue/thread
-		VkDevice					m_device; // host device
+		VkCommandPool				m_commandPool;							// one command pool per queue/thread
+		VkDevice					m_device;								// host device
 		// rendering buffer and synchronization objects
-		VkFence						m_renderFences[MaxFlightCount]; // one fence per frame
+		VkFence						m_renderFences[MaxFlightCount];			// one fence per frame
 		VkBool32					m_renderFencesActived[MaxFlightCount];
 		CommandBufferVk				m_renderBuffers[MaxFlightCount];
 		// updating buffer and synchronization objects		

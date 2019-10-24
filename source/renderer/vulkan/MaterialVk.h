@@ -130,6 +130,7 @@ namespace Nix {
 		virtual void destroyRenderable(IRenderable* _renderable) override;
 
 		virtual IPipeline* createPipeline(const RenderPassDescription& _renderPass) override;
+		virtual IPipeline* createComputePipeline() override;
 
 		virtual void release() override;
 

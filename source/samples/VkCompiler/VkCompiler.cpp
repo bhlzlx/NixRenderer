@@ -23,6 +23,7 @@ class VkCompiler : public NixApplication {
 		rst = compiler->getCompiledSpv(&spv, &nWord);
 		//
 		compiler->parseSpvLayout(Nix::ShaderModuleType::VertexShader, spv, nWord);
+
 		return true;
     }
     

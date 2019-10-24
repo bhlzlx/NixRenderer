@@ -20,6 +20,7 @@ namespace Nix {
 	private:
 		ContextVk*		m_context;
 		VkPipeline		m_pipeline;
+		VkPipelineLayout m_pipelineLayout;
 		VkRenderPass	m_renderPass;
 		//VkViewport		m_viewport;
 		//VkCommandBuffer m_commandBuffer;
@@ -44,10 +45,14 @@ namespace Nix {
 			return m_pipeline;
 		}
 		//
+		VkPipeline getHandle() const {
+			return m_pipeline;
+		}
+		VkPipelineLayout getPipelineLayout() const {
+			return m_pipelineLayout;
+		}
 		void setStencilReference(uint32_t _stencilReference);
 		void setBlendFactor(const float* _blendFactors);
 		void setDynamicalStates(VkCommandBuffer _commandBuffer);
-	public:
-
 	};
 }
