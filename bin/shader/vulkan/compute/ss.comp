@@ -1,11 +1,24 @@
 #version 450
 
-layout ( local_size_x = 32, local_size_y = 32, local_size_z = 32) in;
-
-layout( set = 0, binding = 0 ) uniform Param {
-    float a;
-};
-
-void main(){
-    
+layout (binding = 0, rgba8) readonly uniform image2D imageIn;
+layout (binding = 1) writeonly uniform image2D imageOut;
+layout (local_size_x = 32, local_size_y = 32) in;
+void main(void) {
+    ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
+    vec3 px00 = imageLoad(imageIn, pos + ivec2(-1, 1)).rgb;
+    vec3 px01 = imageLoad(imageIn, pos + ivec2( 0, 1)).rgb;
+    vec3 px02 = imageLoad(imageIn, pos + ivec2( 1, 1)).rgb;
+    vec3 px10 = imageLoad(imageIn, pos + ivec2(-1, 0)).rgb;
+    vec3 px12 = imageLoad(imageIn, pos + ivec2( 1, 0)).rgb;
+    vec3 px20 = imageLoad(imageIn, pos + ivec2(-1,-1)).rgb;
+    vec3 px21 = imageLoad(imageIn, pos + ivec2( 0,-1)).rgb;
+    vec3 px22 = imageLoad(imageIn, pos + ivec2( 1,-1)).rgb;
+    // Sobel
+    vec3 hori = -px00 - 2.0 * px10 -px20 + px02 + 2.0 * px12 + px22;
+    vec3 vert = -px00 - 2.0 * px01 -px02 + px20 + 2.0 * px21 + px22;
+    imageStore(
+        imageOut,
+        pos,
+        vec4(sqrt(hori * hori + vert * vert), 0.0)
+        );
 }
