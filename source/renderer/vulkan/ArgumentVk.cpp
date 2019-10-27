@@ -31,7 +31,7 @@ namespace Nix {
 		// do nothing
 	}
 
-	void ArgumentVk::bind(VkCommandBuffer _commandBuffer)
+	void ArgumentVk::bind(VkCommandBuffer _commandBuffer, VkPipelineBindPoint _bindPoint)
 	{
 		if (m_needUpdate) {
 			++m_activeIndex;
@@ -44,7 +44,7 @@ namespace Nix {
 		}
 		vkCmdBindDescriptorSets(
 			_commandBuffer,
-			VK_PIPELINE_BIND_POINT_GRAPHICS,
+			_bindPoint,
 			m_material->getPipelineLayout(),
 			m_descriptorSetIndex,
 			1,
@@ -52,6 +52,22 @@ namespace Nix {
 			(uint32_t)m_dynamicalOffsets[m_activeIndex].size(),
 			m_dynamicalOffsets[m_activeIndex].data()
 		);
+	}
+
+	void ArgumentVk::transfromImageLayoutIn() {
+		for (auto& bindedTex : m_bindedTexture) {
+			TextureVk* tex = (TextureVk*)std::get<0>(bindedTex.second);
+			VkImageLayout layout = std::get<1>(bindedTex.second);
+			m_context->getGraphicsQueue()->tranformImageLayout(tex, layout);
+		}
+	}
+
+	void ArgumentVk::transfromImageLayoutOut() {
+		for (auto& bindedTex : m_bindedTexture) {
+			TextureVk* tex = (TextureVk*)std::get<0>(bindedTex.second);
+			VkImageLayout layout = std::get<1>(bindedTex.second);
+			m_context->getGraphicsQueue()->tranformImageLayout(tex, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		}
 	}
 
 	bool ArgumentVk::getUniformBlockLayout(const char * _name, const GLSLStructMember ** _members, uint32_t * _numMember)
@@ -240,6 +256,8 @@ namespace Nix {
 		imageInfo->imageView = tex->getImageView();
 		imageInfo->sampler = VK_NULL_HANDLE;
 		m_needUpdate = true;
+		//
+		m_bindedTexture[_id] = std::tuple<ITexture*,VkImageLayout>(_texture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
 	void ArgumentVk::bindStorageImage(uint32_t _id, ITexture* _texture)
@@ -251,6 +269,7 @@ namespace Nix {
 		imageInfo->imageView = tex->getImageView();
 		imageInfo->sampler = VK_NULL_HANDLE;
 		m_needUpdate = true;
+		m_bindedTexture[_id] = std::tuple<ITexture*, VkImageLayout>(_texture, VK_IMAGE_LAYOUT_GENERAL);
 	}
 
 
@@ -284,6 +303,7 @@ namespace Nix {
 		imageInfo->imageView = tex->getImageView();
 		imageInfo->sampler = m_context->getSampler(_sampler);
 		m_needUpdate = true;
+		m_bindedTexture[_id] = std::tuple<ITexture*, VkImageLayout>(_texture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
 	void ArgumentVk::bindStorageBuffer(uint32_t _id, IBuffer * _buffer)

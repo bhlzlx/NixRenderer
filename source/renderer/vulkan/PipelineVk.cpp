@@ -187,27 +187,23 @@ namespace Nix {
 
 	IPipeline* MaterialVk::createComputePipeline()
 	{
-		VkPipelineShaderStageCreateInfo stageInfo = {}; {
-			stageInfo.flags = 0;
-			stageInfo.pNext = nullptr;
-			stageInfo.pName = "main";
-			stageInfo.module = m_shaderModules[ShaderModuleType::ComputeShader];
-			stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-			stageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-			stageInfo.pSpecializationInfo = nullptr;
-		}
-		VkComputePipelineCreateInfo pipInfo = {}; {
-			pipInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-			pipInfo.pNext = nullptr;
-			pipInfo.flags = 0;
-			pipInfo.stage = stageInfo;
-			pipInfo.layout = m_pipelineLayout;
-			pipInfo.basePipelineHandle = VK_NULL_HANDLE;
-			pipInfo.basePipelineIndex = -1;
-		}
+		VkComputePipelineCreateInfo computePipelineCreateInfo = {
+		  VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
+		  0, 0,
+		  {
+			VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+			0, 0, 
+			VK_SHADER_STAGE_COMPUTE_BIT, 
+			m_shaderModules[ShaderModuleType::ComputeShader], 
+			"main", 
+			0
+		  },
+		  m_pipelineLayout, 0, 0
+		};
 		auto pplCache = m_context->getPipelineCache();
 		VkPipeline computePipeline;
-		vkCreateComputePipelines(m_context->getDevice(), pplCache, 1, &pipInfo, nullptr, &computePipeline);
+		VkDevice device = m_context->getDevice();
+		vkCreateComputePipelines(device, pplCache, 1, &computePipelineCreateInfo, nullptr, &computePipeline);
 		PipelineVk* pipeline = new PipelineVk();
 		pipeline->m_pipeline = computePipeline;
 		pipeline->m_renderPass = nullptr;

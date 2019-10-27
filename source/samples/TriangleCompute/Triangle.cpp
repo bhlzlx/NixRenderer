@@ -238,8 +238,8 @@ namespace Nix {
 
 					glm::mat4 transMat = glm::rotate<float>(glm::mat4(), tickCounter % 3600 / 10.0f, glm::vec3(0, 0, 1));
 					m_argument->updateUniformBuffer(m_triTransformMatrix, &transMat, 0, 64);
-					m_mainRenderPass->bindPipeline(m_pipeline);
 					m_mainRenderPass->bindArgument(m_argument);
+					m_mainRenderPass->bindPipeline(m_pipeline);
 					//m_mainRenderPass->bindArgument(m_argInstance);
 					//
 					m_mainRenderPass->drawElements(m_renderable, 0, 6);

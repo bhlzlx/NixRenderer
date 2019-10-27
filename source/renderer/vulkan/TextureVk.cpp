@@ -123,7 +123,7 @@ namespace Nix {
 					_usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 				}
 				else {
-					_usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+					_usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
 				}
 
 			}
@@ -236,11 +236,11 @@ namespace Nix {
 		texture->m_pipelineStages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 		texture->m_imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-		if (_usage & TextureUsageColorAttachment || _usage & TextureUsageDepthStencilAttachment) {
+		/*if (_usage & TextureUsageColorAttachment || _usage & TextureUsageDepthStencilAttachment) {
 		}
 		else {
 			_context->getUploadQueue()->tranformImageLayout(texture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		}
+		}*/
 
 		return texture;
 	}

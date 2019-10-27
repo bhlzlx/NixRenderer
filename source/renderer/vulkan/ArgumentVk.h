@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <NixRenderer.h>
 #include <vector>
+#include <map>
 #include "VkInc.h"
 
 namespace Nix {
@@ -38,12 +39,14 @@ namespace Nix {
 		bool													m_needUpdate;
 		//
 		uint32_t												m_constantsShaderStages;
-
+		std::map<uint32_t, std::tuple<ITexture*,VkImageLayout>>	m_bindedTexture;
 	public:
 		ArgumentVk();
 		~ArgumentVk();
 
-		void bind(VkCommandBuffer _commandBuffer);
+		void bind(VkCommandBuffer _commandBuffer, VkPipelineBindPoint _bindPoint);
+		void transfromImageLayoutIn();
+		void transfromImageLayoutOut();
 
 		virtual bool getUniformBlockLayout(const char * _name, const GLSLStructMember** _members, uint32_t* _numMember) override;
 		//

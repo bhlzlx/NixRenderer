@@ -138,6 +138,7 @@ namespace Nix {
 		}
 		bool attachSwapchains(std::vector<SwapchainVk*> _swapchains);
 		void beginFrame(uint32_t _flightIndex);
+		void tranformImageLayout(TextureVk* _texture, VkImageLayout _newLayout);
 		void updateBuffer(BufferVk* _buffer, size_t _offset, const void * _data, size_t _length);
 		//void updateTexture(TextureVk* _texture, const ImageRegion& _region, const void * _data, size_t _length);
 		void updateTexture(TextureVk* _texture, const TextureRegion& _region, const void * _data, size_t _length);

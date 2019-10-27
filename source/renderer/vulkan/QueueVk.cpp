@@ -160,6 +160,12 @@ namespace Nix {
 		m_readyForRendering = VK_TRUE;
 	}
 
+	void GraphicsQueueVk::tranformImageLayout(TextureVk* _texture, VkImageLayout _newLayout)
+	{
+		VkCommandBuffer cb = this->commandBuffer()->operator const VkCommandBuffer &();
+		_texture->transformImageLayout(cb, _newLayout);
+	}
+
 	const CommandBufferVk* GraphicsQueueVk::commandBuffer() const
 	{
 		return &m_renderBuffers[m_flightIndex];

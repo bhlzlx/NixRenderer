@@ -325,7 +325,7 @@ namespace Nix {
 	void RenderPassVk::bindArgument(IArgument* _argument)
 	{
 		ArgumentVk* argument = (ArgumentVk*)_argument;
-		argument->bind(m_commandBuffer);
+		argument->bind(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS);
 	}
 
 	void RenderPassVk::draw(IRenderable* _renderable, uint32_t _vertexOffset, uint32_t _vertexCount)
@@ -720,7 +720,7 @@ namespace Nix {
 	void RenderPassSwapchainVk::bindArgument(IArgument* _argument)
 	{
 		ArgumentVk* argument = (ArgumentVk*)_argument;
-		argument->bind(m_commandBuffer);
+		argument->bind(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS);
 	}
 
 	void RenderPassSwapchainVk::draw(IRenderable* _renderable, uint32_t _vertexOffset, uint32_t _vertexCount)

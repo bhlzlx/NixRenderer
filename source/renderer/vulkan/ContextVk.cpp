@@ -357,115 +357,117 @@ namespace Nix {
 		PipelineVk* pipeline = (PipelineVk*)_command.computePipeline;
 		vkCmdBindPipeline(buff, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getHandle());
 		ArgumentVk* argument = (ArgumentVk*)_command.argument;
-		argument->bind(buff);
+		argument->transfromImageLayoutIn();
+		argument->bind(buff, VK_PIPELINE_BIND_POINT_COMPUTE);
 		if (_command.constantSize) {
 			vkCmdPushConstants(buff, pipeline->getPipelineLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, _command.constantSize, _command.constants);
 		}
-		if (_command.outputSSBO) {
-			BufferVk* buffer = (BufferVk*)_command.outputSSBO;
-			VkBufferMemoryBarrier barrierBefore; {
-				barrierBefore.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-				barrierBefore.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT;
-				barrierBefore.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
-				barrierBefore.pNext = nullptr;
-				barrierBefore.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-				barrierBefore.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-				barrierBefore.offset = buffer->getOffset();
-				barrierBefore.size = buffer->getSize();
-				barrierBefore.buffer = buffer->getHandle();
-			}
-			vkCmdPipelineBarrier(buff,
-				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
-				VK_DEPENDENCY_DEVICE_GROUP_BIT,
-				0, nullptr,
-				1, &barrierBefore,
-				0, nullptr
-			);
-		}
-		if (_command.outputImage) {
-			TextureVk* tex = (TextureVk*)_command.outputImage;
-			
-			const VkImageMemoryBarrier barrierBefore = {
-			VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER, // sType 
-			nullptr, // pNext
-			VK_ACCESS_SHADER_READ_BIT, // srcAccessMask
-			VK_ACCESS_SHADER_WRITE_BIT, // dstAccessMask
-			tex->getImageLayout(), // oldLayout
-			VK_IMAGE_LAYOUT_GENERAL, // newLayout
-			VK_QUEUE_FAMILY_IGNORED, // srcQueueFamilyIndex 
-			VK_QUEUE_FAMILY_IGNORED, // dstQueueFamilyIndex 
-			tex->getImage(), // image 
-			{ // subresourceRange 
-				VK_IMAGE_ASPECT_COLOR_BIT, // aspectMask 
-				0, // baseMipLevel 
-				tex->getDesc().mipmapLevel, // levelCount
-				0, // baseArrayLayer
-				tex->getDesc().depth // layerCount
-			}
-			};
-			vkCmdPipelineBarrier(buff,
-				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-				VK_DEPENDENCY_DEVICE_GROUP_BIT,
-				0, nullptr,
-				0, nullptr,
-				1, &barrierBefore
-			);
-		}
+		//if (_command.outputSSBO) {
+		//	BufferVk* buffer = (BufferVk*)_command.outputSSBO;
+		//	VkBufferMemoryBarrier barrierBefore; {
+		//		barrierBefore.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+		//		barrierBefore.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT;
+		//		barrierBefore.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+		//		barrierBefore.pNext = nullptr;
+		//		barrierBefore.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		//		barrierBefore.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		//		barrierBefore.offset = buffer->getOffset();
+		//		barrierBefore.size = buffer->getSize();
+		//		barrierBefore.buffer = buffer->getHandle();
+		//	}
+		//	vkCmdPipelineBarrier(buff,
+		//		VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		//		VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+		//		VK_DEPENDENCY_DEVICE_GROUP_BIT,
+		//		0, nullptr,
+		//		1, &barrierBefore,
+		//		0, nullptr
+		//	);
+		//}
+		//if (_command.outputImage) {
+		//	TextureVk* tex = (TextureVk*)_command.outputImage;
+		//	
+		//	const VkImageMemoryBarrier barrierBefore = {
+		//	VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER, // sType 
+		//	nullptr, // pNext
+		//	VK_ACCESS_SHADER_READ_BIT, // srcAccessMask
+		//	VK_ACCESS_SHADER_WRITE_BIT, // dstAccessMask
+		//	tex->getImageLayout(), // oldLayout
+		//	VK_IMAGE_LAYOUT_GENERAL, // newLayout
+		//	VK_QUEUE_FAMILY_IGNORED, // srcQueueFamilyIndex 
+		//	VK_QUEUE_FAMILY_IGNORED, // dstQueueFamilyIndex 
+		//	tex->getImage(), // image 
+		//	{ // subresourceRange 
+		//		VK_IMAGE_ASPECT_COLOR_BIT, // aspectMask 
+		//		0, // baseMipLevel 
+		//		tex->getDesc().mipmapLevel, // levelCount
+		//		0, // baseArrayLayer
+		//		tex->getDesc().depth // layerCount
+		//	}
+		//	};
+		//	vkCmdPipelineBarrier(buff,
+		//		VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		//		VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		//		VK_DEPENDENCY_DEVICE_GROUP_BIT,
+		//		0, nullptr,
+		//		0, nullptr,
+		//		1, &barrierBefore
+		//	);
+		//}
 		vkCmdDispatch(buff, _command.groupX, _command.groupY, _command.groupZ);
-		if (_command.outputSSBO) {
-			BufferVk* buffer = (BufferVk*)_command.outputSSBO;
-			VkBufferMemoryBarrier barrierBefore; {
-				barrierBefore.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-				barrierBefore.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-				barrierBefore.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-				barrierBefore.pNext = nullptr;
-				barrierBefore.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-				barrierBefore.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-				barrierBefore.offset = buffer->getOffset();
-				barrierBefore.size = buffer->getSize();
-				barrierBefore.buffer = buffer->getHandle();
-			}
-			vkCmdPipelineBarrier(buff,
-				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-				VK_DEPENDENCY_DEVICE_GROUP_BIT,
-				0, nullptr,
-				1, &barrierBefore,
-				0, nullptr
-			);
-		}
-		if (_command.outputImage) {
-			TextureVk* tex = (TextureVk*)_command.outputImage;
-
-			const VkImageMemoryBarrier barrierBefore = {
-			VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER, // sType 
-			nullptr, // pNext
-			VK_ACCESS_SHADER_WRITE_BIT, // srcAccessMask
-			VK_ACCESS_SHADER_READ_BIT, // dstAccessMask
-			VK_IMAGE_LAYOUT_GENERAL, // oldLayout
-			tex->getImageLayout(), // newLayout
-			VK_QUEUE_FAMILY_IGNORED, // srcQueueFamilyIndex 
-			VK_QUEUE_FAMILY_IGNORED, // dstQueueFamilyIndex 
-			tex->getImage(), // image 
-			{ // subresourceRange 
-				VK_IMAGE_ASPECT_COLOR_BIT, // aspectMask 
-				0, // baseMipLevel 
-				tex->getDesc().mipmapLevel, // levelCount
-				0, // baseArrayLayer
-				tex->getDesc().depth // layerCount
-			}
-			};
-			vkCmdPipelineBarrier(buff,
-				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-				VK_DEPENDENCY_DEVICE_GROUP_BIT,
-				0, nullptr,
-				0, nullptr,
-				1, &barrierBefore
-			);
-		}
+		argument->transfromImageLayoutOut();
+		//if (_command.outputSSBO) {
+		//	BufferVk* buffer = (BufferVk*)_command.outputSSBO;
+		//	VkBufferMemoryBarrier barrierBefore; {
+		//		barrierBefore.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+		//		barrierBefore.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		//		barrierBefore.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		//		barrierBefore.pNext = nullptr;
+		//		barrierBefore.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		//		barrierBefore.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		//		barrierBefore.offset = buffer->getOffset();
+		//		barrierBefore.size = buffer->getSize();
+		//		barrierBefore.buffer = buffer->getHandle();
+		//	}
+		//	vkCmdPipelineBarrier(buff,
+		//		VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		//		VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		//		VK_DEPENDENCY_DEVICE_GROUP_BIT,
+		//		0, nullptr,
+		//		1, &barrierBefore,
+		//		0, nullptr
+		//	);
+		//}
+		//if (_command.outputImage) {
+		//	TextureVk* tex = (TextureVk*)_command.outputImage;
+		//
+		//	const VkImageMemoryBarrier barrierBefore = {
+		//	VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER, // sType 
+		//	nullptr, // pNext
+		//	VK_ACCESS_SHADER_WRITE_BIT, // srcAccessMask
+		//	VK_ACCESS_SHADER_READ_BIT, // dstAccessMask
+		//	VK_IMAGE_LAYOUT_GENERAL, // oldLayout
+		//	tex->getImageLayout(), // newLayout
+		//	VK_QUEUE_FAMILY_IGNORED, // srcQueueFamilyIndex 
+		//	VK_QUEUE_FAMILY_IGNORED, // dstQueueFamilyIndex 
+		//	tex->getImage(), // image 
+		//	{ // subresourceRange 
+		//		VK_IMAGE_ASPECT_COLOR_BIT, // aspectMask 
+		//		0, // baseMipLevel 
+		//		tex->getDesc().mipmapLevel, // levelCount
+		//		0, // baseArrayLayer
+		//		tex->getDesc().depth // layerCount
+		//	}
+		//	};
+		//	vkCmdPipelineBarrier(buff,
+		//		VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		//		VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		//		VK_DEPENDENCY_DEVICE_GROUP_BIT,
+		//		0, nullptr,
+		//		0, nullptr,
+		//		1, &barrierBefore
+		//	);
+		//}
 	}
 
 	void ContextVk::endFrame()
