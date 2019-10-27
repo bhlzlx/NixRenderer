@@ -582,7 +582,7 @@ namespace Nix {
 		const VkImageMemoryBarrier barrierBefore = {
 			VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER, // sType 
 			nullptr, // pNext
-			VK_ACCESS_SHADER_READ_BIT, // srcAccessMask
+			VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT, // srcAccessMask
 			VK_ACCESS_TRANSFER_WRITE_BIT, // dstAccessMask
 			_texture->getImageLayout(), // oldLayout
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, // newLayout
@@ -601,7 +601,7 @@ namespace Nix {
 			VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER, // sType 
 			nullptr, // pNext
 			VK_ACCESS_TRANSFER_WRITE_BIT, // srcAccessMask
-			VK_ACCESS_SHADER_READ_BIT, // dstAccessMask
+			VK_ACCESS_TRANSFER_WRITE_BIT | VK_ACCESS_TRANSFER_READ_BIT, // dstAccessMask
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, // oldLayout
 			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, // newLayout
 			VK_QUEUE_FAMILY_IGNORED, // srcQueueFamilyIndex 
@@ -617,7 +617,7 @@ namespace Nix {
 		};
 
 		vkCmdPipelineBarrier(
-			m_commandBuffer, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
+			m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 			0, nullptr, 0, nullptr,
 			1, &barrierBefore);
 		vkCmdCopyBufferToImage(m_commandBuffer, staging->getHandle(), _texture->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, static_cast<uint32_t>(copies.size()), copies.data());
@@ -674,7 +674,7 @@ namespace Nix {
 			barrierAfter.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 		}
 		vkCmdPipelineBarrier(
-			m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+			m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 			0, nullptr, 0, nullptr,
 			1, &barrierAfter);
 		//

@@ -58,8 +58,7 @@ namespace Nix {
 		IBuffer*					m_vertexBuffer;
 		IBuffer*					m_indexBuffer;
 
-		IPipeline* m_pipeline;
-
+		IPipeline*					m_pipeline;
 		//
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve) {
 			printf("%s", "Triangle is initializing!");

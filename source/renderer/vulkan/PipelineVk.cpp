@@ -189,10 +189,12 @@ namespace Nix {
 	{
 		VkPipelineShaderStageCreateInfo stageInfo = {}; {
 			stageInfo.flags = 0;
+			stageInfo.pNext = nullptr;
 			stageInfo.pName = "main";
 			stageInfo.module = m_shaderModules[ShaderModuleType::ComputeShader];
 			stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 			stageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+			stageInfo.pSpecializationInfo = nullptr;
 		}
 		VkComputePipelineCreateInfo pipInfo = {}; {
 			pipInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;

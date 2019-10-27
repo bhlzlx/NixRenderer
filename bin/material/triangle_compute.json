@@ -1,0 +1,6 @@
+{
+	"shaders" : [{
+		"type" : "ComputeShader",
+		"name" : "compute/ss.comp"
+	}]
+}

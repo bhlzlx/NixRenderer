@@ -361,7 +361,7 @@ namespace Nix {
 		for (uint32_t familyIndex = 0; familyIndex < familyProperties.size(); ++familyIndex)
 		{
 			const VkQueueFamilyProperties& property = familyProperties[familyIndex];
-			if (property.queueCount && property.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+			if (property.queueCount && property.queueFlags & VK_QUEUE_GRAPHICS_BIT && property.queueFlags & VK_QUEUE_COMPUTE_BIT)
 			{
 				VkBool32 supportPresent = VK_FALSE;
 				vkGetPhysicalDeviceSurfaceSupportKHR( m_PhDevice, familyIndex, _surface, &supportPresent);

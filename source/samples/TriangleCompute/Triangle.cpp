@@ -60,6 +60,11 @@ namespace Nix {
 
 		IPipeline* m_pipeline;
 
+		IPipeline* m_computePipeline;
+		IMaterial* m_computeMaterial;
+		IArgument* m_computeArgument;
+		ITexture* m_computeOutput;
+
 		//
 		virtual bool initialize(void* _wnd, Nix::IArchieve* _archieve) {
 			printf("%s", "Triangle is initializing!");
@@ -76,6 +81,15 @@ namespace Nix {
 			m_driver->initialize(_archieve, DeviceType::DiscreteGPU);
 			// \ 2. create context
 			m_context = m_driver->createContext(_wnd);
+
+			MaterialDescription computeMtlDesc;
+			Nix::TextReader computeMtlReader;
+			computeMtlReader.openFile(_archieve, "material/triangle_compute.json");
+			computeMtlDesc.parse(computeMtlReader.getText());
+
+			IMaterial* computeMtl = m_context->createMaterial(computeMtlDesc);
+			m_computePipeline = computeMtl->createComputePipeline();
+			m_computeArgument = computeMtl->createArgument(0);
 
 			m_mainRenderPass = m_context->getRenderPass();
 			m_primQueue = m_context->getGraphicsQueue(0);
@@ -105,6 +119,10 @@ namespace Nix {
 			texDesc.mipmapLevel = 1;
 			texDesc.type = Nix::TextureType::Texture2D;
 
+
+
+			
+
 			//Nix::IFile * texFile = _archieve->open("texture/texture_bc3.ktx");
 			//Nix::IFile * texFile = _archieve->open("texture/texture_array_bc3.ktx");
 			//Nix::IFile* texMem = CreateMemoryBuffer(texFile->size());
@@ -112,6 +130,7 @@ namespace Nix {
 			//m_texture = m_context->createTextureKTX(texMem->constData(), texMem->size());
 
 			m_triTexture = m_context->createTexture(texDesc);
+			m_computeOutput = m_context->createTexture(texDesc);
 			m_triTransformMatrix = m_context->createUniformBuffer(64);
 
 			Nix::IFile* fishPNG = _archieve->open("texture/fish.png");
@@ -130,6 +149,14 @@ namespace Nix {
 			upload.mipDataOffsets[0] = 0;
 			m_triTexture->uploadSubData(upload);
 
+
+			uint32_t inputLoc, outputLoc;
+			m_computeArgument->getStorageImageLocation("imageIn", inputLoc);
+			m_computeArgument->getStorageImageLocation("imageOut", outputLoc);
+
+			m_computeArgument->bindStorageImage(inputLoc, m_triTexture);
+			m_computeArgument->bindStorageImage(outputLoc, m_computeOutput);
+
 			bool rst = false;
 			m_material = m_context->createMaterial(mtlDesc); {
 				{ // graphics pipeline 
@@ -141,7 +168,7 @@ namespace Nix {
 					rst = m_argument->getTextureLocation("triTexture", m_triTextureLoc);
 					rst = m_argument->getUniformBlockLocation("Argument1", m_triTransformLoc);
 					m_argument->bindSampler(m_triSamplerLoc, m_triSampler);
-					m_argument->bindTexture(m_triTextureLoc, m_triTexture);
+					m_argument->bindTexture(m_triTextureLoc, m_computeOutput);
 					m_argument->bindUniformBuffer(m_triTransformLoc, m_triTransformMatrix);
 					//m_argInstance = m_material->createArgument(1);
 					//rst = m_argInstance->getUniformBlock("LocalArgument", &m_matLocal);
@@ -187,6 +214,20 @@ namespace Nix {
 			float imageIndex = (tickCounter / 1024) % 4;
 
 			if (m_context->beginFrame()) {
+
+				Nix::ComputeCommand comp;
+				comp.argument = m_computeArgument;
+				comp.constantSize = 0;
+				comp.constants = nullptr;
+				comp.groupX = 32;
+				comp.groupY = 32;
+				comp.groupZ = 1;
+				comp.computePipeline = m_computePipeline;
+				comp.outputImage = m_computeOutput;
+				comp.outputSSBO = nullptr;
+
+				m_context->executeCompute(comp);
+
 				m_mainRenderPass->begin(m_primQueue); {
 					/*glm::mat4x4 identity;
 					m_argCommon->setUniform(m_matGlobal, 0, &identity, 64);
@@ -194,6 +235,7 @@ namespace Nix {
 					m_argCommon->setUniform(m_matGlobal, 128, &imageIndex, 4);
 					m_argInstance->setUniform(m_matLocal, 0, &identity, 64);*/
 					//
+
 					glm::mat4 transMat = glm::rotate<float>(glm::mat4(), tickCounter % 3600 / 10.0f, glm::vec3(0, 0, 1));
 					m_argument->updateUniformBuffer(m_triTransformMatrix, &transMat, 0, 64);
 					m_mainRenderPass->bindPipeline(m_pipeline);
