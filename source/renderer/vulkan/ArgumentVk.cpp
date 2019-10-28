@@ -111,7 +111,7 @@ namespace Nix {
 		uint16_t binding = -1;
 		const ArgumentLayoutExt& argLayout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
 		for (; i < argLayout.m_vecSampler.size(); ++i) {
-			if (strcmp(argLayout.m_vecSampler[i].name, _name) == 0 ) {
+			if (strcmp(argLayout.m_vecSampler[i].name, _name) == 0) {
 				binding = argLayout.m_vecSampler[i].binding;
 				break;
 			}
@@ -257,7 +257,7 @@ namespace Nix {
 		imageInfo->sampler = VK_NULL_HANDLE;
 		m_needUpdate = true;
 		//
-		m_bindedTexture[_id] = std::tuple<ITexture*,VkImageLayout>(_texture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		m_bindedTexture[_id] = std::tuple<ITexture*, VkImageLayout>(_texture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
 	void ArgumentVk::bindStorageImage(uint32_t _id, ITexture* _texture)
@@ -344,8 +344,8 @@ namespace Nix {
 	{
 		_buffer->updateData(_data, _length, _offset + _buffer->getSize() / MaxFlightCount * m_activeIndex);
 	}
-
 	void ArgumentVk::setShaderCache(uint32_t _offset, const void* _data, uint32_t _size)
+
 	{
 #ifndef NDEBUG
 		DriverVk* driver = (DriverVk*)m_context->getDriver();

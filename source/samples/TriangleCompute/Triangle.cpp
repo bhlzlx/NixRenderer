@@ -121,7 +121,7 @@ namespace Nix {
 
 
 
-			
+
 
 			//Nix::IFile * texFile = _archieve->open("texture/texture_bc3.ktx");
 			//Nix::IFile * texFile = _archieve->open("texture/texture_array_bc3.ktx");
@@ -170,15 +170,11 @@ namespace Nix {
 					m_argument->bindSampler(m_triSamplerLoc, m_triSampler);
 					m_argument->bindTexture(m_triTextureLoc, m_computeOutput);
 					m_argument->bindUniformBuffer(m_triTransformLoc, m_triTransformMatrix);
-					//m_argInstance = m_material->createArgument(1);
-					//rst = m_argInstance->getUniformBlock("LocalArgument", &m_matLocal);
 				}
 				{ // renderable
 					m_renderable = m_material->createRenderable();
 					m_vertexBuffer = m_context->createVertexBuffer(PlaneVertices, sizeof(PlaneVertices));
 					m_indexBuffer = m_context->createIndexBuffer(PlaneIndices, sizeof(PlaneIndices));
-					//m_vertexBuffer = m_context->createVertexBuffer(nullptr, sizeof(PlaneVertices));
-					//m_indexBuffer = m_context->createIndexBuffer(nullptr, sizeof(PlaneIndices));
 					m_renderable->setVertexBuffer(m_vertexBuffer, 0, 0);
 					m_renderable->setIndexBuffer(m_indexBuffer, 0);
 				}
@@ -229,19 +225,10 @@ namespace Nix {
 				m_context->executeCompute(comp);
 
 				m_mainRenderPass->begin(m_primQueue); {
-					/*glm::mat4x4 identity;
-					m_argCommon->setUniform(m_matGlobal, 0, &identity, 64);
-					m_argCommon->setUniform(m_matGlobal, 64, &identity, 64);
-					m_argCommon->setUniform(m_matGlobal, 128, &imageIndex, 4);
-					m_argInstance->setUniform(m_matLocal, 0, &identity, 64);*/
-					//
-
 					glm::mat4 transMat = glm::rotate<float>(glm::mat4(), tickCounter % 3600 / 10.0f, glm::vec3(0, 0, 1));
 					m_argument->updateUniformBuffer(m_triTransformMatrix, &transMat, 0, 64);
 					m_mainRenderPass->bindArgument(m_argument);
 					m_mainRenderPass->bindPipeline(m_pipeline);
-					//m_mainRenderPass->bindArgument(m_argInstance);
-					//
 					m_mainRenderPass->drawElements(m_renderable, 0, 6);
 				}
 				m_mainRenderPass->end();

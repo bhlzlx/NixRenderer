@@ -13,12 +13,13 @@ void main(void) {
     vec3 px20 = imageLoad(imageIn, pos + ivec2(-1,-1)).rgb;
     vec3 px21 = imageLoad(imageIn, pos + ivec2( 0,-1)).rgb;
     vec3 px22 = imageLoad(imageIn, pos + ivec2( 1,-1)).rgb;
+	float alpha = imageLoad(imageIn, pos).a;
     // Sobel
     vec3 hori = -px00 - 2.0 * px10 -px20 + px02 + 2.0 * px12 + px22;
     vec3 vert = -px00 - 2.0 * px01 -px02 + px20 + 2.0 * px21 + px22;
     imageStore(
         imageOut,
         pos,
-        vec4(sqrt(hori * hori + vert * vert), 0.0)
+        vec4(sqrt(hori * hori + vert * vert), alpha)
         );
 }
