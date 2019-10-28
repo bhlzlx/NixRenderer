@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <NixRenderer.h>
 #include <nix/io/archieve.h>
 #include <assert.h>
@@ -99,6 +99,7 @@ namespace Nix {
 		IMaterial*					m_material;
 		IPipeline*					m_pipeline;
 		IArgument*					m_argument;
+		IBuffer*					m_uniformBuffer;
 		ITexture*					m_textureArray;
 		//
 		int							m_width;
@@ -111,8 +112,8 @@ namespace Nix {
 		//void*						m_packerLibrary;
 		//PFN_CREATE_TEXTURE_PACKER	m_createPacker;
 		DrawDataMemoryHeap			m_vertexMemoryHeap;
-		MemoryPool<UIDrawData> 
-									m_drawDataPool;
+		MemoryPool<UIDrawData>
+			m_drawDataPool;
 		UITextureManager			m_textureManager;
 
 		// ---------------------------------------------------------------------------------------------------
@@ -130,38 +131,38 @@ namespace Nix {
 		//  build draw data
 		// ---------------------------------------------------------------------------------------------------
 
-		bool initialize(IContext* _context, IArchieve* _archieve, const UIRenderConfig& _config );
-		void setScreenSize( int _width, int _height );
+		bool initialize(IContext* _context, IArchieve* _archieve, const UIRenderConfig& _config);
+		void setScreenSize(int _width, int _height);
 
 		inline UITextureManager* getUITextureManager() {
 			return &m_textureManager;
 		}
 
-		uint32_t addFont( const char * _filepath );
+		uint32_t addFont(const char * _filepath);
 
 		// ---------------------------------------------------------------------------------------------------
 		//  build draw data
 		// ---------------------------------------------------------------------------------------------------
-		
-		UIDrawData* build( const PlainTextDraw& _draw, UIDrawData* _oldDrawData, Nix::Rect<float>& _rc );
-		UIDrawData* build( const RichTextDraw& _draw, bool _autoWrap, UIDrawData* _oldDrawData, Nix::Rect<float>& _rc);
-		UIDrawData* build( const ImageDraw* _draws, uint32_t _count, UIDrawData* _oldDrawData );
-		UIDrawData* build( uint32_t _numTri, UIDrawData* _oldDrawData);
-		UIDrawData* buildLines( Nix::Point<float>* _points, uint32_t _numLine );
+
+		UIDrawData* build(const PlainTextDraw& _draw, UIDrawData* _oldDrawData, Nix::Rect<float>& _rc);
+		UIDrawData* build(const RichTextDraw& _draw, bool _autoWrap, UIDrawData* _oldDrawData, Nix::Rect<float>& _rc);
+		UIDrawData* build(const ImageDraw* _draws, uint32_t _count, UIDrawData* _oldDrawData);
+		//UIDrawData* build(uint32_t _numTri, UIDrawData* _oldDrawData);
+		//UIDrawData* buildLines(Nix::Point<float>* _points, uint32_t _numLine);
 
 
 		UIDrawData* copyDrawData(UIDrawData* _drawData);
 		void translateDrawData(UIDrawData* _draw, float _offsetX, float _offsetY, UIDrawData* _to);
-		void rotateDrawData( UIDrawData* _draw, const Nix::Point<float>& _anchor, float _angle, UIDrawData* _to);
-		void transformDrawData( UIDrawData* _draw, const Nix::Point<float>& _anchor, float _angle, float _scale, UIDrawData* _to );
+		void rotateDrawData(UIDrawData* _draw, const Nix::Point<float>& _anchor, float _angle, UIDrawData* _to);
+		void transformDrawData(UIDrawData* _draw, const Nix::Point<float>& _anchor, float _angle, float _scale, UIDrawData* _to);
 		void scissorDrawData(UIDrawData* _draw, const Nix::Scissor& _scissor, UIDrawData* _output);
-		void destroyDrawData( UIDrawData* _draw );
+		void destroyDrawData(UIDrawData* _draw);
 
 		// ---------------------------------------------------------------------------------------------------
 		// runtime drawing
 		// ---------------------------------------------------------------------------------------------------
 		void beginBuild(uint32_t _flightIndex);
-		void buildDrawCall(const UIDrawData * _drawData, const UIDrawState& _state );
+		void buildDrawCall(const UIDrawData * _drawData, const UIDrawState& _state);
 		void endBuild();
 		//
 		void render(IRenderPass* _renderPass, float _width, float _height);

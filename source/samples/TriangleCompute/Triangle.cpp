@@ -119,10 +119,6 @@ namespace Nix {
 			texDesc.mipmapLevel = 1;
 			texDesc.type = Nix::TextureType::Texture2D;
 
-
-
-
-
 			//Nix::IFile * texFile = _archieve->open("texture/texture_bc3.ktx");
 			//Nix::IFile * texFile = _archieve->open("texture/texture_array_bc3.ktx");
 			//Nix::IFile* texMem = CreateMemoryBuffer(texFile->size());
@@ -225,7 +221,7 @@ namespace Nix {
 				m_context->executeCompute(comp);
 
 				m_mainRenderPass->begin(m_primQueue); {
-					glm::mat4 transMat = glm::rotate<float>(glm::mat4(), tickCounter % 3600 / 10.0f, glm::vec3(0, 0, 1));
+					glm::mat4 transMat = glm::mat4();
 					m_argument->updateUniformBuffer(m_triTransformMatrix, &transMat, 0, 64);
 					m_mainRenderPass->bindArgument(m_argument);
 					m_mainRenderPass->bindPipeline(m_pipeline);
@@ -238,7 +234,7 @@ namespace Nix {
 		}
 
 		virtual const char * title() {
-			return "Triangle (with Texture2D Array)";
+			return "Triangle ( compute shader )";
 		}
 
 		virtual uint32_t rendererType() {

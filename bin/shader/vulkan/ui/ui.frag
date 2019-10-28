@@ -6,12 +6,13 @@
 layout (location = 0) in vec3 frag_uv;
 layout (location = 1) in flat vec4 frag_colorMask;
 
-layout ( set = 0, binding =  0 ) uniform sampler2DArray UiTexArray;
+layout ( set = 0, binding =  1 ) uniform texture2DArray uiTextureArray;
+layout ( set = 0, binding =  2 ) uniform sampler uiSampler;
 
 layout ( location = 0 ) out vec4 outFragColor;
 
 void main()
 {
-    outFragColor = texture(UiTexArray, frag_uv);
+    outFragColor = texture( sampler2DArray(uiTextureArray,uiSampler), frag_uv);
 	outFragColor = outFragColor * frag_colorMask;
 }

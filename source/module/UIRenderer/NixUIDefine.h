@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <NixRenderer.h>
 #include "NixUIDrawDataHeap.h"
 
@@ -21,7 +21,7 @@ namespace Nix {
 	enum UIHoriAlign {
 		UIAlignLeft = 0,
 		UIAlignRight = 1,
-		UIAlignHoriMid = 2		
+		UIAlignHoriMid = 2
 	};
 
 	enum UIVertAlign {
@@ -31,13 +31,17 @@ namespace Nix {
 	};
 
 	struct UIVertex {
-		float		x; 
+		float		x;
 		float		y;			// screen space position( x, y )
-		// float	z;			// may use a depth param for 3d depth test
-		float		u; 
+		//float	    z;			// may use a depth param for 3d depth test
+		float		u;
 		float		v;			// texture coordinate( u, v )
-		float		layer;		// texture array layer
-		uint32_t	color;		// color mask
+		uint32_t	uniformIndex;
+	};
+
+	struct UIUniformElement {
+		float		layer; // texture array layer
+		uint32_t	color; // color mask
 	};
 
 	struct UIDrawState {
@@ -55,15 +59,14 @@ namespace Nix {
 
 	struct UIDrawData {
 		DrawDataMemoryHeap::Allocation			vertexBufferAllocation;
+		std::vector<UIUniformElement>			uniformData;
 		UITopologyType							type;
 		uint32_t								primitiveCount;
 		uint32_t								primitiveCapacity;
 	};
 
 	struct UIDrawBatch {
-		//uint32_t				vertexBufferIndex;	// vertex buffer index, should be zero currently
 		uint32_t				vertexOffset;		// vertex offset
-		//uint32_t				indexBufferIndex;	// index buffer index
 		uint32_t				indexOffset;		// index buffer offset
 		uint16_t				elementCount;		// `element count` param of the `draw element` function
 		UIDrawState				state;

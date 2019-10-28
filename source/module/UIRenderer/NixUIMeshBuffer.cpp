@@ -1,21 +1,21 @@
-#include "NixUIMeshBuffer.h"
+﻿#include "NixUIMeshBuffer.h"
 #include "NixUIDefine.h"
 
 namespace Nix {
 
-	void UIMeshBuffer::initialize(IContext* _context, IRenderable* _renderable, uint32_t _vertexCount) {
-		m_vertexBufferPM = _context->createVertexBufferPM(_vertexCount * sizeof(UIVertex), nullptr);
-		m_indexBufferPM = _context->createIndexBufferPM(_vertexCount * sizeof(uint16_t), nullptr);
+	void UIMeshBuffer::initialize(IContext* _context, IRenderable* _renderable, uint32_t _rectCount) {
+		m_vertexBuffer = _context->createVertexBuffer(nullptr, _rectCount * 4 * sizeof(UIVertex));
+		m_indexBuffer = _context->createIndexBuffer(nullptr, _rectCount * 6 * sizeof(uint16_t));
 		//
-		m_vertexBufferMemory.resize(_vertexCount);
-		m_indexBufferMemory.resize(_vertexCount);
+		m_vertexBufferMemory.resize(_rectCount * 4 * sizeof(UIVertex));
+		m_indexBufferMemory.resize(_rectCount * 6 * sizeof(uint16_t));
 		//
 		m_vertexCount = 0;
 		m_indexCount = 0;
 		//
 		m_renderable = _renderable;
-		m_renderable->setVertexBuffer(m_vertexBufferPM, 0, 0);
-		m_renderable->setIndexBuffer(m_indexBufferPM, 0);
+		m_renderable->setVertexBuffer(m_vertexBuffer, 0, 0);
+		m_renderable->setIndexBuffer(m_indexBuffer, 0);
 	}
 
 	bool UIMeshBuffer::pushVertices(const UIDrawData* _drawData, const UIDrawState& _drawState, const UIDrawState& _lastState) {
@@ -46,6 +46,9 @@ namespace Nix {
 				baseIndex += 4;
 				m_indexCount += 6;
 			}
+			//
+			memcpy(&m_uniformBufferMemory[m_uniformCount], _drawData->uniformData.data(), _drawData->uniformData.size() * sizeof(UIUniformElement));
+			m_uniformCount += _drawData->uniformData.size();
 		}
 		else {
 			dcVtxCount = _drawData->primitiveCount * 3;
@@ -69,9 +72,11 @@ namespace Nix {
 				baseIndex += 3;
 				m_indexCount += 3;
 			}
+			memcpy(&m_uniformBufferMemory[m_uniformCount], _drawData->uniformData.data(), _drawData->uniformData.size() * sizeof(UIUniformElement));
+			m_uniformCount += _drawData->uniformData.size();
 		}
 		// can merge the draw call
-		if ( _drawState == _lastState ) {
+		if (_drawState == _lastState) {
 			UIDrawBatch& cmd = m_vecCommands.back();
 			cmd.elementCount += dcIdxCount;
 		}
@@ -88,24 +93,17 @@ namespace Nix {
 	}
 
 	void UIMeshBuffer::flushMeshBuffer() {
-		m_vertexBufferPM->setData(m_vertexBufferMemory.data(), m_vertexCount * sizeof(UIVertex), 0);
-		m_indexBufferPM->setData(m_indexBufferMemory.data(), m_indexCount * sizeof(uint16_t), 0);
+		m_vertexBuffer->updateData(m_vertexBufferMemory.data(), m_vertexCount * sizeof(UIVertex), 0);
+		m_indexBuffer->updateData(m_indexBufferMemory.data(), m_indexCount * sizeof(uint16_t), 0);
 	}
-	 
-	void UIMeshBuffer::draw(IRenderPass* _renderPass, IArgument* _argument, IPipeline* _pipeline, float _screenWidth, float _screenHeight) {
-		struct Constants {
-			float screenWidth;
-			float screenHeight;
-		} constants;
 
-		constants.screenWidth = _screenWidth - 1;
-		constants.screenHeight = _screenHeight - 1;
-
+	void UIMeshBuffer::draw(IRenderPass* _renderPass, IArgument* _argument, uint32_t& _rectCount) {
 		for (auto& dc : this->m_vecCommands) {
+			uint32_t uniformOffset = _rectCount;
+			_argument->setShaderCache(8, &uniformOffset, 4);
 			_renderPass->setScissor(dc.state.scissor);
-			_argument->setShaderCache(0, &constants, sizeof(constants));
-			_renderPass->bindArgument(_argument);
 			_renderPass->drawElements(m_renderable, dc.indexOffset, dc.elementCount);
+			_rectCount += dc.elementCount / 6;
 		}
 	}
 

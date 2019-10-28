@@ -14,12 +14,7 @@
             "name": "uv",
             "bufferIndex": 0,
             "offset": 8,
-            "type": "VertexTypeFloat3"
-        },{
-            "name": "colorMask",
-            "bufferIndex": 0,
-            "offset": 8,
-            "type": "VertexTypeUint"
+            "type": "VertexTypeFloat2"
         }],
         "bufferCount": 1,
         "buffers": [{
@@ -28,18 +23,6 @@
             "rate": 1
         }]
     },
-  "argumentCount" :  1,
-	"argumentLayouts" : [{
-        "index": 0,
-        "descriptorCount" : 1,
-        "descriptors":[{
-                "type" : "SDT_Sampler",
-                "binding" : 0,
-                "name" : "UiTexArray",
-                "shaderStage" : "FragmentShader"
-            }]
-        }
-    ],
 	"renderState" : {
 		"writeMask" : 15,
 		"cullMode" : "CullNone",

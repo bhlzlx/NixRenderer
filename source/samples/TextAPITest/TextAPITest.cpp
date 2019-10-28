@@ -86,7 +86,7 @@ namespace Nix {
 		clear.depth = 1.0f;
 		clear.stencil = 1;
 		m_mainRenderPass->setClear(clear);
-		
+
 		m_uiRenderer = new UIRenderer();
 		UIRenderConfig uiconfig;
 		TextReader uiConfigReader;
@@ -112,32 +112,32 @@ namespace Nix {
 		};
 
 		Nix::Rect<float> rc;
-		m_drawData = m_uiRenderer->build(m_draw,true, nullptr, rc);
+		m_drawData = m_uiRenderer->build(m_draw, true, nullptr, rc);
 		m_drawDataDynamic = m_uiRenderer->copyDrawData(m_drawData);
 		m_plainDrawData = m_uiRenderer->build(m_plainDraw, nullptr, rc);
 
 		constexpr float radius = 50.0f;
 		constexpr uint32_t section = 5;
 
-		m_triDrawData = m_uiRenderer->build(section, nullptr);
-		UIVertex* triVert = (UIVertex*)m_triDrawData->vertexBufferAllocation.ptr;
+		//m_triDrawData = m_uiRenderer->build(section, nullptr);
+		//UIVertex* triVert = (UIVertex*)m_triDrawData->vertexBufferAllocation.ptr;
 
-		for (uint32_t i = 0; i < section; ++i) {
-			triVert[0].color = triVert[1].color = triVert[2].color = 0x55555588;
-			triVert[0].layer = triVert[1].layer = triVert[2].layer = 2;
-			triVert[0].u = triVert[0].v = 0.005f;
-			triVert[1].u = 0.005f; triVert[1].v = 0.03;
-			triVert[2].u = 0.03; triVert[2].v = 0.005f;
+		//for (uint32_t i = 0; i < section; ++i) {
+		//	triVert[0].color = triVert[1].color = triVert[2].color = 0x55555588;
+		//	triVert[0].layer = triVert[1].layer = triVert[2].layer = 2;
+		//	triVert[0].u = triVert[0].v = 0.005f;
+		//	triVert[1].u = 0.005f; triVert[1].v = 0.03;
+		//	triVert[2].u = 0.03; triVert[2].v = 0.005f;
+		//
+		//	triVert[0].x = triVert[0].y = radius;
+		//	triVert[1].x = sin(3.1415926f * 2 / section * i) * radius + radius;
+		//	triVert[1].y = cos(3.1415926f * 2 / section * i) * radius + radius;
+		//	triVert[2].x = sin(3.1415926f * 2 / section * (i + 1)) * radius + radius;
+		//	triVert[2].y = cos(3.1415926f * 2 / section * (i + 1)) * radius + radius;
+		//	triVert += 3;
+		//}
 
-			triVert[0].x = triVert[0].y = radius;
-			triVert[1].x = sin(3.1415926f * 2 / section * i) * radius + radius;
-			triVert[1].y = cos(3.1415926f * 2 / section * i) * radius + radius;
-			triVert[2].x = sin(3.1415926f * 2 / section * (i+1)) * radius + radius;
-			triVert[2].y = cos(3.1415926f * 2 / section * (i+1)) * radius + radius;
-			triVert += 3;
-		}
-
-		m_triDrawDataDynamic = m_uiRenderer->copyDrawData(m_triDrawData);
+		//m_triDrawDataDynamic = m_uiRenderer->copyDrawData(m_triDrawData);
 
 		return true;
 	}
@@ -164,16 +164,16 @@ namespace Nix {
 		static uint64_t tickCounter = 0;
 		tickCounter++;
 
-		m_uiRenderer->transformDrawData(m_triDrawData, Nix::Point<float>{50, 50}, tickCounter, 4.0f, m_triDrawDataDynamic);
+		//m_uiRenderer->transformDrawData(m_triDrawData, Nix::Point<float>{50, 50}, tickCounter, 4.0f, m_triDrawDataDynamic);
 		m_uiRenderer->transformDrawData(m_drawData, Nix::Point<float>{256, 256}, tickCounter, 1.0f, m_drawDataDynamic);
 
 		if (m_context->beginFrame()) {
 			UIDrawState drawState;
 			drawState.setScissor(m_scissor);
-			m_uiRenderer->beginBuild(tickCounter%3);
-			m_uiRenderer->buildDrawCall(m_triDrawDataDynamic, drawState);
+			m_uiRenderer->beginBuild(tickCounter % 3);
+			//m_uiRenderer->buildDrawCall(m_triDrawDataDynamic, drawState);
 			m_uiRenderer->buildDrawCall(m_drawDataDynamic, drawState);
-		//	m_uiRenderer->buildDrawCall(m_plainDrawData,drawState);
+			//	m_uiRenderer->buildDrawCall(m_plainDrawData,drawState);
 			m_uiRenderer->endBuild();
 
 			m_mainRenderPass->begin(m_primQueue); {

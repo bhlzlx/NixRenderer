@@ -240,7 +240,7 @@ namespace Nix {
 				}
 			}
 			else {
-				break;
+				continue;
 			}
 			PushConstants pc;
 			compiler->getPushConstants(&pc.offset, &pc.size);

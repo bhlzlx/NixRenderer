@@ -208,7 +208,7 @@ namespace Nix {
 		}
 
 		virtual const char * title() {
-			return "Triangle (with Texture2D Array)";
+			return "Triangle ( with texture & uniform test )";
 		}
 
 		virtual uint32_t rendererType() {

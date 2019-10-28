@@ -1,4 +1,4 @@
-#include <NixJpDecl.h>
+﻿#include <NixJpDecl.h>
 #include <NixRenderer.h>
 #include "NixUIRenderer.h"
 #include <nix/io/archieve.h>
@@ -10,8 +10,10 @@ namespace Nix {
 		m_context = _context;
 		m_archieve = _archieve;
 		MaterialDescription mtl;
-		strcpy(mtl.vertexShader, "ui/ui.vert");
-		strcpy(mtl.fragmentShader, "ui/ui.frag");
+		strcpy(mtl.shaders[ShaderModuleType::VertexShader].name, "ui/ui.vert");
+		mtl.shaders[ShaderModuleType::VertexShader].type = ShaderModuleType::VertexShader;
+		strcpy(mtl.shaders[ShaderModuleType::FragmentShader].name, "ui/ui.frag");
+		mtl.shaders[ShaderModuleType::FragmentShader].type = ShaderModuleType::FragmentShader;
 		mtl.argumentCount = 1; {
 			mtl.argumentLayouts[0].descriptorCount = 1;
 			mtl.argumentLayouts[0].index = 0; {
@@ -19,7 +21,7 @@ namespace Nix {
 				mtl.argumentLayouts[0].descriptors[0].binding = 0;
 				mtl.argumentLayouts[0].descriptors[0].shaderStage = Nix::FragmentShader;
 				strcpy(mtl.argumentLayouts[0].descriptors[0].name, "UiTexArray");
-			}			
+			}
 		}
 		mtl.pologonMode = Nix::PMFill; {
 			mtl.renderState.cullMode = Nix::CullNone;
@@ -35,7 +37,7 @@ namespace Nix {
 		}
 		mtl.topologyMode = Nix::TMTriangleList;
 		//
-		mtl.vertexLayout.attributeCount = 3;
+		mtl.vertexLayout.attributeCount = 2;
 		mtl.vertexLayout.bufferCount = 1;
 		mtl.vertexLayout.buffers[0].stride = sizeof(UIVertex);
 		mtl.vertexLayout.buffers[0].instanceMode = 0;
@@ -44,17 +46,11 @@ namespace Nix {
 		mtl.vertexLayout.attributes[0].offset = 0;
 		mtl.vertexLayout.attributes[0].bufferIndex = 0;
 		mtl.vertexLayout.attributes[0].type = Nix::VertexTypeFloat2;
-		
+
 		strcpy(mtl.vertexLayout.attributes[1].name, "uv");
 		mtl.vertexLayout.attributes[1].offset = 8;
 		mtl.vertexLayout.attributes[1].bufferIndex = 0;
-		mtl.vertexLayout.attributes[1].type = Nix::VertexTypeFloat3;
-		
-		strcpy(mtl.vertexLayout.attributes[2].name, "colorMask");
-		mtl.vertexLayout.attributes[2].offset = 20;
-		mtl.vertexLayout.attributes[2].bufferIndex = 0;
-		mtl.vertexLayout.attributes[2].type = Nix::VertexTypeUint;
-		
+		mtl.vertexLayout.attributes[1].type = Nix::VertexTypeFloat2;
 		m_material = _context->createMaterial(mtl);
 		if (!m_material) {
 			return false;
@@ -79,35 +75,44 @@ namespace Nix {
 		}
 		*/
 		// read packed textures
-        {
-            bool rst = m_textureManager.initialize( _context, _archieve, 2, (uint32_t)_config.textures.size(), 1 );
-            if( rst == false ) {
-                return false;
-            }
-        }
+		{
+			bool rst = m_textureManager.initialize(_context, _archieve, 2, (uint32_t)_config.textures.size(), 1);
+			if (rst == false) {
+				return false;
+			}
+		}
 		for (auto& item : _config.textures) {
 			m_textureManager.addPackedImage(item.table.c_str(), item.file.c_str());
 		}
 		// create renderable objects / one renderable per frame
-		for (uint32_t i = 0; i<MaxFlightCount; ++i) {
+		for (uint32_t i = 0; i < MaxFlightCount; ++i) {
 			m_renderables[i].push_back(m_material->createRenderable());
 			m_meshBuffers[i].resize(1);
 			m_meshBuffers[i].back().initialize(_context, m_renderables[i][0], MaxVertexCount);
 		}
 		// add fonts
 		for (auto& font : _config.fonts) {
-            uint32_t code = m_textureManager.getFontTextureManger()->addFont(font.c_str());
-            if( -1 == code ) {
-                break;
-            }
+			uint32_t code = m_textureManager.getFontTextureManger()->addFont(font.c_str());
+			if (-1 == code) {
+				break;
+			}
 		}
 		m_textureArray = m_textureManager.getTexture();
+		m_uniformBuffer = m_context->createUniformBuffer(8 * 1024 * 16);// 最多同时上屏约 16k 个四边形
 		m_argument = m_material->createArgument(0);
 		if (!m_argument || !m_textureArray) {
 			return false;
 		}
 		SamplerState ss;
-		m_argument->setSampler(0, ss, m_textureArray);
+		uint32_t samplerLoc;
+		uint32_t textureLoc;
+		uint32_t uniformLoc;
+		m_argument->getSamplerLocation("uiSampler", samplerLoc);
+		m_argument->getTextureLocation("uiTextureArray", textureLoc);
+		m_argument->getUniformBlockLocation("RectParams", uniformLoc);
+		m_argument->bindSampler(samplerLoc, ss);
+		m_argument->bindTexture(textureLoc, m_textureArray);
+		m_argument->bindUniformBuffer(uniformLoc, m_uniformBuffer);
 		return true;
 	}
 
@@ -140,11 +145,11 @@ namespace Nix {
 		for (auto& meshBuffer : meshBuffers) {
 			meshBuffer.clear();
 		}
-		m_drawState.scissor.origin = {0 , 0};
+		m_drawState.scissor.origin = { 0 , 0 };
 		m_drawState.scissor.size = { m_width, m_height };
 	}
 
-	void UIRenderer::buildDrawCall( const UIDrawData* _drawData, const UIDrawState& _state)
+	void UIRenderer::buildDrawCall(const UIDrawData* _drawData, const UIDrawState& _state)
 	{
 		auto& renderbles = m_renderables[m_flightIndex];
 		auto& meshBuffers = m_meshBuffers[m_flightIndex];
@@ -181,17 +186,29 @@ namespace Nix {
 		vp.zNear = 0; vp.zFar = 1.0f;
 		vp.width = _width;
 		vp.height = _height;
-		_renderPass->setViewport(vp);
 		Nix::Scissor ss;
 		ss.origin = { 0, 0 };
 		ss.size = { (int)_width, (int)_height };
+		//
+		_renderPass->setViewport(vp);
 		_renderPass->setScissor(ss);
 		_renderPass->bindPipeline(m_pipeline);
 		_renderPass->bindArgument(m_argument);
 		//
+		uint32_t totalRectCount = 0;
 		std::vector<UIMeshBuffer>& meshBuffers = m_meshBuffers[m_flightIndex];
 		for (UIMeshBuffer& meshBuffer : meshBuffers) {
-			meshBuffer.draw(_renderPass, m_argument, m_pipeline, _width, _height);
+			struct Constants {
+				float screenWidth;
+				float screenHeight;
+				uint32_t baseRectIndex;
+			} constants;
+			constants.screenWidth = _width - 1;
+			constants.screenHeight = _height - 1;
+			constants.baseRectIndex = totalRectCount;
+			_renderPass->bindArgument(m_argument);
+			m_argument->updateUniformBuffer(m_uniformBuffer, meshBuffer.getUniformData(), totalRectCount * sizeof(UIUniformElement), meshBuffer.getUniformLength());
+			meshBuffer.draw(_renderPass, m_argument, totalRectCount);
 		}
 	}
 

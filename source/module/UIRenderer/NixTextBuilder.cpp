@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "NixTextBuilder.h"
 #include "NixUIRenderer.h"
 #include "NixUIDefine.h"
@@ -13,7 +13,7 @@ namespace Nix {
 	*  |----------------------------------------|
 	******************************************************/
 
-	UIDrawData* UIRenderer::build(const PlainTextDraw& _draw, UIDrawData* _oldDrawData, Nix::Rect<float>& _rc )
+	UIDrawData* UIRenderer::build(const PlainTextDraw& _draw, UIDrawData* _oldDrawData, Nix::Rect<float>& _rc)
 	{
 		UIDrawData* drawData = nullptr;
 		if (_oldDrawData) {
@@ -36,17 +36,19 @@ namespace Nix {
 		//float textWidth;
 		float baseLine;
 		float textHeight = 0;
-		m_textureManager.getFontTextureManger()->getLineHeight(_draw.fontId, _draw.fontSize, textHeight,baseLine);
+		m_textureManager.getFontTextureManger()->getLineHeight(_draw.fontId, _draw.fontSize, textHeight, baseLine);
 
 		float baseX = 0;
 		float baseY = baseLine;
 		//
-		
+
 		UIVertex* vtxBegin;
 		//UIVertex* vtxEnd;
 
 		UIVertex* vtx = (UIVertex*)allocation.ptr;
 		vtxBegin = vtx;
+
+		drawData->uniformData.clear();
 		//
 		for (uint32_t charIdx = 0; charIdx < _draw.length; ++charIdx) {
 			Nix::CharKey ck;
@@ -80,12 +82,10 @@ namespace Nix {
 			vtx[2].u = vtx[3].u;
 			vtx[2].v = vtx[1].v;
 			// configure layer
-			vtx[0].layer = vtx[1].layer = vtx[2].layer = vtx[3].layer = charInfo.layer;
-			//
-			vtx[0].color = _draw.colorMask;
-			vtx[1].color = _draw.colorMask;
-			vtx[2].color = _draw.colorMask;
-			vtx[3].color = _draw.colorMask;
+			UIUniformElement unif;
+			unif.color = _draw.colorMask;
+			unif.layer = charInfo.layer;
+			drawData->uniformData.push_back(unif);
 			vtx += 4;
 			baseX += charInfo.adv;// charInfo.bearingX + charInfo.width;
 		}
@@ -121,12 +121,12 @@ namespace Nix {
 				float baseLine;
 			};
 			std::map<uint32_t, LineH> lineHTable;
-			void getLineH( Nix::UITextureManager* _tm, uint16_t _fontID, uint16_t _fontSize, float& _baseLine, float& _height) {
+			void getLineH(Nix::UITextureManager* _tm, uint16_t _fontID, uint16_t _fontSize, float& _baseLine, float& _height) {
 				ULine key;
 				key.fontId = _fontID;
 				key.fontSize = _fontSize;
 				auto it = lineHTable.find(key.lineKey);
-				if ( it == lineHTable.end()) {
+				if (it == lineHTable.end()) {
 					_tm->getFontTextureManger()->getLineHeight(_fontID, _fontSize, _height, _baseLine);
 				}
 				else {
@@ -153,6 +153,7 @@ namespace Nix {
 			drawData->vertexBufferAllocation = m_vertexMemoryHeap.allocateRects(_draw.vecChar.size());
 			drawData->primitiveCapacity = drawData->primitiveCount = _draw.vecChar.size();
 		}
+		drawData->uniformData.clear();
 		//
 		DrawDataMemoryHeap::Allocation& allocation = drawData->vertexBufferAllocation;
 		UIVertex* vtx = (UIVertex*)allocation.ptr;
@@ -191,7 +192,7 @@ namespace Nix {
 			ck.size = ch.size;
 			auto& charInfo = m_textureManager.getFontTextureManger()->getCharactor(ck);
 			// ====================== update line information ======================
-			if (line->rc.size.width + charInfo.adv > _draw.rect.size.width ) {
+			if (line->rc.size.width + charInfo.adv > _draw.rect.size.width) {
 				// new line
 				size_t index = lines.size() - 1;
 				lines.resize(lines.size() + 1);
@@ -242,18 +243,15 @@ namespace Nix {
 			vtx[2].u = vtx[3].u;
 			vtx[2].v = vtx[1].v;
 			// configure layer
-			vtx[0].layer = vtx[1].layer = vtx[2].layer = vtx[3].layer = charInfo.layer;
-			//
-			vtx[0].color = ch.color;
-			vtx[1].color = ch.color;
-			vtx[2].color = ch.color;
-			vtx[3].color = ch.color;
-			vtx += 4;
+			UIUniformElement unif;
+			unif.color = ch.color;
+			unif.layer = charInfo.layer;
+			drawData->uniformData.push_back(unif);
 			line->vertexCount += 4;
 		}
 		contentRect.size.height += line->rc.size.height;
 		//
-		auto alignedContentRc = Nix::alignRect<float>( contentRect, _draw.rect, _draw.calign, UIHoriAlign::UIAlignHoriMid );
+		auto alignedContentRc = Nix::alignRect<float>(contentRect, _draw.rect, _draw.calign, UIHoriAlign::UIAlignHoriMid);
 		// do the alignment
 		for (auto& line : lines) {
 			auto alignedRc = Nix::alignRect<float>(line.rc, alignedContentRc, _draw.valign, _draw.halign);
@@ -274,7 +272,7 @@ namespace Nix {
 	UIDrawData* UIRenderer::build(const ImageDraw* _draws, uint32_t _count, UIDrawData* _oldDrawData)
 	{
 		UIDrawData* drawData = nullptr;
-		if ( _oldDrawData ) {
+		if (_oldDrawData) {
 			if (_oldDrawData->type == UIRectangle && _oldDrawData->primitiveCapacity >= _count) {
 				drawData = _oldDrawData;
 				drawData->primitiveCount = _count;
@@ -289,58 +287,59 @@ namespace Nix {
 			drawData->type = UIRectangle;
 			drawData->vertexBufferAllocation = m_vertexMemoryHeap.allocateRects(_count);
 		}
+		drawData->uniformData.clear();
 		//
 		UIVertex* vtx = (UIVertex*)drawData->vertexBufferAllocation.ptr;
 		for (uint32_t i = 0; i < _count; ++i) {
-			vtx[0].x = _draws->rect.origin.x;
-			vtx[0].y = _draws->rect.origin.y;
-			vtx[0].u = _draws->uv[0].x;
-			vtx[0].v = _draws->uv[0].y;
-			
-			vtx[2].x = _draws->rect.origin.x + _draws->rect.size.width;
-			vtx[2].y = _draws->rect.origin.y + _draws->rect.size.height;
-			vtx[2].u = _draws->uv[2].x;
-			vtx[2].v = _draws->uv[2].y;
+			vtx[0].x = _draws[i].rect.origin.x;
+			vtx[0].y = _draws[i].rect.origin.y;
+			vtx[0].u = _draws[i].uv[0].x;
+			vtx[0].v = _draws[i].uv[0].y;
+			vtx[2].x = _draws[i].rect.origin.x + _draws[i].rect.size.width;
+			vtx[2].y = _draws[i].rect.origin.y + _draws[i].rect.size.height;
+			vtx[2].u = _draws[i].uv[2].x;
+			vtx[2].v = _draws[i].uv[2].y;
 
 			vtx[1].x = vtx[0].x;
 			vtx[1].y = vtx[2].y;
-			vtx[1].u = _draws->uv[1].x;
-			vtx[1].v = _draws->uv[1].y;
+			vtx[1].u = _draws[i].uv[1].x;
+			vtx[1].v = _draws[i].uv[1].y;
 
 			vtx[3].x = vtx[2].x;
 			vtx[3].y = vtx[0].y;
-			vtx[3].u = _draws->uv[3].x;
-			vtx[3].v = _draws->uv[3].y;
-			//
-			vtx[0].color = vtx[1].color = vtx[2].color = vtx[3].color = _draws->color;
-			vtx[0].layer = vtx[1].layer = vtx[2].layer = vtx[3].layer = _draws->layer;
+			vtx[3].u = _draws[i].uv[3].x;
+			vtx[3].v = _draws[i].uv[3].y;
 			//
 			vtx += 4;
+			UIUniformElement unif;
+			unif.color = _draws[i].color;
+			unif.layer = _draws[i].layer;
+			drawData->uniformData.push_back(unif);
 		}
 		return drawData;
 	}
 
-	UIDrawData* UIRenderer::build(uint32_t _numTri, UIDrawData* _oldDrawData)
-	{
-		UIDrawData* drawData = nullptr;
-		if (_oldDrawData) {
-			if (_oldDrawData->type == UITriangle && _oldDrawData->primitiveCapacity >= _numTri) {
-				drawData = _oldDrawData;
-				drawData->primitiveCount = _numTri;
-			}
-			else {
-				this->destroyDrawData(_oldDrawData);
-			}
-		}
-		if (!drawData) {
-			drawData = m_drawDataPool.newElement();
-			drawData->primitiveCapacity = drawData->primitiveCount = _numTri;
-			drawData->type = UIRectangle;
-			drawData->vertexBufferAllocation = m_vertexMemoryHeap.allocateTriangles(_numTri);
-		}
-		drawData->type = UITriangle;
-		return drawData;
-	}
+	//UIDrawData* UIRenderer::build(uint32_t _numTri, UIDrawData* _oldDrawData)
+	//{
+	//	UIDrawData* drawData = nullptr;
+	//	if (_oldDrawData) {
+	//		if (_oldDrawData->type == UITriangle && _oldDrawData->primitiveCapacity >= _numTri) {
+	//			drawData = _oldDrawData;
+	//			drawData->primitiveCount = _numTri;
+	//		}
+	//		else {
+	//			this->destroyDrawData(_oldDrawData);
+	//		}
+	//	}
+	//	if (!drawData) {
+	//		drawData = m_drawDataPool.newElement();
+	//		drawData->primitiveCapacity = drawData->primitiveCount = _numTri;
+	//		drawData->type = UIRectangle;
+	//		drawData->vertexBufferAllocation = m_vertexMemoryHeap.allocateTriangles(_numTri);
+	//	}
+	//	drawData->type = UITriangle;
+	//	return drawData;
+	//}
 
 	UIDrawData* UIRenderer::copyDrawData(UIDrawData* _drawData)
 	{
@@ -350,7 +349,7 @@ namespace Nix {
 		drawData->primitiveCount = _drawData->primitiveCount;
 		if (_drawData->type == UITriangle) {
 			drawData->vertexBufferAllocation = m_vertexMemoryHeap.allocateTriangles(_drawData->primitiveCapacity);
-			memcpy( drawData->vertexBufferAllocation.ptr, _drawData->vertexBufferAllocation.ptr, drawData->primitiveCount * 3 * sizeof(UIVertex));
+			memcpy(drawData->vertexBufferAllocation.ptr, _drawData->vertexBufferAllocation.ptr, drawData->primitiveCount * 3 * sizeof(UIVertex));
 		}
 		else {
 			drawData->vertexBufferAllocation = m_vertexMemoryHeap.allocateRects(_drawData->primitiveCapacity);
@@ -380,8 +379,8 @@ namespace Nix {
 		auto funRotate = [](const Nix::Point<float>& _point, const Nix::Point<float>& _anchor, float _angle) -> Nix::Point<float> {
 			Nix::Point<float> ret;
 			float arc = _angle / 180.0f * 3.1415926f;
-			ret.x =(_point.x - _anchor.x) * cosf(-arc) - (_point.y - _anchor.y) * sinf(-arc) + _anchor.x;
-			ret.y =(_point.x - _anchor.x) * sinf(-arc) + (_point.y - _anchor.y) * cosf(-arc) + _anchor.y;
+			ret.x = (_point.x - _anchor.x) * cosf(-arc) - (_point.y - _anchor.y) * sinf(-arc) + _anchor.x;
+			ret.y = (_point.x - _anchor.x) * sinf(-arc) + (_point.y - _anchor.y) * cosf(-arc) + _anchor.y;
 			return ret;
 		};
 		assert(_draw->primitiveCount == _to->primitiveCount);
@@ -443,5 +442,3 @@ namespace Nix {
 		_output->primitiveCount = primitiveCount;
 	}
 }
-
-
