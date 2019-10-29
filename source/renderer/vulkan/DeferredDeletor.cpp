@@ -14,7 +14,8 @@ namespace Nix {
 	inline void GraphicsQueueAsyncTaskManager::destroyResource(BufferVk* _buffer) {
 		QueueAsyncTask* item = this->createDestroyTask(_buffer->m_allocator, _buffer->m_allocation);
 		if (item) {
-			m_vecItems[m_flightIndex].push_back(item);
+			uint32_t freeIndex = (m_currentIndex + MaxFlightCount) % (MaxFlightCount + 1);
+			m_vecItems[freeIndex].push_back(item);
 		}
 	}
 
@@ -119,7 +120,8 @@ namespace Nix {
 		return new PipelineDeleteItem(_pipeline);
 	}
 
-	GraphicsQueueAsyncTaskManager::GraphicsQueueAsyncTaskManager()
+	GraphicsQueueAsyncTaskManager::GraphicsQueueAsyncTaskManager() :
+		m_currentIndex(0)
 	{
 	}
 

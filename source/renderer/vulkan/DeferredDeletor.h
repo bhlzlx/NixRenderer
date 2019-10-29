@@ -29,8 +29,8 @@ namespace Nix {
 		QueueAsyncTask * createDestroyTask(ArgumentVk* _drawable);
 		QueueAsyncTask * createDestroyTask(PipelineVk* _pipeline);
 		//
-		std::array< std::list<QueueAsyncTask*>, MaxFlightCount >  m_vecItems;
-		uint32_t m_flightIndex;
+		std::array< std::list<QueueAsyncTask*>, MaxFlightCount + 1 >  m_vecItems;
+		uint32_t m_currentIndex;
 	public:
 		GraphicsQueueAsyncTaskManager();
 		~GraphicsQueueAsyncTaskManager();
@@ -40,7 +40,8 @@ namespace Nix {
 			// create deferred destroy item & add to destroy list
 			QueueAsyncTask* item = this->createDestroyTask(_object);
 			if (item) {
-				m_vecItems[m_flightIndex].push_back(item);
+				uint32_t freeIndex = (m_currentIndex + MaxFlightCount) % (MaxFlightCount + 1);
+				m_vecItems[freeIndex].push_back(item);
 			}
 		}
 
@@ -51,15 +52,15 @@ namespace Nix {
 
 		}
 
-		void tick(uint32_t _flightIndex) {
-			auto& itemList = m_vecItems[_flightIndex];
+		void tick() {
+			auto& itemList = m_vecItems[m_currentIndex];
 			for (auto& item : itemList) {
 				item->execute();
 			}
-			//
 			itemList.clear();
 			//
-			m_flightIndex = _flightIndex;
+			m_currentIndex += 1;
+			m_currentIndex %= (MaxFlightCount + 1);
 		}
 		//
 		void cleanup() {

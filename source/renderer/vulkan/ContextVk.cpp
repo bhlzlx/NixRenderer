@@ -345,7 +345,7 @@ namespace Nix {
 			return false;
 		}
 		m_graphicsQueue->beginFrame(m_swapchain.getFlightIndex());
-		GetDeferredDeletor().tick(m_swapchain.getFlightIndex());
+		GetDeferredDeletor().tick();
 		++m_frameCounter;
 		return true;
 	}
