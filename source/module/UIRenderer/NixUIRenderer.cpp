@@ -98,7 +98,7 @@ namespace Nix {
 			}
 		}
 		m_textureArray = m_textureManager.getTexture();
-		m_uniformBuffer = m_context->createUniformBuffer(8 * 1024 * 16);// 最多同时上屏约 16k 个四边形
+		m_uniformBuffer = m_context->createUniformBuffer(8 * 1024 * 8);// 最多同时上屏约 8k 个四边形
 		m_argument = m_material->createArgument(0);
 		if (!m_argument || !m_textureArray) {
 			return false;
@@ -110,6 +110,9 @@ namespace Nix {
 		m_argument->getSamplerLocation("uiSampler", samplerLoc);
 		m_argument->getTextureLocation("uiTextureArray", textureLoc);
 		m_argument->getUniformBlockLocation("RectParams", uniformLoc);
+		const GLSLStructMember* members = nullptr;
+		uint32_t numMembers;
+		m_argument->getUniformBlockLayout("RectParams", &members, &numMembers);
 		m_argument->bindSampler(samplerLoc, ss);
 		m_argument->bindTexture(textureLoc, m_textureArray);
 		m_argument->bindUniformBuffer(uniformLoc, m_uniformBuffer);
@@ -206,6 +209,7 @@ namespace Nix {
 			constants.screenWidth = _width - 1;
 			constants.screenHeight = _height - 1;
 			constants.baseRectIndex = totalRectCount;
+			m_argument->setShaderCache(0, &constants, 8);
 			_renderPass->bindArgument(m_argument);
 			m_argument->updateUniformBuffer(m_uniformBuffer, meshBuffer.getUniformData(), totalRectCount * sizeof(UIUniformElement), meshBuffer.getUniformLength());
 			meshBuffer.draw(_renderPass, m_argument, totalRectCount);

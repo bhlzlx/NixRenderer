@@ -9,6 +9,7 @@ namespace Nix {
 		//
 		m_vertexBufferMemory.resize(_rectCount * 4 * sizeof(UIVertex));
 		m_indexBufferMemory.resize(_rectCount * 6 * sizeof(uint16_t));
+		m_uniformBufferMemory.resize(_rectCount);
 		//
 		m_vertexCount = 0;
 		m_indexCount = 0;

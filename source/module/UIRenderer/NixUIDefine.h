@@ -39,10 +39,13 @@ namespace Nix {
 		uint32_t	uniformIndex;
 	};
 
-	struct UIUniformElement {
-		float		layer; // texture array layer
-		uint32_t	color; // color mask
+	struct alignas(16) UIUniformElement {
+		struct {
+			uint32_t	layer; // texture array layer
+			uint32_t	color; // color mask
+		};
 	};
+	static_assert(sizeof(UIUniformElement) == 16, "");
 
 	struct UIDrawState {
 		Nix::Scissor			scissor;

@@ -138,6 +138,15 @@ namespace Nix {
 					const UniformBuffer& unif = uniforms[i];
 					auto& argument = argumentLayouts[unif.set];
 					argument.m_vecUniformBuffer.push_back(unif);
+					const GLSLStructMember* members;
+					uint32_t memberCount = compiler->getUniformBufferMemebers(unif.set, unif.binding, &members);
+
+					std::vector<GLSLStructMember> vecMembers;
+					for (uint32_t memberIdx = 0; memberIdx < memberCount; ++memberIdx) {
+						vecMembers.push_back(members[memberIdx]);
+					}
+					argument.m_uniformLayouts.push_back(vecMembers);
+
 					Nix::ShaderDescriptor descriptor = {}; {
 						descriptor.binding = unif.binding;
 						descriptor.dataSize = unif.size;
@@ -238,26 +247,26 @@ namespace Nix {
 					}
 					argument.m_vecShaderDescriptor.push_back(descriptor);
 				}
+				PushConstants pc;
+				compiler->getPushConstants(&pc.offset, &pc.size);
+				VkPushConstantRange vkpc;
+				vkpc.offset = pc.offset;
+				vkpc.size = pc.size;
+				if (vkpc.size) {
+					VkShaderStageFlagBits shaderStages[] = {
+						VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
+						VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT,
+						VkShaderStageFlagBits::VK_SHADER_STAGE_GEOMETRY_BIT,
+						VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
+						VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT,
+					};
+					vkpc.stageFlags = shaderStages[shader.type];
+					constantsStageFlags |= vkpc.stageFlags;
+					constantRanges.push_back(vkpc);
+				}
 			}
 			else {
 				continue;
-			}
-			PushConstants pc;
-			compiler->getPushConstants(&pc.offset, &pc.size);
-			VkPushConstantRange vkpc;
-			vkpc.offset = pc.offset;
-			vkpc.size = pc.size;
-			VkShaderStageFlagBits shaderStages[] = {
-				VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
-				VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT,
-				VkShaderStageFlagBits::VK_SHADER_STAGE_GEOMETRY_BIT,
-				VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
-				VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT,
-			};
-			vkpc.stageFlags = shaderStages[shader.type];
-			constantsStageFlags |= vkpc.stageFlags;
-			if (vkpc.size) {
-				constantRanges.push_back(vkpc);
 			}
 		}
 		//
@@ -344,6 +353,7 @@ namespace Nix {
 					binding.pImmutableSamplers = nullptr;
 					bindings.push_back(binding);
 					dynamicBindings.push_back(binding);
+					//
 					break;
 				}
 				case SDT_StorageBuffer: {

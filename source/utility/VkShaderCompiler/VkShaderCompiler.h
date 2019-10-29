@@ -36,7 +36,7 @@ namespace Nix {
 		struct UniformBuffer {
 			uint16_t set;
 			uint16_t binding;
-			uint16_t size;
+			uint32_t size;
 			char name[MaxDescriptorNameLength];
 		};
 

@@ -50,7 +50,7 @@ namespace Nix {
 		void clear() {
 			m_vertexCount = 0;
 			m_indexCount = 0;
-			m_vertexCount = 0;
+			m_uniformCount = 0;
 			m_vecCommands.clear();
 		}
 

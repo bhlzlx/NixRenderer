@@ -637,8 +637,8 @@ namespace Nix {
 	} UniformSlot;
 
 	struct GLSLStructMember {
-		uint16_t offset;
-		uint16_t size;
+		uint32_t offset;
+		uint32_t size;
 		char name[MaxDescriptorNameLength];
 	};
 
@@ -778,7 +778,7 @@ namespace Nix {
 		virtual void resize(uint32_t _width, uint32_t _height) = 0;
 		virtual bool beginFrame() = 0;
 		virtual void endFrame() = 0;
-		virtual void executeCompute( const ComputeCommand& _command ) = 0;
+		virtual void executeCompute(const ComputeCommand& _command) = 0;
 		virtual IGraphicsQueue* getGraphicsQueue(uint32_t index = 0) = 0;
 		virtual IRenderPass* getRenderPass() = 0;
 		virtual IDriver* getDriver() = 0;

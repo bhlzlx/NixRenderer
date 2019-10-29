@@ -248,6 +248,7 @@ namespace Nix {
 			unif.layer = charInfo.layer;
 			drawData->uniformData.push_back(unif);
 			line->vertexCount += 4;
+			vtx += 4;
 		}
 		contentRect.size.height += line->rc.size.height;
 		//

@@ -22,7 +22,7 @@ namespace Nix {
 		uint32_t												m_descriptorSetIndex;
 		VkDescriptorSet											m_descriptorSets[MaxFlightCount];			//
 		uint32_t												m_descriptorSetPools[MaxFlightCount];		// pools that holds the descriptor sets
-		uint32_t												m_activeIndex;
+		uint32_t												m_activeIndex; // the actived descriptor index, not the flight index
 		//VkDevice												m_device;
 		ContextVk*												m_context;
 		MaterialVk*												m_material;
@@ -39,7 +39,7 @@ namespace Nix {
 		bool													m_needUpdate;
 		//
 		uint32_t												m_constantsShaderStages;
-		std::map<uint32_t, std::tuple<ITexture*,VkImageLayout>>	m_bindedTexture;
+		std::map<uint32_t, std::tuple<ITexture*, VkImageLayout>>	m_bindedTexture;
 	public:
 		ArgumentVk();
 		~ArgumentVk();

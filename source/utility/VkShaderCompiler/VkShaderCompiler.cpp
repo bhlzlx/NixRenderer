@@ -474,8 +474,14 @@ namespace Nix {
 				block.set = get_decoration(uniformBlock.id, spv::Decoration::DecorationDescriptorSet);
 				block.binding = get_decoration(uniformBlock.id, spv::Decoration::DecorationBinding);
 				strcpy(block.name, uniformBlock.name.c_str());
-				auto uniformType = get_type_from_variable(uniformBlock.id);
-				block.size = get_declared_struct_size(uniformType);
+				//const auto &type = get_type(uniformBlock.base_type_id);
+				const auto& spirType = get_type_from_variable(uniformBlock.id);
+				size_t blockSize = get_declared_struct_size(spirType);
+				block.size = blockSize;
+
+				//const SPIRType &type = comp.get_type(resource.base_type_id);
+				//size_t size = comp.get_declared_struct_size(type);
+
 				m_vecUBO.push_back(block);
 				addDescriptorRecord(block.set, block.binding);
 				//

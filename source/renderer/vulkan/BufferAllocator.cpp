@@ -1,4 +1,4 @@
-#include "BufferAllocator.h"
+﻿#include "BufferAllocator.h"
 #include "VkInc.h"
 #include "ContextVk.h"
 #include "BufferVk.h"
@@ -61,8 +61,8 @@ namespace Nix {
 				bufferInfo.flags = 0;
 				bufferInfo.usage =
 					VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |
-					VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT | 
-					VK_BUFFER_USAGE_TRANSFER_DST_BIT|
+					VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT |
+					VK_BUFFER_USAGE_TRANSFER_DST_BIT |
 					VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 				bufferInfo.sharingMode = _context->getQueueFamilies().size() > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
 				bufferInfo.queueFamilyIndexCount = static_cast<uint32_t>(_context->getQueueFamilies().size());
@@ -85,7 +85,8 @@ namespace Nix {
 			BufferType::UniformBufferType,
 			[allocator](ContextVk* _context, size_t _size, VmaAllocation& _allocation)->VkBuffer {
 			VmaAllocationCreateInfo allocInfo = {}; {
-				allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+				//allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+				allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 			}
 			VkBufferCreateInfo bufferInfo = {}; {
 				bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -189,6 +190,7 @@ namespace Nix {
 		assert(false);
 		return BufferAllocation();
 	}
+
 	inline void BufferAllocatorVk::free(const BufferAllocation & _allocation) {
 		if (_allocation.size < 1024 * 1024) {
 			size_t loc = locateCollectionIndex(_allocation.size);
@@ -216,14 +218,15 @@ namespace Nix {
 				cvt.b = m_noneGroupedBuffers[i];
 				if (cvt.h == _allocation.buffer) {
 					auto vmaAllocator = m_context->getVmaAllocator();
-					vmaDestroyBuffer(vmaAllocator, cvt.b, m_noneGroupedAllocation[i]);
-					//
+					// 如果这个Buffer是持久映射的，那么，先关闭持久映射再销毁
+					// 这销毁流程必须这么走
 					if (
 						m_type == (uint32_t)BufferType::StagingBufferType ||
 						m_type == (uint32_t)BufferType::UniformBufferType
 						) {
 						vmaUnmapMemory(vmaAllocator, m_noneGroupedAllocation[i]);
 					}
+					vmaDestroyBuffer(vmaAllocator, cvt.b, m_noneGroupedAllocation[i]);
 					m_noneGroupedAllocation.erase(m_noneGroupedAllocation.begin() + i);
 					m_noneGroupedBuffers.erase(m_noneGroupedBuffers.begin() + i);
 					m_noneGroupedRawData.erase(m_noneGroupedRawData.begin() + i);

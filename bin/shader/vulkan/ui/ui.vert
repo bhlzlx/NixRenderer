@@ -10,12 +10,12 @@ layout (location = 1) out flat vec4 frag_colorMask;
 
 
 struct RectParam {
-	float imageArrayIndex;
+	uint imageArrayIndex;
 	uint colorMask;
 };
 
 layout ( set = 0, binding =  0 ) uniform RectParams {
-	RectParam params[16384];
+	RectParam params[4096];
 };
 
 out gl_PerVertex 
@@ -36,8 +36,8 @@ void main()
 	gl_Position.z = 0.0f;
 	gl_Position.w = 1.0f;
 	// -----------------------------------------------------------
-	float arrayIndex = params[uniformIndex].imageArrayIndex;
-	uint colorMask = params[uniformIndex].colorMask;
+	float arrayIndex = params[uniformIndex + gl_VertexIndex/4].imageArrayIndex;
+	uint colorMask = params[uniformIndex + gl_VertexIndex/4].colorMask;
 	frag_uv = vec3(uv, arrayIndex);
 	frag_colorMask = vec4(colorMask>>24, colorMask>>16&0xff, colorMask>>8&0xff, colorMask&0xff)/255.0f;
 	// return

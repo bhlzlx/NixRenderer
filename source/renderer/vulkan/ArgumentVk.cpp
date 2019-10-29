@@ -42,6 +42,7 @@ namespace Nix {
 			vkUpdateDescriptorSets(m_context->getDevice(), static_cast<uint32_t>(m_vecDescriptorWrites.size()), m_vecDescriptorWrites.data(), 0, nullptr);
 			m_needUpdate = false;
 		}
+		uint32_t flightIndex = m_context->getSwapchain()->getFlightIndex();
 		vkCmdBindDescriptorSets(
 			_commandBuffer,
 			_bindPoint,
@@ -49,8 +50,8 @@ namespace Nix {
 			m_descriptorSetIndex,
 			1,
 			&m_descriptorSets[m_activeIndex],
-			(uint32_t)m_dynamicalOffsets[m_activeIndex].size(),
-			m_dynamicalOffsets[m_activeIndex].data()
+			(uint32_t)m_dynamicalOffsets[flightIndex].size(),
+			m_dynamicalOffsets[flightIndex].data()
 		);
 	}
 
@@ -79,6 +80,8 @@ namespace Nix {
 		if (!buffer) {
 			return false;
 		}
+		*_members = members->data();
+		*_numMember = members->size();
 		return true;
 	}
 
@@ -330,7 +333,7 @@ namespace Nix {
 		VkDescriptorBufferInfo* bufferInfo = const_cast<VkDescriptorBufferInfo*>(write.pBufferInfo);
 		bufferInfo->buffer = buf->getHandle();
 		bufferInfo->offset = buf->getOffset();
-		bufferInfo->range = buf->getSize();
+		bufferInfo->range = buf->getSize() / MaxFlightCount;
 		//
 		const ArgumentLayoutExt& layout = m_material->getDescriptorSetLayout(m_descriptorSetIndex);
 		uint32_t index = layout.getDynamicOffsetsIndex(write.dstBinding);
@@ -342,7 +345,8 @@ namespace Nix {
 
 	void ArgumentVk::updateUniformBuffer(IBuffer* _buffer, const void* _data, uint32_t _offset, uint32_t _length)
 	{
-		_buffer->updateData(_data, _length, _offset + _buffer->getSize() / MaxFlightCount * m_activeIndex);
+		uint32_t flightIndex = m_context->getSwapchain()->getFlightIndex();
+		_buffer->updateData(_data, _length, _offset + _buffer->getSize() / MaxFlightCount * flightIndex);
 	}
 	void ArgumentVk::setShaderCache(uint32_t _offset, const void* _data, uint32_t _size)
 
