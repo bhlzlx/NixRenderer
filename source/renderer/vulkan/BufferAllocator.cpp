@@ -85,8 +85,8 @@ namespace Nix {
 			BufferType::UniformBufferType,
 			[allocator](ContextVk* _context, size_t _size, VmaAllocation& _allocation)->VkBuffer {
 			VmaAllocationCreateInfo allocInfo = {}; {
-				//allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
-				allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+				allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+				//allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 			}
 			VkBufferCreateInfo bufferInfo = {}; {
 				bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
