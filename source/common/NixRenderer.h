@@ -140,7 +140,8 @@ namespace Nix {
 
 	enum ShaderModuleType {
 		VertexShader = 0,
-		TessellationShader,
+		TessellationControlShader,
+		TessellationEvaluationShader,
 		GeometryShader,
 		FragmentShader,
 		ComputeShader,
@@ -523,7 +524,9 @@ namespace Nix {
 		TopologyMode							topologyMode;
 		PolygonMode								pologonMode;
 		//
-		NIX_JSON(shaders, vertexLayout, argumentCount, argumentLayouts, renderState, topologyMode, pologonMode)
+		uint32_t								tessPatchCount = 0;
+		//
+		NIX_JSON(shaders, vertexLayout, argumentCount, argumentLayouts, renderState, topologyMode, pologonMode, tessPatchCount)
 	};
 
 	class IRenderPass;

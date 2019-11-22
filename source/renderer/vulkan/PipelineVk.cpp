@@ -31,7 +31,12 @@ namespace Nix {
 		// This pipeline will assemble vertex data as a triangle lists (though we only use one triangle)
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = {};
 		inputAssemblyState.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-		inputAssemblyState.topology = m_topology;
+		if (m_shaderModules[TessellationControlShader]) {
+			inputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
+		}
+		else {
+			inputAssemblyState.topology = m_topology;
+		}
 		//
 		VkPipelineRasterizationStateCreateInfo rasterizationState; {
 			rasterizationState.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -160,6 +165,12 @@ namespace Nix {
 		}
 		assert(shaderStages.size() >= 1);
 		//
+		VkPipelineTessellationStateCreateInfo tessellationState = {};
+		tessellationState.flags = 0;
+		tessellationState.pNext = nullptr;
+		tessellationState.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+		tessellationState.patchControlPoints = m_tessellationPatchCount;
+		//
 		pipelineCreateInfo.pStages = shaderStages.data();
 		pipelineCreateInfo.stageCount = shaderStages.size();
 		// Assign the pipeline states to the pipeline creation info structure
@@ -170,6 +181,7 @@ namespace Nix {
 		pipelineCreateInfo.pMultisampleState = &multisampleState;
 		pipelineCreateInfo.pViewportState = &viewportState;
 		pipelineCreateInfo.pDepthStencilState = &depthStencilState;
+		pipelineCreateInfo.pTessellationState = m_tessellationPatchCount ? &tessellationState : nullptr;
 		pipelineCreateInfo.renderPass = renderPass;
 		pipelineCreateInfo.pDynamicState = &dynamicState;
 		//

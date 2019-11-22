@@ -363,6 +363,8 @@ namespace Nix {
 			case Nix::VertexShader: ShaderType = EShLangVertex; break;
 			case Nix::FragmentShader: ShaderType = EShLangFragment; break;
 			case Nix::ComputeShader: ShaderType = EShLangCompute; break;
+			case Nix::TessellationControlShader: ShaderType = EShLangTessControl; break;
+			case Nix::TessellationEvaluationShader: ShaderType = EShLangTessEvaluation; break;
 			}
 			glslang::TShader Shader(ShaderType);
 

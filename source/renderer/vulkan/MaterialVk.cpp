@@ -15,7 +15,7 @@ namespace Nix {
 			const auto& descriptors = argument.getDescriptors();
 			if (descriptors.size()) {
 				_description.argumentLayouts[descriptorSetCounter].index = setId;
-				_description.argumentLayouts[descriptorSetCounter].descriptorCount = descriptors.size();
+				_description.argumentLayouts[descriptorSetCounter].descriptorCount = static_cast<uint32_t>(descriptors.size());
 				memcpy(_description.argumentLayouts[descriptorSetCounter].descriptors, descriptors.data(), descriptors.size() * sizeof(ShaderDescriptor));
 				++descriptorSetCounter;
 			}
@@ -32,8 +32,10 @@ namespace Nix {
 			return VK_SHADER_STAGE_FRAGMENT_BIT;
 		case Nix::ComputeShader:
 			return VK_SHADER_STAGE_COMPUTE_BIT;
-		case Nix::TessellationShader:
+		case Nix::TessellationControlShader:
 			return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+		case Nix::TessellationEvaluationShader:
+			return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
 		case Nix::GeometryShader:
 			return VK_SHADER_STAGE_GEOMETRY_BIT;
 		default:
@@ -124,7 +126,9 @@ namespace Nix {
 				}
 				case ShaderModuleType::ComputeShader: {
 				}
-				case ShaderModuleType::TessellationShader: {
+				case ShaderModuleType::TessellationControlShader: {
+				}
+				case ShaderModuleType::TessellationEvaluationShader: {
 				}
 				case ShaderModuleType::GeometryShader: {
 				}
@@ -164,7 +168,7 @@ namespace Nix {
 					argument.m_vecStorageBuffer.push_back(ssbo);
 					Nix::ShaderDescriptor descriptor = {}; {
 						descriptor.binding = ssbo.binding;
-						descriptor.dataSize = ssbo.size;
+						descriptor.dataSize = static_cast<uint32_t>( ssbo.size );
 						descriptor.shaderStage = shader.type;
 						strcpy(descriptor.name, ssbo.name);
 						descriptor.type = SDT_StorageBuffer;
@@ -387,7 +391,7 @@ namespace Nix {
 				if (dynamicBindingTable.size() < dynamicBindings[i].binding + 1) {
 					dynamicBindingTable.resize(dynamicBindings[i].binding + 1);
 				}
-				dynamicBindingTable[dynamicBindings[i].binding] = i;
+				dynamicBindingTable[dynamicBindings[i].binding] = static_cast<uint32_t>(i);
 			}
 			argumentLayouts[setIndex].m_dynamicOffsetIndexTable = dynamicBindingTable;
 		}
@@ -415,6 +419,7 @@ namespace Nix {
 		material->m_topology = NixTopologyToVk(materialDesc.topologyMode);
 		material->m_pologonMode = NixPolygonModeToVk(materialDesc.pologonMode);
 		material->m_constantsStageFlags = constantsStageFlags;
+		material->m_tessellationPatchCount = _desc.tessPatchCount;
 		//
 		return material;
 	}

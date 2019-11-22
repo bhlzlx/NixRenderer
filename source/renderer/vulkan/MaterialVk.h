@@ -113,6 +113,7 @@ namespace Nix {
 		VkPipelineLayout										m_pipelineLayout;
 		VkPrimitiveTopology										m_topology;
 		VkPolygonMode											m_pologonMode;
+		uint32_t												m_tessellationPatchCount;
 		//
 		uint32_t												m_constantsStageFlags;
 	public:

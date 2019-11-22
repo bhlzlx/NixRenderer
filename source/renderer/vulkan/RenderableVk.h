@@ -14,7 +14,7 @@ namespace Nix {
 	private:
 		std::vector< VkBuffer >			m_vecBuffer;
 		std::vector< VkDeviceSize >		m_vecBufferOffset;
-		VkBuffer						m_indexBufferPM;
+		VkBuffer						m_indexBuffer;
 		VkDeviceSize					m_indexBufferOffset;
 		TopologyMode					m_topologyMode; // will no use, only for debugging
 		//
@@ -34,7 +34,7 @@ namespace Nix {
 			return m_vecBufferOffset.data();
 		}
 		inline VkBuffer getIndexBuffer() {
-			return m_indexBufferPM;
+			return m_indexBuffer;
 		}
 		inline VkDeviceSize getIndexBufferOffset() {
 			return m_indexBufferOffset;

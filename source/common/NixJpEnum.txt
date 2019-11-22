@@ -29,7 +29,8 @@ KS_JSON_ENUM_TABLE
 
 	KS_JSON_ENUM_TYPE(ShaderModuleType)
 		KS_JSON_ENUM_VALUE(VertexShader)
-		KS_JSON_ENUM_VALUE(TessellationShader)
+		KS_JSON_ENUM_VALUE(TessellationControlShader)
+		KS_JSON_ENUM_VALUE(TessellationEvaluationShader)
 		KS_JSON_ENUM_VALUE(GeometryShader)
 		KS_JSON_ENUM_VALUE(FragmentShader)
 		KS_JSON_ENUM_VALUE(ComputeShader)
