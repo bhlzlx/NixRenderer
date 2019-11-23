@@ -14,4 +14,5 @@ layout ( location = 0 ) out vec4 outFragColor;
 
 void main() {
     outFragColor = texture( sampler2D(triTexture, triSampler), frag_uv);
+    outFragColor.a = 1.0f;
 }

@@ -1,19 +1,19 @@
 {
 	"shaders" : [{
 		"type" : "VertexShader",
-		"name" : "triangle_tessellation/triangle.vert"
+		"name" : "terrain_tessellation/terrain.vert"
 	},{
 		"type" : "FragmentShader",
-		"name" : "triangle_tessellation/triangle.frag"
+		"name" : "terrain_tessellation/terrain.frag"
 	},{
 		"type" : "TessellationControlShader",
-		"name" : "triangle_tessellation/triangle.tcs"
+		"name" : "terrain_tessellation/terrain.tcs"
 	},{
 		"type" : "TessellationEvaluationShader",
-		"name" : "triangle_tessellation/triangle.tes"
+		"name" : "terrain_tessellation/terrain.tes"
 	}
 	],
-	"tessPatchCount" : 3,
+	"tessPatchCount" : 4,
 	"topologyMode" : "TMTriangleList",
 	"pologonMode" : "PMLine",
   "vertexLayout": {

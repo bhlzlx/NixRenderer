@@ -12,6 +12,10 @@ layout ( location = 1 ) in vec2 tes_uv[];
 
 layout ( location = 0 ) out vec2 frag_uv;
 
+layout( set = 0, binding = 0 ) uniform Argument1 {
+	mat4 transform;
+};
+
 vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2)
 {
     return vec2(gl_TessCoord.x) * v0 + vec2(gl_TessCoord.y) * v1 + vec2(gl_TessCoord.z) * v2;
@@ -25,5 +29,8 @@ vec3 interpolate3D(vec3 v0, vec3 v1, vec3 v2)
 void main() {
 	frag_uv = interpolate2D( tes_uv[0], tes_uv[1], tes_uv[2] );
 	vec3 frag_position = interpolate3D(tes_position[0], tes_position[1], tes_position[2]);
-	gl_Position = vec4( frag_position, 1.0f );
+	//
+	vec4 position = transform * vec4( frag_position, 1.0f );
+	position.y = -position.y;
+	gl_Position = position;
 }

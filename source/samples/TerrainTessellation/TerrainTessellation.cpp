@@ -15,25 +15,31 @@
 #include <nix/io/archieve.h>
 #include <cstdio>
 #include <cassert>
+#include <glm/glm.hpp>
 
 #ifdef _WIN32
 #include <Windows.h>
 #endif
-
 #include "../FreeCamera.h"
 
 namespace Nix {
 
-	float PlaneVertices[] = {
-		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f,
-		0.5f, -0.5f, 0.0f, 1.0f, 1.0f,
-		0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f,
+	float terrainPatches[] = {
+		// pos(x,z) - uv
+		0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 1.0f, 1.0f, 1.0f,
 	};
 
-	uint16_t PlaneIndices[] = {
-		0,1,2,0,2,3
+	uint16_t patchIndices[] = {
+		0, 1, 3, 2
 	};
+
+	const float perspectiveNear = 0.1f;
+	const float perspectiveFar = 512.0f;
+	const float perspectiveFOV = 3.1415926f / 2;
+	const float particleSize = 2.0f;
 
 	class Triangle : public NixApplication {
 	private:
@@ -45,15 +51,18 @@ namespace Nix {
 		IMaterial*					m_material;
 
 		IArgument*					m_argument;
-		uint32_t					m_triSamplerLoc;
-		uint32_t					m_triTextureLoc;
-		uint32_t					m_triTransformLoc;
-		SamplerState				m_triSampler;
-		ITexture*					m_triTexture;
-		IBuffer*					m_triTransformMatrix;
+		//
+		uint32_t					m_TCSArgumentSlot;
+		IBuffer*					m_TCSArgumentUniform;
+		uint32_t					m_TESArgumentSlot;
+		IBuffer*					m_TESArgumentUniform;
 
+		uint32_t					m_TESTextureSlot;
+		ITexture*					m_TESTexture;
+
+		uint32_t					m_TESSamplerSlot;
+		//
 		IRenderable*				m_renderable;
-
 		IBuffer*					m_vertexBuffer;
 		IBuffer*					m_indexBuffer;
 
@@ -88,7 +97,7 @@ namespace Nix {
 			//
 			MaterialDescription mtlDesc;
 			Nix::TextReader mtlReader;
-			mtlReader.openFile(_archieve, "material/triangle_tessellation.json");
+			mtlReader.openFile(_archieve, "material/terrain_tessellation.json");
 			mtlDesc.parse(mtlReader.getText());
 			RenderPassDescription rpDesc;
 			Nix::TextReader rpReader;
@@ -96,39 +105,34 @@ namespace Nix {
 			rpDesc.parse(rpReader.getText());
 			rpDesc.colors[0].format = m_context->swapchainColorFormat();
 			rpDesc.depthStencil.format = m_driver->selectDepthFormat(true);
-			//
+
 			TextureDescription texDesc;
 			texDesc.depth = 1;
-			texDesc.format = NixRGBA8888_UNORM;
+			texDesc.format = NixR8_UNORM;
 			texDesc.height = 64;
 			texDesc.width = 64;
 			texDesc.mipmapLevel = 1;
 			texDesc.type = Nix::TextureType::Texture2D;
 
-			//Nix::IFile * texFile = _archieve->open("texture/texture_bc3.ktx");
-			//Nix::IFile * texFile = _archieve->open("texture/texture_array_bc3.ktx");
-			//Nix::IFile* texMem = CreateMemoryBuffer(texFile->size());
-			//texFile->read(texFile->size(), texMem);
-			//m_texture = m_context->createTextureKTX(texMem->constData(), texMem->size());
+			m_TESTexture = m_context->createTexture(texDesc);
+			m_TESArgumentUniform = m_context->createUniformBuffer(128);
+			m_TCSArgumentUniform = m_context->createUniformBuffer(128);
 
-			m_triTexture = m_context->createTexture(texDesc);
-			m_triTransformMatrix = m_context->createUniformBuffer(64);
-
-			Nix::IFile* fishPNG = _archieve->open("texture/fish.png");
+			Nix::IFile* fishPNG = _archieve->open("texture/heightmap.png");
 			Nix::IFile* memPNG = CreateMemoryBuffer(fishPNG->size());
 			fishPNG->read(fishPNG->size(), memPNG);
 
-			int x, y, channel = 4;
-			auto rawData = stbi_load_from_memory((const stbi_uc*)memPNG->constData(), memPNG->size(), &x, &y, &channel, 4);
+			int x, y, channel = 1;
+			auto rawData = stbi_load_from_memory((const stbi_uc*)memPNG->constData(), memPNG->size(), &x, &y, &channel, 1);
 			BufferImageUpload upload;
 			upload.baseMipRegion = {
 				0, 0, { 0 , 0 , 0 }, { (uint32_t)x, (uint32_t)y, 1}
 			};
 			upload.data = rawData;
-			upload.length = x * y * 4;
+			upload.length = x * y;
 			upload.mipCount = 1;
 			upload.mipDataOffsets[0] = 0;
-			m_triTexture->uploadSubData(upload);
+			m_TESTexture->uploadSubData(upload);
 
 			bool rst = false;
 			m_material = m_context->createMaterial(mtlDesc); {
@@ -137,25 +141,32 @@ namespace Nix {
 				}
 				{ // arguments
 					m_argument = m_material->createArgument(0);
-					rst = m_argument->getSamplerLocation("triSampler", m_triSamplerLoc);
-					rst = m_argument->getTextureLocation("triTexture", m_triTextureLoc);
-					rst = m_argument->getUniformBlockLocation("Argument1", m_triTransformLoc);
-					m_argument->bindSampler(m_triSamplerLoc, m_triSampler);
-					m_argument->bindTexture(m_triTextureLoc, m_triTexture);
-					m_argument->bindUniformBuffer(m_triTransformLoc, m_triTransformMatrix);
+					m_argument->getUniformBlockLocation("TCSArgument", m_TCSArgumentSlot);
+					m_argument->getUniformBlockLocation("TESArgument", m_TESArgumentSlot);
+					m_argument->getSamplerLocation("terrainSampler", m_TESSamplerSlot);
+					m_argument->getTextureLocation("terrainTexture", m_TESTextureSlot);
+					//
+					SamplerState TESSamplerState;
+					m_argument->bindSampler(m_TESSamplerSlot, TESSamplerState);
+					m_argument->bindTexture(m_TESTextureSlot, m_TESTexture);
+					m_argument->bindUniformBuffer(m_TCSArgumentSlot, m_TCSArgumentUniform);
+					m_argument->bindUniformBuffer(m_TESArgumentSlot, m_TESArgumentUniform);
 					//m_argInstance = m_material->createArgument(1);
 					//rst = m_argInstance->getUniformBlock("LocalArgument", &m_matLocal);
 				}
 				{ // renderable
 					m_renderable = m_material->createRenderable();
-					m_vertexBuffer = m_context->createVertexBuffer(PlaneVertices, sizeof(PlaneVertices));
-					m_indexBuffer = m_context->createIndexBuffer(PlaneIndices, sizeof(PlaneIndices));
+					m_vertexBuffer = m_context->createVertexBuffer(terrainPatches, sizeof(terrainPatches));
+					m_indexBuffer = m_context->createIndexBuffer(patchIndices, sizeof(patchIndices));
 					//m_vertexBuffer = m_context->createVertexBuffer(nullptr, sizeof(PlaneVertices));
 					//m_indexBuffer = m_context->createIndexBuffer(nullptr, sizeof(PlaneIndices));
 					m_renderable->setVertexBuffer(m_vertexBuffer, 0, 0);
 					m_renderable->setIndexBuffer(m_indexBuffer, 0);
 				}
 			}
+
+			m_camera.SetEye(glm::vec3(0, 4, 0));
+
 			return true;
 		}
 
@@ -169,6 +180,7 @@ namespace Nix {
 			ss.origin = { 0, 0 };
 			ss.size = { (int)_width, (int)_height };
 
+			m_camera.Perspective(perspectiveFOV, (float)_width / (float)_height, perspectiveNear, perspectiveFar);
 			//
 			m_mainRenderPass->setViewport(vp);
 			m_mainRenderPass->setScissor(ss);
@@ -185,23 +197,30 @@ namespace Nix {
 
 			tickCounter++;
 
+			m_camera.Tick();
+
+			glm::vec3 eye = m_camera.GetEye();
+
 			float imageIndex = (tickCounter / 1024) % 4;
 
 			if (m_context->beginFrame()) {
 				m_mainRenderPass->begin(m_primQueue); {
-					/*glm::mat4x4 identity;
-					m_argCommon->setUniform(m_matGlobal, 0, &identity, 64);
-					m_argCommon->setUniform(m_matGlobal, 64, &identity, 64);
-					m_argCommon->setUniform(m_matGlobal, 128, &imageIndex, 4);
-					m_argInstance->setUniform(m_matLocal, 0, &identity, 64);*/
 					//
-					glm::mat4 transMat = glm::rotate<float>(glm::mat4(), tickCounter % 3600 / 10.0f, glm::vec3(0, 0, 1));
-					m_argument->updateUniformBuffer(m_triTransformMatrix, &transMat, 0, 64);
+					struct {
+						glm::mat4 tcsModel;
+						glm::vec3 eye;
+					} tcsTrans;
+					tcsTrans.eye = eye;
+					tcsTrans.tcsModel = glm::scale<float>(glm::mat4(), glm::vec3(64.0f, 1.0f, 64.0f));
+					glm::mat4 tesTrans = m_camera.GetProjMatrix() * m_camera.GetViewMatrix() * tcsTrans.tcsModel;
+					m_argument->updateUniformBuffer(m_TCSArgumentUniform, &tcsTrans, 0, 128);
+					m_argument->updateUniformBuffer(m_TESArgumentUniform, &tesTrans, 0, 64);
+					//
 					m_mainRenderPass->bindPipeline(m_pipeline);
 					m_mainRenderPass->bindArgument(m_argument);
 					//m_mainRenderPass->bindArgument(m_argInstance);
 					//
-					m_mainRenderPass->drawElements(m_renderable, 0, 6);
+					m_mainRenderPass->drawElements(m_renderable, 0, 4);
 				}
 				m_mainRenderPass->end();
 
@@ -210,11 +229,90 @@ namespace Nix {
 		}
 
 		virtual const char * title() {
-			return "Triangle ( with Tessellation shader )";
+			return "Terrain Mesh ( with Tessellation shader )";
 		}
 
 		virtual uint32_t rendererType() {
 			return 0;
+		}
+
+
+		void onMouseEvent(eMouseButton _bt, eMouseEvent _event, int _x, int _y)
+		{
+			static int lx = 0;
+			static int ly = 0;
+
+			static int dx;
+			static int dy;
+
+			switch (_event)
+			{
+			case MouseDown:
+			{
+				if (_bt == RButtonMouse)
+				{
+					lx = _x;
+					ly = _y;
+				}
+				break;
+			}
+			case MouseUp:
+			{
+				break;
+			}
+			case MouseMove:
+			{
+				if (_bt == RButtonMouse)
+				{
+					dx = _x - lx;
+					dy = _y - ly;
+					ly = _y;
+					lx = _x;
+					m_camera.RotateAxisY((float)dx / 10.0f * 3.1415f);
+					m_camera.RotateAxisX((float)dy / 10.0f * 3.1415f);
+				}
+				break;
+			}
+			}
+		}
+
+		void onKeyEvent(unsigned char _key, eKeyEvent _event)
+		{
+			if (_event == NixApplication::eKeyDown)
+			{
+				switch (_key)
+				{
+				case 'W':
+				case 'w': {
+					//auto forward = m_camera.GetForward();
+					m_camera.Forward(1.0f);
+					break;
+				}
+				case 'a':
+				case 'A': {
+					m_camera.Leftward(1.0);
+					//auto leftward = m_camera.GetLeftward();
+					//m_camera.Leftward(cammeraStepDistance);
+					break;
+				}
+				case 's':
+				case 'S':
+				{
+					m_camera.Forward(-1.0);
+					//auto rightward = -m_camera.GetLeftward();
+					//m_camera.Backward(cammeraStepDistance);
+					break;
+				}
+				case 'd':
+				case 'D': {
+					m_camera.Leftward(-1.0);
+					//auto backward = -m_camera.GetForward();
+					//moveDirection = PxVec3(backward.x, backward.y, backward.z);
+					//m_camera.Rightward(cammeraStepDistance);
+					break;
+				}
+				}
+			}
 		}
 	};
 }
