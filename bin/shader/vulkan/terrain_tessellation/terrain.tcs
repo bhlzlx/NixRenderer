@@ -19,13 +19,15 @@ layout ( set = 0, binding = 0 ) uniform TCSArgument {
 	vec3 eye;
 };
 
+const float maxTessLevel = 64.0f;
+
 float calcTessLevelOuter( vec3 _point1, vec3 _point2, vec3 _eye ) {
-	vec3 pt = ( _point1 + _point2 ) / 2.0f;
-	pt = (model * vec4(pt,1.0f)).xyz;
-	float distance = length( _eye - pt );
-	// float m = mod(distance, 64.0f);
-	float times = floor( distance / 64.0f );
-	float tessLevel = 64.0f / pow(2,times);// * ( 1.0f + m );
+	//vec3 pt = ( _point1 + _point2 ) / 2.0f;
+	//pt = ( model * vec4(pt,1.0f) ).xyz;
+	float distance = length( _eye - _point1 * maxTessLevel );
+	float m = mod(distance, maxTessLevel);
+	float times = floor( distance / maxTessLevel );
+	float tessLevel = maxTessLevel / pow(2,times) ;// ( 1.0f + m/maxTessLevel );
 	return floor(tessLevel);
 }
 
@@ -33,10 +35,10 @@ void main() {
 	tes_position[gl_InvocationID] = tcs_position[gl_InvocationID];
 	tes_uv[gl_InvocationID] = tcs_uv[gl_InvocationID];
 	//
-	gl_TessLevelOuter[0] = calcTessLevelOuter( tes_position[0], tes_position[1], eye );
-	gl_TessLevelOuter[1] = calcTessLevelOuter( tes_position[1], tes_position[2], eye );
-	gl_TessLevelOuter[2] = calcTessLevelOuter( tes_position[2], tes_position[3], eye );
-	gl_TessLevelOuter[3] = calcTessLevelOuter( tes_position[3], tes_position[0], eye );
+	gl_TessLevelOuter[0] = calcTessLevelOuter( tes_position[0], tes_position[3], eye );
+	gl_TessLevelOuter[1] = calcTessLevelOuter( tes_position[1], tes_position[0], eye );
+	gl_TessLevelOuter[2] = calcTessLevelOuter( tes_position[2], tes_position[1], eye );
+	gl_TessLevelOuter[3] = calcTessLevelOuter( tes_position[3], tes_position[2], eye );
 	//
 	gl_TessLevelInner[0] = (gl_TessLevelOuter[0] + gl_TessLevelOuter[1] + gl_TessLevelOuter[2] + gl_TessLevelOuter[3] ) / 4;
 	gl_TessLevelInner[1] = gl_TessLevelInner[0];

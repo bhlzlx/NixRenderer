@@ -8,6 +8,7 @@
 
 #include <NixApplication.h>
 #include <glm/glm.hpp>
+
 #include <glm/gtc/matrix_transform.hpp>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -24,17 +25,49 @@
 
 namespace Nix {
 
-	float terrainPatches[] = {
-		// pos(x,z) - uv
-		0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-		1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-		1.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+	/*==============
+		3 --- 2
+		|     |
+		0 --- 1	
+	==============*/
+
+	struct Patch {
+		float x, y, z;
+		float u, v;
 	};
 
-	uint16_t patchIndices[] = {
-		0, 1, 3, 2
+	const Patch blockPatch[4] = {
+		// pos(x,z) - uv
+		{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f },
+		{ 1.0f, 0.0f, 0.0f, 1.0f, 0.0f },
+		{ 1.0f, 0.0f, 1.0f, 1.0f, 1.0f },
+		{ 0.0f, 0.0f, 1.0f, 0.0f, 1.0f },
 	};
+
+	uint16_t oneBlockPatchIndices[] = {
+		0, 1, 2, 3
+	};
+
+	Patch testPatches[9][4];
+	uint16_t testPatchIndices[36];
+
+	void FillPatch( Patch* _ptr, int _x, int _y) {
+		memcpy(_ptr, blockPatch, sizeof(blockPatch));
+		for (uint32_t i = 0; i < 4; ++i) {
+			_ptr[i].x += _x;
+			_ptr[i].z += _y;
+		}
+		if (_x & 1) {
+			std::swap(_ptr[0].u, _ptr[1].u);
+			std::swap(_ptr[2].u, _ptr[3].u);
+		}
+		if (_y & 1) {
+			std::swap(_ptr[0].v, _ptr[3].v);
+			std::swap(_ptr[2].v, _ptr[1].v);
+		}
+	}
+
+	
 
 	const float perspectiveNear = 0.1f;
 	const float perspectiveFar = 512.0f;
@@ -118,7 +151,7 @@ namespace Nix {
 			m_TESArgumentUniform = m_context->createUniformBuffer(128);
 			m_TCSArgumentUniform = m_context->createUniformBuffer(128);
 
-			Nix::IFile* fishPNG = _archieve->open("texture/heightmap.png");
+			Nix::IFile* fishPNG = _archieve->open("texture/terrian.png");
 			Nix::IFile* memPNG = CreateMemoryBuffer(fishPNG->size());
 			fishPNG->read(fishPNG->size(), memPNG);
 
@@ -147,6 +180,8 @@ namespace Nix {
 					m_argument->getTextureLocation("terrainTexture", m_TESTextureSlot);
 					//
 					SamplerState TESSamplerState;
+					TESSamplerState.min = TextureFilter::TexFilterLinear;
+					TESSamplerState.mag = TextureFilter::TexFilterLinear;
 					m_argument->bindSampler(m_TESSamplerSlot, TESSamplerState);
 					m_argument->bindTexture(m_TESTextureSlot, m_TESTexture);
 					m_argument->bindUniformBuffer(m_TCSArgumentSlot, m_TCSArgumentUniform);
@@ -155,9 +190,17 @@ namespace Nix {
 					//rst = m_argInstance->getUniformBlock("LocalArgument", &m_matLocal);
 				}
 				{ // renderable
+					for (uint32_t x = 0; x < 3; ++x) {
+						for (uint32_t y = 0; y < 3; ++y) {
+							FillPatch(&testPatches[x*3+y][0], x, y);							
+						}
+					}
+					for (uint32_t n = 0; n < 36; ++n) {
+						testPatchIndices[n] = n;
+					}
 					m_renderable = m_material->createRenderable();
-					m_vertexBuffer = m_context->createVertexBuffer(terrainPatches, sizeof(terrainPatches));
-					m_indexBuffer = m_context->createIndexBuffer(patchIndices, sizeof(patchIndices));
+					m_vertexBuffer = m_context->createVertexBuffer(testPatches, sizeof(testPatches));
+					m_indexBuffer = m_context->createIndexBuffer(testPatchIndices, sizeof(testPatchIndices));
 					//m_vertexBuffer = m_context->createVertexBuffer(nullptr, sizeof(PlaneVertices));
 					//m_indexBuffer = m_context->createIndexBuffer(nullptr, sizeof(PlaneIndices));
 					m_renderable->setVertexBuffer(m_vertexBuffer, 0, 0);
@@ -220,7 +263,7 @@ namespace Nix {
 					m_mainRenderPass->bindArgument(m_argument);
 					//m_mainRenderPass->bindArgument(m_argInstance);
 					//
-					m_mainRenderPass->drawElements(m_renderable, 0, 4);
+					m_mainRenderPass->drawElements(m_renderable, 0, 36);
 				}
 				m_mainRenderPass->end();
 
