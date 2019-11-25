@@ -394,6 +394,9 @@ namespace Nix {
 				dynamicBindingTable[dynamicBindings[i].binding] = static_cast<uint32_t>(i);
 			}
 			argumentLayouts[setIndex].m_dynamicOffsetIndexTable = dynamicBindingTable;
+
+			dynamicBindingTable.clear();
+			dynamicBindings.clear();
 		}
 		// create pipeline layout
 		VkPipelineLayoutCreateInfo info; {

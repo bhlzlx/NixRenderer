@@ -2,11 +2,7 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-layout (location = 0) in vec3 vert_position;
-layout (location = 1) in vec3 vert_normal;
-layout (location = 2) in vec2 vert_uv;
-
-layout (location = 0) out float	frag_brightness;
+layout (location = 0) in float	frag_brightness;
 
 out gl_PerVertex 
 {

@@ -5,6 +5,9 @@
 	},{
 		"type" : "FragmentShader",
 		"name" : "sphere/sphere.frag"
+	},{
+		"type" : "GeometryShader",
+		"name" : "sphere/sphere.geom"
 	}
 	],
 	"topologyMode" : "TMTriangleList",
