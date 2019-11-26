@@ -242,7 +242,7 @@ namespace Nix {
 			//
 			MaterialDescription mtlDesc;
 			Nix::TextReader mtlReader;
-			mtlReader.openFile(_archieve, "material/sphere.json");
+			mtlReader.openFile(_archieve, "material/sphere_geometry.json");
 			mtlDesc.parse(mtlReader.getText());
 			RenderPassDescription rpDesc;
 			Nix::TextReader rpReader;
@@ -352,7 +352,7 @@ namespace Nix {
 		}
 
 		virtual const char * title() {
-			return "Sphere";
+			return "Sphere ( Geometry Shader )";
 		}
 
 		virtual uint32_t rendererType() {

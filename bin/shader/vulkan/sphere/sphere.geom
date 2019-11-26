@@ -2,29 +2,23 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-layout (location = 0) in float	frag_brightness;
+layout (location = 0) in float	geom_brightness[];
+layout (location = 0) out float	frag_brightness[];
 
-out gl_PerVertex 
-{
-    vec4 	gl_Position;
-};
+layout( triangles ) in;
+layout( line_strip, max_vertices = 6 ) out;
 
-layout( set = 0, binding = 0 ) uniform GlobalArgument {
-	mat4 projection;
-	mat4 view;
-	vec3 light;
-};
-
-layout( set = 1, binding = 0 ) uniform LocalArgument {
-	mat4 model;
-};
-
-void main() 
-{
-	vec4 worldPosition = model * vec4(vert_position, 1.0f);
-	worldPosition = worldPosition / worldPosition.w;
-	gl_Position = projection * view * worldPosition;
-	vec4 tNormal = model * vec4( normalize(vert_normal), 0.0f );
-	frag_brightness = dot( normalize(tNormal.xyz), normalize(light - worldPosition.xyz ));
-	gl_Position.y *= -1;
+void main() {
+	vec3 normalv3 = normalize( cross(gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz) );
+	vec4 normal = -vec4 (normalv3, 0.0f );
+	gl_Position = gl_in[0].gl_Position; EmitVertex();
+	gl_Position = gl_in[0].gl_Position + normal; EmitVertex();
+	gl_Position = gl_in[1].gl_Position; EmitVertex();
+	gl_Position = gl_in[1].gl_Position + normal; EmitVertex();
+	gl_Position = gl_in[2].gl_Position; EmitVertex();
+	gl_Position = gl_in[2].gl_Position + normal; EmitVertex();	//
+	
+	frag_brightness[0] = geom_brightness[0];
+	frag_brightness[1] = geom_brightness[1];
+	frag_brightness[2] = geom_brightness[2];
 }
