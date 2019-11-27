@@ -190,6 +190,7 @@ namespace Nix {
 		IGraphicsQueue*				m_primQueue;
 		//
 		IMaterial*					m_material;
+		IMaterial*					m_materialSphere;
 
 		IArgument*					m_argCommon;
 		uint32_t					m_samBase;
@@ -207,6 +208,8 @@ namespace Nix {
 		IBuffer*					m_vertexBuffer;
 		//
 		IPipeline*					m_pipeline;
+
+		IPipeline*					m_spherePipeline;
 
 		glm::mat4					m_model;
 		glm::mat4					m_view;
@@ -244,6 +247,12 @@ namespace Nix {
 			Nix::TextReader mtlReader;
 			mtlReader.openFile(_archieve, "material/sphere_geometry.json");
 			mtlDesc.parse(mtlReader.getText());
+
+			MaterialDescription baseMtlDesc;
+			Nix::TextReader baseMtlReader;
+			baseMtlReader.openFile(_archieve, "material/sphere.json");
+			baseMtlDesc.parse(baseMtlReader.getText());
+
 			RenderPassDescription rpDesc;
 			Nix::TextReader rpReader;
 			rpReader.openFile(_archieve, "renderpass/swapchain.json");
@@ -260,9 +269,12 @@ namespace Nix {
 			texDesc.type = Nix::TextureType::Texture2D;
 
 			bool rst = false;
-			m_material = m_context->createMaterial(mtlDesc); {
+			m_material = m_context->createMaterial(mtlDesc); 
+			m_materialSphere = m_context->createMaterial(baseMtlDesc);
+			{
 				{ // graphics pipeline 
 					m_pipeline = m_material->createPipeline(rpDesc);
+					m_spherePipeline = m_materialSphere->createPipeline(rpDesc);
 				}
 				{ // arguments
 					m_argCommon = m_material->createArgument(0);
@@ -344,6 +356,12 @@ namespace Nix {
 					m_mainRenderPass->bindArgument(m_argInstance);
 					//					
 					m_mainRenderPass->drawElements( m_renderable, 0, m_indexCount);
+					
+					m_mainRenderPass->bindPipeline(m_spherePipeline);
+					//m_mainRenderPass->bindArgument(m_argCommon);
+					//m_mainRenderPass->bindArgument(m_argInstance);
+					//					
+					m_mainRenderPass->drawElements(m_renderable, 0, m_indexCount);
 				}
 				m_mainRenderPass->end();
 
