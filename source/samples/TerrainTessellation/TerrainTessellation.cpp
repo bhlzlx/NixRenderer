@@ -74,6 +74,28 @@ namespace Nix {
 	const float perspectiveFOV = 3.1415926f / 2;
 	const float particleSize = 2.0f;
 
+	ITexture* LoadTextureFromFileSTB( TextureDescription& _desc, uint32_t _channel, const std::string& _filepath, IContext* _context, IArchieve* _arch ) {
+		ITexture* tex = nullptr;
+		tex = _context->createTexture(_desc);
+		Nix::IFile* fishPNG = _arch->open(_filepath);
+		Nix::IFile* memPNG = CreateMemoryBuffer(fishPNG->size());
+		fishPNG->read(fishPNG->size(), memPNG);
+
+		int x, y, channel;
+		auto rawData = stbi_load_from_memory((const stbi_uc*)memPNG->constData(), memPNG->size(), &x, &y, &channel, _channel);
+		BufferImageUpload upload;
+		upload.baseMipRegion = {
+			0, 0,{ 0 , 0 , 0 },{ (uint32_t)x, (uint32_t)y, 1 }
+		};
+		upload.data = rawData;
+		upload.length = x * y * _channel;
+		upload.mipCount = 1;
+		upload.mipDataOffsets[0] = 0;
+		tex->uploadSubData(upload);
+		stbi_image_free(rawData);
+		return tex;
+	}
+
 	class Triangle : public NixApplication {
 	private:
 		IDriver*					m_driver;
@@ -98,6 +120,10 @@ namespace Nix {
 		IRenderable*				m_renderable;
 		IBuffer*					m_vertexBuffer;
 		IBuffer*					m_indexBuffer;
+
+		ITexture*					m_grassTexture;
+		ITexture*					m_sandTexture;
+		ITexture*					m_snowTexture;
 
 		IPipeline*					m_pipeline;
 
@@ -146,26 +172,16 @@ namespace Nix {
 			texDesc.width = 64;
 			texDesc.mipmapLevel = 1;
 			texDesc.type = Nix::TextureType::Texture2D;
+			m_TESTexture = LoadTextureFromFileSTB(texDesc, 1, "texture/terrian.png", m_context, _archieve);
+			texDesc.format = NixRGBA8888_UNORM;
+			texDesc.width = texDesc.height = 512;
+			m_grassTexture = LoadTextureFromFileSTB(texDesc, 4, "texture/grass.png", m_context, _archieve);
+			m_snowTexture = LoadTextureFromFileSTB(texDesc, 4, "texture/snow.png", m_context, _archieve);
+			m_sandTexture = LoadTextureFromFileSTB(texDesc, 4, "texture/sand.png", m_context, _archieve);
 
-			m_TESTexture = m_context->createTexture(texDesc);
 			m_TESArgumentUniform = m_context->createUniformBuffer(128);
 			m_TCSArgumentUniform = m_context->createUniformBuffer(128);
 
-			Nix::IFile* fishPNG = _archieve->open("texture/terrian.png");
-			Nix::IFile* memPNG = CreateMemoryBuffer(fishPNG->size());
-			fishPNG->read(fishPNG->size(), memPNG);
-
-			int x, y, channel = 1;
-			auto rawData = stbi_load_from_memory((const stbi_uc*)memPNG->constData(), memPNG->size(), &x, &y, &channel, 1);
-			BufferImageUpload upload;
-			upload.baseMipRegion = {
-				0, 0, { 0 , 0 , 0 }, { (uint32_t)x, (uint32_t)y, 1}
-			};
-			upload.data = rawData;
-			upload.length = x * y;
-			upload.mipCount = 1;
-			upload.mipDataOffsets[0] = 0;
-			m_TESTexture->uploadSubData(upload);
 
 			bool rst = false;
 			m_material = m_context->createMaterial(mtlDesc); {
@@ -176,8 +192,19 @@ namespace Nix {
 					m_argument = m_material->createArgument(0);
 					m_argument->getUniformBlockLocation("TCSArgument", m_TCSArgumentSlot);
 					m_argument->getUniformBlockLocation("TESArgument", m_TESArgumentSlot);
+
 					m_argument->getSamplerLocation("terrainSampler", m_TESSamplerSlot);
+
 					m_argument->getTextureLocation("terrainTexture", m_TESTextureSlot);
+					//
+					uint32_t colorSamplerSlot;
+					m_argument->getSamplerLocation("texSampler", colorSamplerSlot);
+					uint32_t grassSlot;
+					m_argument->getTextureLocation("texGrass", grassSlot);
+					uint32_t sandSlot;
+					m_argument->getTextureLocation("texSand", sandSlot);
+					uint32_t snowSlot;
+					m_argument->getTextureLocation("texSnow", snowSlot);
 					//
 					SamplerState TESSamplerState;
 					TESSamplerState.min = TextureFilter::TexFilterLinear;
@@ -186,6 +213,13 @@ namespace Nix {
 					m_argument->bindTexture(m_TESTextureSlot, m_TESTexture);
 					m_argument->bindUniformBuffer(m_TCSArgumentSlot, m_TCSArgumentUniform);
 					m_argument->bindUniformBuffer(m_TESArgumentSlot, m_TESArgumentUniform);
+
+
+					m_argument->bindSampler(colorSamplerSlot, TESSamplerState);
+					m_argument->bindTexture(grassSlot, m_grassTexture);
+					m_argument->bindTexture(snowSlot, m_snowTexture);
+					m_argument->bindTexture(sandSlot, m_sandTexture);
+
 					//m_argInstance = m_material->createArgument(1);
 					//rst = m_argInstance->getUniformBlock("LocalArgument", &m_matLocal);
 				}

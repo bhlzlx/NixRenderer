@@ -15,7 +15,7 @@
 	],
 	"tessPatchCount" : 4,
 	"topologyMode" : "TMTriangleList",
-	"pologonMode" : "PMLine",
+	"pologonMode" : "PMTriangle",
 	"vertexLayout": {
 		"attributeCount": 2,
 		"attributes": [

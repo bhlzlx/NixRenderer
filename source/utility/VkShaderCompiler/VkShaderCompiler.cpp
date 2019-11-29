@@ -469,7 +469,7 @@ namespace Nix {
 				auto ranges = get_active_buffer_ranges(constants.id);
 				m_pushConstants.offset = ranges[0].offset;
 				m_pushConstants.size = (ranges.back().offset - m_pushConstants.offset) + ranges.back().range;
-				m_pushConstants.offset = m_pushConstants.offset;
+				// m_pushConstants.offset = m_pushConstants.offset;
 			}
 			// ======================= buffer type ===========================
 			for (auto& uniformBlock : spvResource.uniform_buffers) {
