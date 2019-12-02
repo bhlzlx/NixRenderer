@@ -69,9 +69,9 @@ namespace Nix {
 
 	
 
-	const float perspectiveNear = 0.1f;
-	const float perspectiveFar = 512.0f;
-	const float perspectiveFOV = 3.1415926f / 2;
+	const float perspectiveNear = 1.0f;
+	const float perspectiveFar = 256;
+	const float perspectiveFOV = 3.1415926f / 3;
 	const float particleSize = 2.0f;
 
 	ITexture* LoadTextureFromFileSTB( TextureDescription& _desc, uint32_t _channel, const std::string& _filepath, IContext* _context, IArchieve* _arch ) {

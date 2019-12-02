@@ -11,6 +11,8 @@ layout ( location = 1 ) in vec2 tcs_uv[];
 
 layout ( location = 0 ) out vec3 tes_position[];
 layout ( location = 1 ) out vec2 tes_uv[];
+layout ( location = 2 ) out vec3 tes_eye[];
+layout ( location = 3 ) out mat4 tes_model[];
 
 layout ( vertices = 4 ) out;
 
@@ -34,6 +36,8 @@ float calcTessLevelOuter( vec3 _point1, vec3 _point2, vec3 _eye ) {
 void main() {
 	tes_position[gl_InvocationID] = tcs_position[gl_InvocationID];
 	tes_uv[gl_InvocationID] = tcs_uv[gl_InvocationID];
+	tes_eye[gl_InvocationID] = eye;
+	tes_model[gl_InvocationID] = model;
 	//
 	gl_TessLevelOuter[0] = calcTessLevelOuter( tes_position[0], tes_position[3], eye );
 	gl_TessLevelOuter[1] = calcTessLevelOuter( tes_position[1], tes_position[0], eye );

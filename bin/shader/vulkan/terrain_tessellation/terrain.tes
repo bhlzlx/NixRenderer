@@ -9,9 +9,13 @@ layout( quads, equal_spacing, ccw ) in;
 
 layout ( location = 0 ) in vec3 tes_position[];
 layout ( location = 1 ) in vec2 tes_uv[];
+layout ( location = 2 ) in vec3 tes_eye[];
+layout ( location = 3 ) in mat4 tes_model[];
 
 layout ( location = 0 ) out vec2 frag_uv;
-layout ( location = 1 ) out float heightLevel;
+layout ( location = 1 ) out float frag_heightLevel;
+layout ( location = 2 ) out vec3 frag_eye;
+layout ( location = 3 ) out vec3 frag_position;
 
 layout ( set = 0, binding = 1 ) uniform TESArgument {
 	mat4 mvp;
@@ -38,11 +42,13 @@ vec3 interpolate3D( vec3 v0, vec3 v1, vec3 v2, vec3 v3, vec2 mix ) {
 void main() {
 	frag_uv = interpolate2D( tes_uv[0], tes_uv[1], tes_uv[2], tes_uv[3], gl_TessCoord.xy);
 	vec4 rgba = texture( sampler2D(terrainTexture, terrainSampler), frag_uv);
-	vec3 frag_position = interpolate3D(tes_position[0], tes_position[1], tes_position[2],  tes_position[3], gl_TessCoord.xy );
-	heightLevel = rgba.r;
+	frag_position = interpolate3D(tes_position[0], tes_position[1], tes_position[2],  tes_position[3], gl_TessCoord.xy );
+	frag_heightLevel = rgba.r;
+	frag_eye = tes_eye[0];
 	frag_position.y = rgba.r*16;
 	gl_Position = mvp * vec4( frag_position, 1.0f );
 	gl_Position.y *= -1;
+	frag_position = (tes_model[0]* vec4(frag_position, 1.0f)).xyz;
 }
 // test stage code ...
 // vec2 frag_uv = gl_TessCoord.xy;// interpolate2D( tes_uv[0], tes_uv[1], tes_uv[2], tes_uv[3] );
