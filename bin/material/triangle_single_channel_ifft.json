@@ -1,0 +1,92 @@
+{
+	"shaders" : [{
+		"type" : "VertexShader",
+		"name" : "triangle/triangle.vert"
+	},{
+		"type" : "FragmentShader",
+		"name" : "triangle/triangle_single_channel_ifft.frag"
+	}
+	],
+	"topologyMode" : "TMTriangleList",
+	"pologonMode" : "PMFill",
+  "vertexLayout": {
+    "attributeCount": 2,
+    "attributes": [
+      {
+        "name": "vert_position",
+        "bufferIndex": 0,
+        "offset": 0,
+        "type": "VertexTypeFloat3"
+      },
+      {
+        "name": "vert_uv",
+        "bufferIndex": 0,
+        "offset": 12,
+        "type": "VertexTypeFloat2"
+      }
+    ],
+    "bufferCount": 1,
+    "buffers": [
+      {
+        "stride": 20,
+        "instanceMode": 0,
+        "rate": 1
+      }
+    ]
+  },
+  "argumentCount" :  2,
+	"argumentLayouts" : [{
+    "index": 0,
+    "descriptorCount" :  2,
+		"descriptors" : [{
+			"type" : "SDT_UniformBlock",
+			"binding" : 0,
+			"name" : "GlobalArgument",
+			"shaderStage" : "VertexShader",
+			"dataSize" : 132
+		},{
+			"type" : "SDT_Sampler",
+			"binding" : 1,
+			"name" : "samBase",
+			"shaderStage" : "FragmentShader"
+		}]
+	},{
+    "index": 1,
+    "descriptorCount" :  2,
+		"descriptors" : [{
+			"type" : "SDT_UniformBlock",
+			"binding" : 0,
+			"name" : "LocalArgument",
+			"shaderStage" : "VertexShader",
+			"dataSize" : 64
+		}]
+	}],
+	"renderState" : {
+		"writeMask" : 15,
+		"cullMode" : "CullNone",
+		"windingMode" : "Clockwise",
+		"scissorEnable" : 1,
+		"depthState" : {
+			"writable": 1,
+			"testable" : 1,
+			"cmpFunc" : "LessEqual"
+		},
+		"stencilState" : {
+			"enable" : 0,
+			"opFail" : "StencilOpKeep",
+			"opZFail" : "StencilOpKeep",
+			"opPass" : "StencilOpKeep",
+			"enableCCW" : 0,
+			"opFailCCW" : "StencilOpKeep",
+			"opZFailCCW" : "StencilOpKeep",
+			"opPassCCW" : "StencilOpKeep",
+			"cmpFunc" : "Greater"
+		},
+		"blendState" : {
+			"enable" : 1,
+			"dscFactor" : "SourceAlpha",
+			"dstFactor" : "InvertSourceAlpha",
+			"op" : "BlendOpAdd"
+		}
+	}
+}

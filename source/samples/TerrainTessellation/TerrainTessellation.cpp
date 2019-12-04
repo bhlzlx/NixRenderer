@@ -96,7 +96,7 @@ namespace Nix {
 		return tex;
 	}
 
-	class Triangle : public NixApplication {
+	class Host2DFFT : public NixApplication {
 	private:
 		IDriver*					m_driver;
 		IContext*					m_context;
@@ -394,7 +394,7 @@ namespace Nix {
 	};
 }
 
-Nix::Triangle theapp;
+Nix::Host2DFFT theapp;
 
 NixApplication* GetApplication() {
 	return &theapp;

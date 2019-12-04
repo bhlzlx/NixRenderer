@@ -33,7 +33,7 @@ namespace Nix {
 		0,1,2,0,2,3
 	};
 
-	class Triangle : public NixApplication {
+	class TriangleCompute : public NixApplication {
 	private:
 		IDriver*					m_driver;
 		IContext*					m_context;
@@ -243,7 +243,7 @@ namespace Nix {
 	};
 }
 
-Nix::Triangle theapp;
+Nix::TriangleCompute theapp;
 
 NixApplication* GetApplication() {
 	return &theapp;

@@ -152,6 +152,7 @@ namespace Nix {
 		NixInvalidFormat,
 		//
 		NixR8_UNORM,
+		NixR16_UNORM,
 		// 32 bit
 		NixRGBA8888_UNORM,
 		NixBGRA8888_UNORM,

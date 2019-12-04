@@ -42,6 +42,7 @@ namespace Nix {
 	static inline VkFormat NixFormatToVk(NixFormat _format) {
 		switch (_format) {
 		case NixR8_UNORM: return VK_FORMAT_R8_UNORM;
+		case NixR16_UNORM: return VK_FORMAT_R16_UNORM;
 		//
 		case NixRGBA8888_UNORM: return VK_FORMAT_R8G8B8A8_UNORM;
 		case NixRGBA8888_SNORM: return VK_FORMAT_R8G8B8A8_SNORM;
@@ -98,6 +99,7 @@ namespace Nix {
 		case VK_FORMAT_BC1_RGBA_UNORM_BLOCK : return NixBC1_LINEAR_RGBA;
 		case VK_FORMAT_PVRTC1_4BPP_UNORM_BLOCK_IMG: return NixPVRTC_LINEAR_RGBA;
 		case VK_FORMAT_R8_UNORM: return NixR8_UNORM;
+		case VK_FORMAT_R16_UNORM: return NixR16_UNORM;
 		default:
 			break;
 		}
